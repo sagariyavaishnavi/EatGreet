@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import {
     ArrowRight,
-    PlayCircle,
     Users,
     Briefcase,
     ChefHat,
     BarChart3,
-    TrendingUp,
     ShieldCheck,
     Globe,
     UtensilsCrossed

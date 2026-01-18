@@ -100,7 +100,7 @@ export default function Login() {
                 </form>
 
                 <p className="mt-8 text-center text-sm text-gray-500">
-                    New User? <a href="/signup" className="text-blue-500 font-semibold hover:underline">Register</a>
+                    New User? <Link to="/#contact" className="text-blue-500 font-semibold hover:underline">Register</Link>
                 </p>
             </motion.div>
         </div>

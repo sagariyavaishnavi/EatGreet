@@ -7,6 +7,16 @@ const AdminCategory = () => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryStatus, setNewCategoryStatus] = useState(true);
     const [editingCategory, setEditingCategory] = useState(null);
+    const [selectedIcon, setSelectedIcon] = useState(Utensils);
+
+    const iconOptions = [
+        { icon: Utensils, label: 'Utensils' },
+        { icon: Coffee, label: 'Coffee' },
+        { icon: Pizza, label: 'Pizza' },
+        { icon: Salad, label: 'Salad' },
+        { icon: Cake, label: 'Cake' },
+        { icon: Sandwich, label: 'Sandwich' },
+    ];
 
     // Mock Data
     const [categories, setCategories] = useState([
@@ -22,6 +32,7 @@ const AdminCategory = () => {
         setEditingCategory(category);
         setNewCategoryName(category.name);
         setNewCategoryStatus(category.status === 'ACTIVE');
+        setSelectedIcon(category.icon);
         setIsModalOpen(true);
     };
 
@@ -31,7 +42,7 @@ const AdminCategory = () => {
         if (editingCategory) {
             setCategories(categories.map(cat =>
                 cat.id === editingCategory.id
-                    ? { ...cat, name: newCategoryName, status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE' }
+                    ? { ...cat, name: newCategoryName, status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE', icon: selectedIcon }
                     : cat
             ));
         } else {
@@ -40,7 +51,7 @@ const AdminCategory = () => {
                 name: newCategoryName,
                 count: 0,
                 status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE',
-                icon: Utensils, // Default icon
+                icon: selectedIcon || Utensils,
                 color: 'bg-gray-50 text-gray-500' // Default color
             };
             setCategories([...categories, newCategory]);
@@ -54,6 +65,7 @@ const AdminCategory = () => {
         setEditingCategory(null);
         setNewCategoryName('');
         setNewCategoryStatus(true);
+        setSelectedIcon(Utensils);
     };
 
     const toggleStatus = (id) => {
@@ -67,6 +79,8 @@ const AdminCategory = () => {
             setCategories(categories.filter(cat => cat.id !== id));
         }
     };
+
+    const ActiveIcon = selectedIcon || Utensils;
 
     return (
         <div className="space-y-6 relative">
@@ -112,7 +126,7 @@ const AdminCategory = () => {
                             {/* Top: Icon and Actions */}
                             <div className="flex justify-between items-start mb-6">
                                 <div className={`w-14 h-14 rounded-2xl ${category.color} bg-opacity-10 flex items-center justify-center`}>
-                                    <category.icon className={`w-7 h-7 ${category.color.split(' ')[1]}`} />
+                                    <category.icon className="w-7 h-7 text-gray-500" />
                                 </div>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
@@ -164,36 +178,51 @@ const AdminCategory = () => {
                     {/* Add New Category Card */}
                     <div
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
-                        className="border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[200px] group bg-gray-50/50"
+                        className="border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[150px] sm:min-h-[200px] group bg-gray-50/50"
                     >
-                        <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <Plus className="w-6 h-6 text-[#FD6941]" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-[#FD6941]" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-700">Add New Category</h3>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-700">Add New Category</h3>
                     </div>
                 </div>
             </div>
 
-            {/* Modal Overlay */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800">{editingCategory ? 'Edit Category' : 'Add New Category'}</h2>
+                    <div className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-4 sm:mb-6">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{editingCategory ? 'Edit Category' : 'Add New Category'}</h2>
                             <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
                         </div>
 
                         <div className="space-y-6">
-                            {/* SVG Icon Upload */}
+                            {/* SVG Icon Upload & Selection */}
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Icon (SVG)</label>
-                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors">
-                                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-2 text-[#FD6941]">
-                                        <Utensils className="w-5 h-5" />
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Icon</label>
+
+                                {/* Icon Selection Grid */}
+                                <div className="grid grid-cols-6 gap-2 mb-4">
+                                    {iconOptions.map((opt, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setSelectedIcon(opt.icon)}
+                                            className={`p-2 rounded-xl flex items-center justify-center transition-all ${selectedIcon === opt.icon ? 'bg-[#FD6941] text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                                            title={opt.label}
+                                        >
+                                            <opt.icon className="w-5 h-5" />
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* File Upload Area */}
+                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors group">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${selectedIcon ? 'bg-orange-100 text-[#FD6941]' : 'bg-gray-100 text-gray-400'}`}>
+                                        <ActiveIcon className="w-5 h-5" />
                                     </div>
-                                    <p className="text-xs text-gray-500 font-medium">Click to upload SVG</p>
+                                    <p className="text-xs text-gray-500 font-medium">Click to upload custom SVG</p>
                                     <p className="text-[10px] text-gray-400 mt-1">Recommended 24x24px</p>
                                     <input type="file" className="hidden" accept=".svg" />
                                 </div>
@@ -228,7 +257,7 @@ const AdminCategory = () => {
 
                             <button
                                 onClick={handleSave}
-                                className="w-full py-3 rounded-full bg-[#FD6941] text-white text-sm font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all mt-4"
+                                className="w-full py-3 sm:py-4 rounded-full bg-[#FD6941] text-white text-sm font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all mt-4"
                             >
                                 {editingCategory ? 'Update Category' : 'Create Category'}
                             </button>

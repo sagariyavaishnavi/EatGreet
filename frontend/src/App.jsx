@@ -16,6 +16,7 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMenu from './pages/admin/AdminMenu';
 import AdminCategory from './pages/admin/AdminCategory';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 // Other Roles
 import KitchenDashboard from './pages/kitchen/KitchenDashboard';
@@ -56,11 +57,13 @@ function App() {
         </Route>
 
         {/* Super Admin Routes */}
-        <Route path="/super-admin" element={<SuperAdminDashboard />} />
-        <Route path="/super-admin/restaurants" element={<Restaurants />} />
-        <Route path="/super-admin/payments" element={<Payments />} />
-        <Route path="/super-admin/reports" element={<Reports />} />
-        <Route path="/super-admin/users" element={<Users />} />
+        <Route path="/super-admin" element={<SuperAdminLayout />}>
+          <Route index element={<SuperAdminDashboard />} />
+          <Route path="restaurants" element={<Restaurants />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="users" element={<Users />} />
+        </Route>
 
         {/* Other Roles (Placeholders) */}
         <Route path="/kitchen" element={<KitchenDashboard />} />

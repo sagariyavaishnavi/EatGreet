@@ -30,24 +30,24 @@ import { motion } from 'framer-motion';
 
 
 const revenueData = [
-    { name: 'Jan', value: 12000 },
-    { name: 'Feb', value: 19000 },
-    { name: 'Mar', value: 15000 },
-    { name: 'Apr', value: 22000 },
-    { name: 'May', value: 28000 },
-    { name: 'Jun', value: 25000 },
-    { name: 'Jul', value: 35000 },
-    { name: 'Aug', value: 32000 },
-    { name: 'Sep', value: 42000 },
-    { name: 'Oct', value: 45000 },
-    { name: 'Nov', value: 48000 },
-    { name: 'Dec', value: 55000 },
+    { name: 'Jan', value: 0 },
+    { name: 'Feb', value: 0 },
+    { name: 'Mar', value: 0 },
+    { name: 'Apr', value: 0 },
+    { name: 'May', value: 0 },
+    { name: 'Jun', value: 0 },
+    { name: 'Jul', value: 0 },
+    { name: 'Aug', value: 0 },
+    { name: 'Sep', value: 0 },
+    { name: 'Oct', value: 0 },
+    { name: 'Nov', value: 0 },
+    { name: 'Dec', value: 0 },
 ];
 
 const paymentStatusData = [
-    { name: 'Paid', value: 85, color: '#10B981' },
-    { name: 'Pending', value: 12, color: '#F59E0B' },
-    { name: 'Overdue', value: 6, color: '#EF4444' },
+    { name: 'Paid', value: 0, color: '#10B981' },
+    { name: 'Pending', value: 0, color: '#F59E0B' },
+    { name: 'Overdue', value: 0, color: '#EF4444' },
 ];
 
 const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) => (
@@ -93,32 +93,32 @@ export default function SuperAdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
                         title="Total Restaurants"
-                        value="142"
-                        change="+12%"
+                        value="0"
+                        change="0%"
                         icon={Store}
                         gradient="bg-gradient-to-br from-[#E2F0E9] to-[#D4E9F2]"
                         colorClass="text-emerald-600"
                     />
                     <StatCard
                         title="Active Subscriptions"
-                        value="128"
-                        change="+8%"
+                        value="0"
+                        change="0%"
                         icon={Ticket}
                         gradient="bg-gradient-to-br from-[#E6F3E6] to-[#CDE7CD]"
                         colorClass="text-emerald-600"
                     />
                     <StatCard
                         title="Monthly Revenue"
-                        value="₹2,45,000"
-                        change="+15%"
+                        value="₹0"
+                        change="0%"
                         icon={BarChart3}
                         gradient="bg-gradient-to-br from-[#E9F5E9] to-[#DFF0DF]"
                         colorClass="text-emerald-600"
                     />
                     <StatCard
                         title="Unpaid Restaurants"
-                        value="4"
-                        change="-2%"
+                        value="0"
+                        change="0%"
                         icon={AlertTriangle}
                         gradient="bg-gradient-to-br from-[#FAF3E5] to-[#F1E4C9]"
                         colorClass="text-rose-500"
@@ -201,7 +201,7 @@ export default function SuperAdminDashboard() {
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-3xl font-extrabold text-gray-900">103</span>
+                                    <span className="text-3xl font-extrabold text-gray-900">0</span>
                                     <span className="text-xs text-gray-400 font-bold tracking-widest">TOTAL</span>
                                 </div>
                             </div>

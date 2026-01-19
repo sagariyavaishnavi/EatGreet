@@ -6,59 +6,7 @@ import bellIcon from '../../assets/Bell--Streamline-Flex.svg';
 import { useState, useEffect } from 'react';
 
 
-const activeOrders = [
-    {
-        id: "#002",
-        table: "001",
-        waiter: "John Patel",
-        time: "7:38 PM",
-        guests: 6,
-        status: "PREPARING",
-        timer: "08:12",
-        statusColor: "bg-orange-100 text-orange-600",
-        timerColor: "border-orange-400 text-gray-800",
-        items: [
-            { name: "Margarita pizza", qty: 2, price: 199.00 },
-            { name: "Paneer Tandoor pizza", qty: 1, price: 249.00 },
-            { name: "cock", qty: 2, price: 20.00 }
-        ],
-        total: 687.00
-    },
-    {
-        id: "#001",
-        table: "001",
-        waiter: "John Patel",
-        time: "7:38 PM",
-        guests: 6,
-        status: "READY",
-        timer: "12:09",
-        statusColor: "bg-green-100 text-green-600",
-        timerColor: "border-green-400 text-gray-800",
-        items: [
-            { name: "Margarita pizza", qty: 2, price: 199.00 },
-            { name: "Paneer Tandoor pizza", qty: 1, price: 249.00 },
-            { name: "cock", qty: 2, price: 20.00 }
-        ],
-        total: 687.00
-    },
-    {
-        id: "#003",
-        table: "001",
-        waiter: "John Patel",
-        time: "7:38 PM",
-        guests: 6,
-        status: "PENDING",
-        timer: "03:33",
-        statusColor: "bg-gray-100 text-gray-600",
-        timerColor: "border-gray-300 text-gray-800",
-        items: [
-            { name: "Margarita pizza", qty: 2, price: 199.00 },
-            { name: "Paneer Tandoor pizza", qty: 1, price: 249.00 },
-            { name: "cock", qty: 2, price: 20.00 }
-        ],
-        total: 687.00
-    }
-];
+const activeOrders = [];
 
 // eslint-disable-next-line no-unused-vars
 const StatCard = ({ icon: Icon, value, title }) => (
@@ -98,7 +46,7 @@ const AdminDashboard = () => {
                         <div className="w-10 h-10 flex items-center justify-center">
                             <img src={clockIcon} alt="Pending" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl font-bold text-gray-900">122</span>
+                        <span className="text-4xl font-bold text-gray-900">0</span>
                     </div>
                     <p className="text-gray-400 text-sm font-medium pl-1">Total Pending Orders</p>
                 </div>
@@ -109,7 +57,7 @@ const AdminDashboard = () => {
                         <div className="w-10 h-10 flex items-center justify-center">
                             <img src={chefHatIcon} alt="Preparing" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl font-bold text-gray-900">96</span>
+                        <span className="text-4xl font-bold text-gray-900">0</span>
                     </div>
                     <p className="text-gray-400 text-sm font-medium pl-1">Preparing Orders</p>
                 </div>
@@ -120,16 +68,16 @@ const AdminDashboard = () => {
                         <div className="w-10 h-10 flex items-center justify-center">
                             <img src={bellIcon} alt="Ready" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl font-bold text-gray-900">96</span>
+                        <span className="text-4xl font-bold text-gray-900">0</span>
                     </div>
                     <p className="text-gray-400 text-sm font-medium pl-1">Ready to serve</p>
                 </div>
 
                 {/* Today Orders Complete Card */}
                 {(() => {
-                    const completed = 70;
-                    const total = 136;
-                    const percentage = Math.round((completed / total) * 100);
+                    const completed = 0;
+                    const total = 0;
+                    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                     let gradientClass = "from-white to-[#F9FAFB]";
                     let barColorClass = "bg-gray-200";

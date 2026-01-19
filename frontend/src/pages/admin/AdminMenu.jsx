@@ -1,5 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload } from 'lucide-react';
+import MediaSlider from '../../components/MediaSlider';
+import { CATEGORIES_KEY, MENU_ITEMS_KEY } from '../../constants';
+
+// Default mock data if storage is empty
+const DEFAULT_MENU_ITEMS = [
+    {
+        id: '1',
+        name: 'Margherita Pizza',
+        category: 'MAIN COURSE',
+        price: 199,
+        description: 'Fresh Mozzarella, Tomato sauce, and Basil on our signature wood-fire crust.',
+        image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+        rating: 4.5,
+        time: '15-20 min',
+        calories: '850 kcal',
+        isVeg: true,
+        isAvailable: true
+    },
+    // ... (Adding a few more to match customer view initial state roughly if needed, or stick to simple admin defaults)
+    // For simplicity, let's trust the admin to add more, or use the ones from customer view as default?
+    // Let's use a robust default compatible with both views.
+    {
+        id: '2',
+        name: "Double Whopper",
+        price: 249,
+        description: "Two flame-grilled beef patties topped with juicy tomatoes, fresh cut lettuce, creamy mayonnaise, ketchup, crunchy pickles, and sliced white onions on a soft sesame seed bun.",
+        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+        rating: 4.5,
+        time: "15-20 min",
+        calories: "850 kcal",
+        category: "BURGERS",
+        isVeg: false,
+        isAvailable: true
+    }
+];
 
 const AdminMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +49,10 @@ const AdminMenu = () => {
     const [newItemCategory, setNewItemCategory] = useState('Main Course');
     const [newItemPrice, setNewItemPrice] = useState('');
     const [newItemDescription, setNewItemDescription] = useState('');
+    // New Fields
+    const [newItemCalories, setNewItemCalories] = useState('250 kcal');
+    const [newItemTime, setNewItemTime] = useState('15-20 min');
+    const [newItemIsVeg, setNewItemIsVeg] = useState(true);
 
     const removeMedia = (indexToRemove) => {
         setMediaItems(mediaItems.filter((_, index) => index !== indexToRemove));
@@ -27,23 +66,70 @@ const AdminMenu = () => {
         }
     };
 
-    // Mock Data mimicking the screenshot
-    const [menuItems, setMenuItems] = useState(Array.from({ length: 8 }, (_, i) => ({
-        id: (i + 1).toString(),
-        name: 'Margherita Pizza',
-        category: 'MAIN COURSE',
-        price: 199,
-        description: 'Fresh Mozzarella, Tomato sauce, and Basil on our signature wood-fire crust.',
-        image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80', // Pizza image
-        isAvailable: true
-    })));
+    // Live Data State
+    // Category Data State
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const loadCategories = () => {
+            const saved = localStorage.getItem(CATEGORIES_KEY);
+            if (saved) {
+                setCategories(JSON.parse(saved).filter(c => c.status === 'ACTIVE'));
+            } else {
+                // Fallback default categories if none in storage
+                setCategories([
+                    { name: 'Main Course' }, { name: 'Starters' }, { name: 'Beverages' },
+                    { name: 'Desserts' }, { name: 'Pizza' }, { name: 'Sides' }
+                ]);
+            }
+        };
+        loadCategories();
+
+        window.addEventListener('storage', loadCategories);
+        window.addEventListener('category-update', loadCategories);
+        return () => {
+            window.removeEventListener('storage', loadCategories);
+            window.removeEventListener('category-update', loadCategories);
+        };
+    }, []);
+
+    // Menu Item State
+    const [menuItems, setMenuItems] = useState(() => {
+        const saved = localStorage.getItem(MENU_ITEMS_KEY);
+        return saved ? JSON.parse(saved) : DEFAULT_MENU_ITEMS;
+    });
+
+    // Sync Helper
+    const updateMenu = (newItems) => {
+        setMenuItems(newItems);
+        localStorage.setItem(MENU_ITEMS_KEY, JSON.stringify(newItems));
+        // Dispatch custom event for same-tab updates
+        window.dispatchEvent(new Event('menu-update'));
+    };
+
+    // Listen for external updates
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const saved = localStorage.getItem(MENU_ITEMS_KEY);
+            if (saved) setMenuItems(JSON.parse(saved));
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('menu-update', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('menu-update', handleStorageChange);
+        };
+    }, []);
 
     const [editingItem, setEditingItem] = useState(null);
 
     const toggleStatus = (id) => {
-        setMenuItems(menuItems.map(item =>
+        const updatedItems = menuItems.map(item =>
             item.id === id ? { ...item, isAvailable: !item.isAvailable } : item
-        ));
+        );
+        updateMenu(updatedItems);
     };
 
     const handleEdit = (item) => {
@@ -52,6 +138,9 @@ const AdminMenu = () => {
         setNewItemCategory(item.category);
         setNewItemPrice(item.price);
         setNewItemDescription(item.description);
+        setNewItemCalories(item.calories || '250 kcal');
+        setNewItemTime(item.time || '15-20 min');
+        setNewItemIsVeg(item.isVeg === undefined ? true : item.isVeg);
         setIsActiveStatus(item.isAvailable);
         setSelectedLabels(item.labels || []);
 
@@ -74,28 +163,38 @@ const AdminMenu = () => {
 
     const handleDelete = (id) => {
         if (window.confirm('Are you sure you want to delete this item?')) {
-            setMenuItems(menuItems.filter(item => item.id !== id));
+            const updatedItems = menuItems.filter(item => item.id !== id);
+            updateMenu(updatedItems);
         }
     };
 
     const handleSave = () => {
+        if (!newItemName.trim() || !newItemPrice || !newItemCategory) {
+            alert("Please fill in all required fields (Name, Category, Price).");
+            return;
+        }
         const itemData = {
             id: editingItem ? editingItem.id : Date.now().toString(),
             name: newItemName || 'New Item',
             category: newItemCategory.toUpperCase(),
             price: newItemPrice || 0,
             description: newItemDescription || 'No description provided.',
+            calories: newItemCalories,
+            time: newItemTime,
+            isVeg: newItemIsVeg,
             image: mediaItems.length > 0 ? mediaItems[0].url : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
             isAvailable: isActiveStatus,
             labels: selectedLabels,
             media: mediaItems
         };
 
+        let updatedItems;
         if (editingItem) {
-            setMenuItems(menuItems.map(item => item.id === editingItem.id ? itemData : item));
+            updatedItems = menuItems.map(item => item.id === editingItem.id ? itemData : item);
         } else {
-            setMenuItems([...menuItems, itemData]);
+            updatedItems = [...menuItems, itemData];
         }
+        updateMenu(updatedItems);
 
         setIsModalOpen(false);
         setEditingItem(null);
@@ -110,6 +209,9 @@ const AdminMenu = () => {
         setNewItemCategory('Main Course');
         setNewItemPrice('');
         setNewItemDescription('');
+        setNewItemCalories('250 kcal');
+        setNewItemTime('15-20 min');
+        setNewItemIsVeg(true);
     };
 
     const openModal = () => {
@@ -162,14 +264,18 @@ const AdminMenu = () => {
                         <div key={item.id || index} className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                             {/* Image Container */}
                             <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
-                                <img
-                                    src={item.image}
-                                    alt={item.name}
+                                <MediaSlider
+                                    media={item.media && item.media.length > 0 ? item.media : [{ url: item.image, type: 'image/jpeg' }]}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                                     <div className={`w-2 h-2 rounded-full ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                     <span className="text-[10px] font-bold text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
+                                </div>
+                                <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    <div className={`w-3 h-3 border-2 rounded-sm flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -182,6 +288,12 @@ const AdminMenu = () => {
                                 <div className="flex justify-between items-start">
                                     <h3 className="font-bold text-gray-800 text-lg leading-tight w-2/3">{item.name}</h3>
                                     <span className="font-bold text-xl text-gray-800">₹{item.price}</span>
+                                </div>
+
+                                <div className="flex gap-2 text-[10px] font-bold text-gray-400">
+                                    <span>{item.calories}</span>
+                                    <span>•</span>
+                                    <span>{item.time}</span>
                                 </div>
 
                                 <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 h-10">
@@ -282,14 +394,35 @@ const AdminMenu = () => {
                                                 className="hidden"
                                                 accept="image/*,video/*"
                                                 multiple
-                                                onChange={(e) => {
+                                                onChange={async (e) => {
                                                     const files = Array.from(e.target.files);
-                                                    const newMedia = files.map(file => ({
-                                                        name: file.name,
-                                                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                                                        url: URL.createObjectURL(file),
-                                                        type: file.type
-                                                    }));
+                                                    const newMedia = [];
+
+                                                    for (const file of files) {
+                                                        if (file.type.startsWith('video')) {
+                                                            const duration = await new Promise((resolve) => {
+                                                                const video = document.createElement('video');
+                                                                video.preload = 'metadata';
+                                                                video.onloadedmetadata = function () {
+                                                                    window.URL.revokeObjectURL(video.src);
+                                                                    resolve(video.duration);
+                                                                }
+                                                                video.src = URL.createObjectURL(file);
+                                                            });
+
+                                                            if (duration > 30) {
+                                                                alert(`Video ${file.name} exceeds 30 seconds limit.`);
+                                                                continue;
+                                                            }
+                                                        }
+
+                                                        newMedia.push({
+                                                            name: file.name,
+                                                            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                                                            url: URL.createObjectURL(file),
+                                                            type: file.type
+                                                        });
+                                                    }
 
                                                     // Determine how many can be added
                                                     const remainingSlots = 5 - mediaItems.length;
@@ -343,9 +476,10 @@ const AdminMenu = () => {
                                                 value={newItemCategory}
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
                                             >
-                                                <option>Main Course</option>
-                                                <option>Starters</option>
-                                                <option>Beverages</option>
+                                                <option disabled value="">Select Category</option>
+                                                {categories.map((cat, idx) => (
+                                                    <option key={cat.id || idx} value={cat.name}>{cat.name}</option>
+                                                ))}
                                             </select>
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -364,6 +498,49 @@ const AdminMenu = () => {
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                             />
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Calories</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g 350 kcal"
+                                            className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            value={newItemCalories}
+                                            onChange={(e) => setNewItemCalories(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Time</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g 15-20 min"
+                                            className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            value={newItemTime}
+                                            onChange={(e) => setNewItemTime(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Item Type (Veg / Non-Veg)</label>
+                                    <div className="flex gap-4">
+                                        <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                            <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
+                                            <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
+                                                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                                            </div>
+                                            <span className="text-xs font-bold">Veg</span>
+                                        </label>
+                                        <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                            <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
+                                            <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
+                                                <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                                            </div>
+                                            <span className="text-xs font-bold">Non-Veg</span>
+                                        </label>
                                     </div>
                                 </div>
 

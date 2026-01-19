@@ -20,6 +20,10 @@ const AdminLogin = () => {
                 localStorage.setItem('isAuthenticated', 'true');
                 localStorage.setItem('userRole', 'admin');
                 navigate('/admin');
+            } else if (email === 'admin@eatgreet.com' && password === 'admin') {
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('userRole', 'super-admin');
+                navigate('/super-admin');
             } else {
                 setError('Invalid email or password');
             }

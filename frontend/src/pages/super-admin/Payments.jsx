@@ -1,14 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, Construction } from 'lucide-react';
-import SuperAdminNavbar from '../../components/super-admin/SuperAdminNavbar';
+
 
 export default function Payments() {
     return (
         <div className="h-screen bg-[#F0F2F4] p-4 md:p-6 flex flex-col overflow-hidden">
-            <div className="mb-4">
-                <SuperAdminNavbar />
-            </div>
+
 
             <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col items-center justify-center">
                 <motion.div

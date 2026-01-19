@@ -27,7 +27,7 @@ import {
     Ticket
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import SuperAdminNavbar from '../../components/super-admin/SuperAdminNavbar';
+
 
 const revenueData = [
     { name: 'Jan', value: 12000 },
@@ -78,9 +78,7 @@ const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) =>
 export default function SuperAdminDashboard() {
     return (
         <div className="h-screen bg-[#F0F2F4] p-4 md:p-6 flex flex-col overflow-hidden">
-            <div className="mb-4">
-                <SuperAdminNavbar />
-            </div>
+
 
             <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col space-y-6 min-h-0 overflow-y-auto no-scrollbar">
                 {/* Welcome Section */}

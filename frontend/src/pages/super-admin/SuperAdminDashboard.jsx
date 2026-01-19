@@ -27,7 +27,7 @@ import {
     Ticket
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import SuperAdminNavbar from '../../components/super-admin/SuperAdminNavbar';
+
 
 const revenueData = [
     { name: 'Jan', value: 0 },
@@ -77,6 +77,8 @@ const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) =>
 
 export default function SuperAdminDashboard() {
     return (
+        <div className="h-screen bg-[#F0F2F4] p-4 md:p-6 flex flex-col overflow-hidden">
+
         <div className="flex flex-col space-y-6">
             {/* Welcome Section */}
             <div className="flex justify-between items-end">
@@ -166,6 +168,42 @@ export default function SuperAdminDashboard() {
                         </ResponsiveContainer>
                     </div>
                 </motion.div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard
+                        title="Total Restaurants"
+                        value="0"
+                        change="0%"
+                        icon={Store}
+                        gradient="bg-gradient-to-br from-[#E2F0E9] to-[#D4E9F2]"
+                        colorClass="text-emerald-600"
+                    />
+                    <StatCard
+                        title="Active Subscriptions"
+                        value="0"
+                        change="0%"
+                        icon={Ticket}
+                        gradient="bg-gradient-to-br from-[#E6F3E6] to-[#CDE7CD]"
+                        colorClass="text-emerald-600"
+                    />
+                    <StatCard
+                        title="Monthly Revenue"
+                        value="₹0"
+                        change="0%"
+                        icon={BarChart3}
+                        gradient="bg-gradient-to-br from-[#E9F5E9] to-[#DFF0DF]"
+                        colorClass="text-emerald-600"
+                    />
+                    <StatCard
+                        title="Unpaid Restaurants"
+                        value="0"
+                        change="0%"
+                        icon={AlertTriangle}
+                        gradient="bg-gradient-to-br from-[#FAF3E5] to-[#F1E4C9]"
+                        colorClass="text-rose-500"
+                    />
+                </div>
 
                 {/* Payment Status Donut Chart */}
                 <motion.div

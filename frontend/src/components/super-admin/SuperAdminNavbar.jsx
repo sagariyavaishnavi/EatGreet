@@ -45,6 +45,10 @@ export default function SuperAdminNavbar() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
+                <Link to="/super-admin/settings" className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
+                    <Settings className="w-5 h-5" />
+                </Link>
+
                 <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
                     <Settings className="w-5 h-5" />
                 </button>
@@ -54,6 +58,7 @@ export default function SuperAdminNavbar() {
                 </button>
 
                 {/* Profile Capsule */}
+                <Link to="/super-admin/profile" className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
                 <div className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
                     <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Admin" className="w-full h-full object-cover" />
@@ -62,7 +67,7 @@ export default function SuperAdminNavbar() {
                         <span className="font-medium text-sm text-gray-800">Admin</span>
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                     </div>
-                </div>
+                </Link>
             </div>
         </nav>
     );

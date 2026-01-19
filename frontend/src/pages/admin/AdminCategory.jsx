@@ -1,12 +1,52 @@
 import { useState } from 'react';
 import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter } from 'lucide-react';
 
+import { CATEGORIES_KEY } from '../../constants';
+
+// Icon Map for Serialization
+const ICON_MAP = {
+    'Utensils': Utensils,
+    'Coffee': Coffee,
+    'Pizza': Pizza,
+    'Salad': Salad,
+    'Cake': Cake,
+    'Sandwich': Sandwich
+};
+
+const DEFAULT_CATEGORIES = [
+    { id: 1, name: 'Main Course', count: 0, status: 'ACTIVE', icon: 'Utensils', color: 'bg-blue-50 text-blue-500' },
+    { id: 2, name: 'Starters', count: 0, status: 'ACTIVE', icon: 'Sandwich', color: 'bg-orange-50 text-orange-500' },
+    { id: 3, name: 'Beverages', count: 0, status: 'ACTIVE', icon: 'Coffee', color: 'bg-purple-50 text-purple-500' },
+    { id: 4, name: 'Desserts', count: 0, status: 'ACTIVE', icon: 'Cake', color: 'bg-pink-50 text-pink-500' },
+    { id: 5, name: 'Pizza', count: 0, status: 'ACTIVE', icon: 'Pizza', color: 'bg-yellow-50 text-yellow-500' },
+    { id: 6, name: 'Sides', count: 0, status: 'ACTIVE', icon: 'Salad', color: 'bg-green-50 text-green-500' },
+];
+
 const AdminCategory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryStatus, setNewCategoryStatus] = useState(true);
     const [editingCategory, setEditingCategory] = useState(null);
+    const [selectedIconName, setSelectedIconName] = useState('Utensils');
+
+    const iconOptions = Object.keys(ICON_MAP).map(key => ({ icon: ICON_MAP[key], label: key, name: key }));
+
+    // Initialize from LocalStorage
+    const [categories, setCategories] = useState(() => {
+        const saved = localStorage.getItem(CATEGORIES_KEY);
+        return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+    });
+
+    // Validated Update Helper
+    const updateCategories = (newCats) => {
+        setCategories(newCats);
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(newCats));
+        // Dispatch event for other tabs
+        window.dispatchEvent(new Event('storage'));
+        // Dispatch custom event for same-tab components (like AdminMenu)
+        window.dispatchEvent(new Event('category-update'));
+    };
     const [selectedIcon, setSelectedIcon] = useState(Utensils);
 
     const iconOptions = [
@@ -32,6 +72,7 @@ const AdminCategory = () => {
         setEditingCategory(category);
         setNewCategoryName(category.name);
         setNewCategoryStatus(category.status === 'ACTIVE');
+        setSelectedIconName(category.icon || 'Utensils');
         setSelectedIcon(category.icon);
         setIsModalOpen(true);
     };
@@ -39,6 +80,17 @@ const AdminCategory = () => {
     const handleSave = () => {
         if (!newCategoryName) return;
 
+        const iconName = selectedIconName;
+        // Simple color logic based on icon/random could go here, keeping existing simple
+        const colorClass = 'bg-gray-50 text-gray-500';
+
+        if (editingCategory) {
+            const updated = categories.map(cat =>
+                cat.id === editingCategory.id
+                    ? { ...cat, name: newCategoryName, status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE', icon: iconName }
+                    : cat
+            );
+            updateCategories(updated);
         if (editingCategory) {
             setCategories(categories.map(cat =>
                 cat.id === editingCategory.id
@@ -49,6 +101,13 @@ const AdminCategory = () => {
             const newCategory = {
                 id: Date.now(),
                 name: newCategoryName,
+                count: 0, // In a real app we'd calc this
+                status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE',
+                icon: iconName,
+                color: colorClass
+            };
+            updateCategories([...categories, newCategory]);
+
                 count: 0,
                 status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE',
                 icon: selectedIcon || Utensils,
@@ -65,6 +124,15 @@ const AdminCategory = () => {
         setEditingCategory(null);
         setNewCategoryName('');
         setNewCategoryStatus(true);
+        setSelectedIconName('Utensils');
+    };
+
+    const toggleStatus = (id) => {
+        const updated = categories.map(cat =>
+            cat.id === id ? { ...cat, status: cat.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : cat
+        );
+        updateCategories(updated);
+
         setSelectedIcon(Utensils);
     };
 
@@ -76,6 +144,12 @@ const AdminCategory = () => {
 
     const handleDelete = (id) => {
         if (window.confirm('Are you sure you want to delete this category?')) {
+            const updated = categories.filter(cat => cat.id !== id);
+            updateCategories(updated);
+        }
+    };
+
+    const ActiveIcon = ICON_MAP[selectedIconName] || Utensils;
             setCategories(categories.filter(cat => cat.id !== id));
         }
     };
@@ -121,6 +195,62 @@ const AdminCategory = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Category Cards */}
+                    {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => {
+                        const IconComponent = ICON_MAP[category.icon] || Utensils;
+                        return (
+                            <div key={category.id} className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
+                                {/* Top: Icon and Actions */}
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={`w-14 h-14 rounded-2xl ${category.color} bg-opacity-10 flex items-center justify-center`}>
+                                        <IconComponent className="w-7 h-7 text-gray-500" />
+                                    </div>
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleEdit(category)}
+                                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(category.id)}
+                                            className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Middle: Title */}
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{category.name}</h3>
+                                    <p className="text-gray-400 text-sm font-medium">{category.count} Items Available</p>
+                                </div>
+
+                                {/* Bottom: Status & Toggle */}
+                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                            {category.status}
+                                        </span>
+                                    </div>
+
+                                    <label className="flex items-center cursor-pointer">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={category.status === 'ACTIVE'}
+                                                onChange={() => toggleStatus(category.id)}
+                                            />
+                                            <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ${category.status === 'ACTIVE' ? 'bg-[#FD6941]' : 'bg-gray-300'}`}></div>
+                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        )
+                    })}
                     {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => (
                         <div key={category.id} className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
                             {/* Top: Icon and Actions */}
@@ -178,6 +308,12 @@ const AdminCategory = () => {
                     {/* Add New Category Card */}
                     <div
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
+                        className="border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[200px] group bg-gray-50/50"
+                    >
+                        <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Plus className="w-6 h-6 text-[#FD6941]" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-700">Add New Category</h3>
                         className="border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[150px] sm:min-h-[200px] group bg-gray-50/50"
                     >
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -188,6 +324,12 @@ const AdminCategory = () => {
                 </div>
             </div>
 
+            {/* Modal Overlay */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">{editingCategory ? 'Edit Category' : 'Add New Category'}</h2>
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
                     <div className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -199,6 +341,7 @@ const AdminCategory = () => {
                         </div>
 
                         <div className="space-y-6">
+                            {/* SVG Icon Upload */}
                             {/* SVG Icon Upload & Selection */}
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Icon</label>
@@ -208,6 +351,8 @@ const AdminCategory = () => {
                                     {iconOptions.map((opt, idx) => (
                                         <button
                                             key={idx}
+                                            onClick={() => setSelectedIconName(opt.name)}
+                                            className={`p-2 rounded-xl flex items-center justify-center transition-all ${selectedIconName === opt.name ? 'bg-[#FD6941] text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                                             onClick={() => setSelectedIcon(opt.icon)}
                                             className={`p-2 rounded-xl flex items-center justify-center transition-all ${selectedIcon === opt.icon ? 'bg-[#FD6941] text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                                             title={opt.label}
@@ -219,6 +364,10 @@ const AdminCategory = () => {
 
                                 {/* File Upload Area */}
                                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors group">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${selectedIconName ? 'bg-orange-100 text-[#FD6941]' : 'bg-gray-100 text-gray-400'}`}>
+                                        <ActiveIcon className="w-5 h-5" />
+                                    </div>
+                                    <p className="text-xs text-gray-500 font-medium">Click to upload SVG</p>
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${selectedIcon ? 'bg-orange-100 text-[#FD6941]' : 'bg-gray-100 text-gray-400'}`}>
                                         <ActiveIcon className="w-5 h-5" />
                                     </div>
@@ -257,6 +406,7 @@ const AdminCategory = () => {
 
                             <button
                                 onClick={handleSave}
+                                className="w-full py-3 rounded-full bg-[#FD6941] text-white text-sm font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all mt-4"
                                 className="w-full py-3 sm:py-4 rounded-full bg-[#FD6941] text-white text-sm font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all mt-4"
                             >
                                 {editingCategory ? 'Update Category' : 'Create Category'}

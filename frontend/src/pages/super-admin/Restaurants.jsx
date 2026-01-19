@@ -10,12 +10,25 @@ import {
     ExternalLink,
     ChevronRight
 } from 'lucide-react';
-import SuperAdminNavbar from '../../components/super-admin/SuperAdminNavbar';
+
 
 const restaurants = [];
 
 export default function Restaurants() {
     return (
+        <div className="h-screen bg-[#F0F2F4] p-4 md:p-6 flex flex-col overflow-hidden">
+
+
+            <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col space-y-6 min-h-0 overflow-y-auto no-scrollbar">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-4xl font-bold text-gray-900">Restaurants</h1>
+                            <span className="bg-[#FFEDE6] text-[#F15A2B] px-4 py-1 rounded-full text-sm font-bold">0 Total</span>
+                        </div>
+                        <p className="text-gray-500 font-medium">Manage Partner restaurants, Monitor performance, Control access.</p>
+
         <div className="flex flex-col space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

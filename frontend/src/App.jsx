@@ -15,6 +15,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMenu from './pages/admin/AdminMenu';
+import AdminCategory from './pages/admin/AdminCategory';
 
 // Other Roles
 import KitchenDashboard from './pages/kitchen/KitchenDashboard';
@@ -49,7 +50,7 @@ function App() {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="menu" element={<AdminMenu />} />
-          <Route path="category" element={<div className="p-4">Category Page (Coming Soon)</div>} />
+          <Route path="category" element={<AdminCategory />} />
           <Route path="orders" element={<div className="p-4">Orders Page (Coming Soon)</div>} />
           <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
         </Route>

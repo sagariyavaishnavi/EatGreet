@@ -4,6 +4,10 @@
     font-family: 'Urbanist', system-ui, sans-serif;
 }
 
+body {
+    font-weight: 500;
+}
+
 * {
     font-family: 'Urbanist', sans-serif !important;
 }

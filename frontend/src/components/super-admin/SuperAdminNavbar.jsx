@@ -16,23 +16,25 @@ export default function SuperAdminNavbar() {
     ];
 
     return (
-        <nav className="flex items-center justify-between mb-6 px-2 py-2">
+        <nav className="flex items-center justify-between px-[30px] py-3 sticky top-0 z-50 bg-transparent">
+            {/* Logo */}
             <div className="flex items-center gap-2">
-                <Link to="/super-admin">
-                    <img src={logo} alt="EatGreet" className="h-9" />
+                <Link to="/super-admin" className="block">
+                    <img src={logo} alt="EatGreet" className="h-10 w-auto object-contain" />
                 </Link>
             </div>
 
-            <div className="hidden lg:flex items-center gap-1">
+            {/* Navigation Pills */}
+            <div className="flex items-center gap-1 bg-white p-1.5 rounded-full shadow-[0_2px_10px_-2px_rgba(0,0,0,0.05)] border border-gray-100 overflow-x-auto no-scrollbar max-w-[calc(100vw-180px)] lg:max-w-none">
                 {navItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
                         <Link
                             key={item.name}
                             to={item.path}
-                            className={`px-5 py-2 rounded-full font-bold text-sm transition-all duration-300 ${isActive
+                            className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${isActive
                                 ? 'bg-black text-white shadow-md'
-                                : 'text-gray-500 hover:text-black hover:bg-gray-100'
+                                : 'text-gray-500 hover:text-black hover:bg-gray-50'
                                 }`}
                         >
                             {item.name}
@@ -41,21 +43,24 @@ export default function SuperAdminNavbar() {
                 })}
             </div>
 
-            <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-white rounded-full transition-colors">
-                    <Settings className="w-5 h-5 text-gray-500" />
+            {/* Right Actions */}
+            <div className="flex items-center gap-3">
+                <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
+                    <Settings className="w-5 h-5" />
                 </button>
-                <button className="p-2 hover:bg-white rounded-full relative transition-colors">
-                    <Bell className="w-5 h-5 text-gray-500" />
-                    <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+                <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black relative">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-3 right-3.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                 </button>
-                <div className="flex items-center gap-2 pl-3 ml-1 border-l border-gray-300">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-white">
+
+                {/* Profile Capsule */}
+                <div className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+                    <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Admin" className="w-full h-full object-cover" />
                     </div>
-                    <div className="hidden md:flex items-center gap-0.5 group cursor-pointer">
-                        <span className="font-extrabold text-sm text-gray-900">Admin</span>
-                        <ChevronDown className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform" />
+                    <div className="hidden md:flex items-center gap-1">
+                        <span className="font-medium text-sm text-gray-800">Admin</span>
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
                     </div>
                 </div>
             </div>

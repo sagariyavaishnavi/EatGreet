@@ -39,6 +39,17 @@ body {
     }
 }
 
+/* Global scrollbar removal */
+*::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+
 @keyframes float {
 
     0%,

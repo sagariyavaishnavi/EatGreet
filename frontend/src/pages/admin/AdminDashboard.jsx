@@ -116,16 +116,19 @@ const AdminDashboard = () => {
                                     <span>100%</span>
                                 </div>
                                 <div className="h-4 w-full bg-gray-200/50 rounded-full overflow-hidden relative flex">
+
                                     {/* Background Track */}
                                     <div className="absolute inset-0 w-full h-full bg-black/5"></div>
 
                                     {/* Active Fill */}
+                                    <div className="absolute inset-0 w-full h-full bg-black/5"></div>
                                     <div
                                         className={`h-full rounded-full transition-all duration-1000 ease-out ${barColorClass}`}
                                         style={{ width: `${percentage}%` }}
                                     ></div>
 
                                     {/* Markers Overlay */}
+
                                     <div className="absolute top-0 left-[33%] w-0.5 h-full bg-white/80"></div>
                                     <div className="absolute top-0 left-[60%] w-0.5 h-full bg-white/80"></div>
                                 </div>
@@ -253,6 +256,12 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     ))}
+                <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8 bg-gray-50/50 rounded-[2rem] border-2 border-dashed border-gray-100">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
+                        <UtensilsCrossed className="w-8 h-8 text-gray-300" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-1">No Active Orders</h3>
+                    <p className="text-gray-400 text-sm max-w-[200px]">New orders will appear here in real-time once placed by customers.</p>
                 </div>
             </div>
         </div>

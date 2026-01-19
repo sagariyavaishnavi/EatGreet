@@ -122,6 +122,16 @@ const AdminMenu = () => {
             window.removeEventListener('menu-update', handleStorageChange);
         };
     }, []);
+    // Mock Data mimicking the screenshot
+    const [menuItems, setMenuItems] = useState(Array.from({ length: 8 }, (_, i) => ({
+        id: (i + 1).toString(),
+        name: 'Margherita Pizza',
+        category: 'MAIN COURSE',
+        price: 199,
+        description: 'Fresh Mozzarella, Tomato sauce, and Basil on our signature wood-fire crust.',
+        image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80', // Pizza image
+        isAvailable: true
+    })));
 
     const [editingItem, setEditingItem] = useState(null);
 
@@ -130,6 +140,9 @@ const AdminMenu = () => {
             item.id === id ? { ...item, isAvailable: !item.isAvailable } : item
         );
         updateMenu(updatedItems);
+        setMenuItems(menuItems.map(item =>
+            item.id === id ? { ...item, isAvailable: !item.isAvailable } : item
+        ));
     };
 
     const handleEdit = (item) => {
@@ -141,6 +154,7 @@ const AdminMenu = () => {
         setNewItemCalories(item.calories || '250 kcal');
         setNewItemTime(item.time || '15-20 min');
         setNewItemIsVeg(item.isVeg === undefined ? true : item.isVeg);
+
         setIsActiveStatus(item.isAvailable);
         setSelectedLabels(item.labels || []);
 
@@ -165,6 +179,7 @@ const AdminMenu = () => {
         if (window.confirm('Are you sure you want to delete this item?')) {
             const updatedItems = menuItems.filter(item => item.id !== id);
             updateMenu(updatedItems);
+            setMenuItems(menuItems.filter(item => item.id !== id));
         }
     };
 
@@ -173,6 +188,7 @@ const AdminMenu = () => {
             alert("Please fill in all required fields (Name, Category, Price).");
             return;
         }
+
         const itemData = {
             id: editingItem ? editingItem.id : Date.now().toString(),
             name: newItemName || 'New Item',
@@ -182,6 +198,7 @@ const AdminMenu = () => {
             calories: newItemCalories,
             time: newItemTime,
             isVeg: newItemIsVeg,
+
             image: mediaItems.length > 0 ? mediaItems[0].url : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
             isAvailable: isActiveStatus,
             labels: selectedLabels,
@@ -195,6 +212,11 @@ const AdminMenu = () => {
             updatedItems = [...menuItems, itemData];
         }
         updateMenu(updatedItems);
+        if (editingItem) {
+            setMenuItems(menuItems.map(item => item.id === editingItem.id ? itemData : item));
+        } else {
+            setMenuItems([...menuItems, itemData]);
+        }
 
         setIsModalOpen(false);
         setEditingItem(null);
@@ -266,6 +288,9 @@ const AdminMenu = () => {
                             <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
                                 <MediaSlider
                                     media={item.media && item.media.length > 0 ? item.media : [{ url: item.image, type: 'image/jpeg' }]}
+                                <img
+                                    src={item.image}
+                                    alt={item.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -346,12 +371,17 @@ const AdminMenu = () => {
                             <Plus className="w-8 h-8 text-[#FD6941]" />
                         </div>
                         <h3 className="font-bold text-lg text-gray-800">Add New Item</h3>
+                        className="border-2 border-dashed border-gray-200 rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[200px] sm:min-h-[350px] group bg-gray-50"
+                    >
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                            <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#FD6941]" />
+                        </div>
+                        <h3 className="font-bold text-base sm:text-lg text-gray-800">Add New Item</h3>
                     </div>
 
                 </div>
             </div>
 
-            {/* Modal Overlay */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
                     <div className="bg-white rounded-[2rem] w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -362,6 +392,13 @@ const AdminMenu = () => {
                             <div className="lg:col-span-5 bg-gray-50 p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
                                 <h3 className="text-xl font-bold text-gray-800 mb-6">Item Media</h3>
                                 <p className="text-sm text-gray-400 mb-4">Add up to 5 images or videos.</p>
+                    <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[95vh] lg:max-h-none overflow-y-auto lg:overflow-visible no-scrollbar">
+
+                            {/* Left Column: Media Upload */}
+                            <div className="lg:col-span-4 bg-gray-50 p-4 sm:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+                                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-4">Item Media</h3>
+                                <p className="text-[10px] sm:text-xs text-gray-400 mb-3">Add up to 5 images or videos.</p>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     {/* Uploaded Media Items */}
@@ -388,6 +425,7 @@ const AdminMenu = () => {
                                     {/* Upload Card (Show if limit not reached) */}
                                     {mediaItems.length < 5 && (
                                         <div className={`border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer ${mediaItems.length === 0 ? 'col-span-2 aspect-auto min-h-[300px]' : ''}`}>
+                                        <div className={`border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer ${mediaItems.length === 0 ? 'col-span-2 aspect-auto min-h-[120px] sm:min-h-[180px]' : ''}`}>
                                             <input
                                                 type="file"
                                                 id="file-upload"
@@ -424,6 +462,15 @@ const AdminMenu = () => {
                                                         });
                                                     }
 
+                                                onChange={(e) => {
+                                                    const files = Array.from(e.target.files);
+                                                    const newMedia = files.map(file => ({
+                                                        name: file.name,
+                                                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                                                        url: URL.createObjectURL(file),
+                                                        type: file.type
+                                                    }));
+
                                                     // Determine how many can be added
                                                     const remainingSlots = 5 - mediaItems.length;
                                                     const itemsToAdd = newMedia.slice(0, remainingSlots);
@@ -445,6 +492,18 @@ const AdminMenu = () => {
                                                 )}
                                                 {mediaItems.length === 0 && (
                                                     <span className="bg-[#FD6941] text-white px-6 py-2 rounded-full font-medium text-sm shadow-sm">
+
+                                                <div className={`bg-orange-100 rounded-full flex items-center justify-center text-[#FD6941] mb-2 ${mediaItems.length === 0 ? 'w-12 h-12' : 'w-8 h-8'}`}>
+                                                    <ImageIcon className={mediaItems.length === 0 ? 'w-6 h-6' : 'w-4 h-4'} />
+                                                </div>
+                                                <h4 className={`text-gray-800 font-bold ${mediaItems.length === 0 ? 'text-sm mb-1' : 'text-[10px] mb-0.5'}`}>
+                                                    {mediaItems.length === 0 ? 'Upload Media' : 'Add More'}
+                                                </h4>
+                                                {mediaItems.length === 0 && (
+                                                    <p className="text-[10px] text-gray-400 mb-3 max-w-[150px]">Browse images or videos</p>
+                                                )}
+                                                {mediaItems.length === 0 && (
+                                                    <span className="bg-[#FD6941] text-white px-4 py-1.5 rounded-full font-medium text-xs shadow-sm">
                                                         Select Files
                                                     </span>
                                                 )}
@@ -455,24 +514,37 @@ const AdminMenu = () => {
                             </div>
 
                             {/* Right Column: Form Details */}
-                            <div className="lg:col-span-7 p-8 lg:p-10 space-y-6">
+                            <div className="lg:col-span-8 p-4 sm:p-6 lg:p-8 space-y-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">Item Details</h3>
+                                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
+                                        <X className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">Item Name</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. Tandoor Burger"
                                         className="w-full px-5 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Item Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Tandoor Burger"
+                                        className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
                                         value={newItemName}
                                         onChange={(e) => setNewItemName(e.target.value)}
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
                                         <div className="relative">
                                             <select
                                                 className="w-full px-5 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
+
+                                                className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
                                                 value={newItemCategory}
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
                                             >
@@ -487,13 +559,18 @@ const AdminMenu = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Price</label>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Price</label>
                                         <div className="relative">
                                             <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
                                             <input
                                                 type="number"
                                                 placeholder="0.00"
                                                 className="w-full pl-8 pr-5 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                                            <input
+                                                type="number"
+                                                placeholder="0.00"
+                                                className="w-full pl-8 pr-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                             />
@@ -550,43 +627,50 @@ const AdminMenu = () => {
                                         rows="4"
                                         placeholder="Describe the ingredients, Preparation, and flavor profile..."
                                         className="w-full px-5 py-4 rounded-3xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Description</label>
+                                    <textarea
+                                        rows="2"
+                                        placeholder="Describe the ingredients..."
+                                        className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
                                         value={newItemDescription}
                                         onChange={(e) => setNewItemDescription(e.target.value)}
                                     ></textarea>
                                 </div>
 
-                                <div className="flex items-center justify-between py-2">
+                                <div className="flex items-center justify-between py-1">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800">Active Status</label>
-                                        <p className="text-xs text-gray-400">Make this item visible on the digital menu immediately</p>
+                                        <label className="block text-xs font-bold text-gray-800">Active Status</label>
+                                        <p className="text-[10px] text-gray-400">Make this item visible on the menu</p>
                                     </div>
                                     <div
                                         onClick={() => setIsActiveStatus(!isActiveStatus)}
-                                        className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in cursor-pointer"
+                                        className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in cursor-pointer"
                                     >
-                                        <div className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
-                                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        <div className={`w-10 h-5 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
+                                        <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-5' : 'translate-x-0'}`}></div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-3">Dietary Labels</label>
-                                    <div className="flex flex-wrap gap-2">
+                                    <label className="block text-xs font-bold text-gray-700 mb-2">Dietary Labels</label>
+                                    <div className="flex flex-wrap gap-1.5">
                                         {['Vegetarian', 'Vegan', 'Non-veg', 'Gluten-Free', 'Spicy'].map((label) => (
                                             <button
                                                 key={label}
                                                 onClick={() => toggleLabel(label)}
                                                 className={`px-4 py-2 rounded-full border text-xs font-bold transition-all flex items-center gap-2 
+
+                                                className={`px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all flex items-center gap-1.5 
                                                     ${selectedLabels.includes(label)
                                                         ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
                                                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                                                     }`}
                                             >
-                                                {label === 'Vegetarian' && <span className="w-2 h-2 rounded-full bg-green-500 ring-2 ring-green-500 ring-offset-1"></span>}
-                                                {label === 'Vegan' && <span className="w-3 h-3 text-green-600">🌿</span>}
-                                                {label === 'Non-veg' && <span className="w-2 h-2 rounded-full bg-red-500 ring-2 ring-red-500 ring-offset-1"></span>}
-                                                {label === 'Gluten-Free' && <span className="w-3 h-3 text-orange-400">🍞</span>}
-                                                {label === 'Spicy' && <span className="w-3 h-3 text-red-500">🌶️</span>}
+                                                {label === 'Vegetarian' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 ring-1 ring-green-500 ring-offset-1"></span>}
+                                                {label === 'Vegan' && <span className="w-2.5 h-2.5 text-green-600">🌿</span>}
+                                                {label === 'Non-veg' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 ring-1 ring-red-500 ring-offset-1"></span>}
+                                                {label === 'Gluten-Free' && <span className="w-2.5 h-2.5 text-orange-400">🍞</span>}
+                                                {label === 'Spicy' && <span className="w-2.5 h-2.5 text-red-500">🌶️</span>}
                                                 {label}
                                             </button>
                                         ))}
@@ -594,15 +678,17 @@ const AdminMenu = () => {
                                 </div>
 
                                 <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">
+
+                                <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
                                     <button
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-8 py-3 rounded-full border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-colors"
+                                        className="px-6 py-2 rounded-full border border-gray-200 text-gray-600 text-xs font-bold hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
-                                        className="px-8 py-3 rounded-full bg-[#FD6941] text-white text-sm font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all"
+                                        className="px-6 py-2 rounded-full bg-[#FD6941] text-white text-xs font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all"
                                     >
                                         Save Item
                                     </button>

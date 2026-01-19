@@ -22,7 +22,6 @@ import AdminProfile from './pages/admin/AdminProfile';
 import AdminSettings from './pages/admin/AdminSettings';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 
-// Kitchen Imports
 import KitchenLayout from './layouts/KitchenLayout';
 import KitchenDashboard from './pages/kitchen/KitchenDashboard';
 import KitchenProfile from './pages/kitchen/KitchenProfile';
@@ -104,7 +103,7 @@ function App() {
           <Route path="menu" element={<Menu />} />
           <Route path="profile" element={<CustomerProfile />} />
           <Route path="favorites" element={<CustomerFavorites />} />
-        </Route>
+         </Route>
 
         {/* Legacy/Shortcut Routes */}
         <Route path="/menu" element={<Navigate to="/customer/menu" replace />} />

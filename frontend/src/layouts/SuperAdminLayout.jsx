@@ -7,6 +7,9 @@ const SuperAdminLayout = () => {
         <div className="flex flex-col min-h-screen bg-gray-50">
             <SuperAdminNavbar />
             <main className="flex-1 px-[30px] py-6 w-full overflow-y-auto">
+        <div className="flex flex-col h-screen bg-[#F0F2F4]">
+            <SuperAdminNavbar />
+            <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-[30px] py-6 w-full no-scrollbar">
                 <Outlet />
             </main>
         </div>

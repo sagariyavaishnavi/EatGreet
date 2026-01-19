@@ -57,6 +57,9 @@ const AdminHeader = () => {
         <Link to="/admin/settings" className="hidden sm:flex w-11 h-11 bg-white hover:bg-gray-50 rounded-full items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
           <Settings className="w-5 h-5" />
         </Link>
+        <button className="hidden sm:flex w-11 h-11 bg-white hover:bg-gray-50 rounded-full items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
+          <Settings className="w-5 h-5" />
+        </button>
         <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black relative">
           <Bell className="w-5 h-5" />
           <span className="absolute top-3 right-3.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
@@ -64,6 +67,7 @@ const AdminHeader = () => {
 
         {/* Profile Capsule */}
         <Link to="/admin/profile" className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+        <div className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
           <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
             <img src="https://ui-avatars.com/api/?name=Admin&background=FD6941&color=fff" alt="Admin" className="w-full h-full object-cover" />
           </div>
@@ -74,6 +78,7 @@ const AdminHeader = () => {
             </svg>
           </div>
         </Link>
+        </div>
       </div>
 
       {/* Mobile Menu Drawer */}

@@ -1,19 +1,19 @@
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { authAPI } from '../../utils/api';
 
-const AdminLogin = () => {
+export default function AdminLogin() {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
+        setIsLoading(true);
 
         try {
             const response = await authAPI.login({ email, password });
@@ -33,80 +33,76 @@ const AdminLogin = () => {
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden p-8 md:p-12">
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-primary">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+        <div className="min-h-screen flex items-center justify-center bg-[#EBF2F2] p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-[#F4F7F7] p-8 md:p-12 rounded-[2.5rem] shadow-xl w-full max-w-md border border-white/50 relative overflow-hidden"
+            >
+                <div className="flex flex-col items-center mb-8">
+                    <div className="mb-2">
+                        <img src="/logo-v.svg" alt="EatGreet Logo" className="w-[120px]" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Eat<span className="text-primary">Greet</span></h2>
-                    <p className="text-gray-500">Sign in to manage your restaurant</p>
+                    <h2 className="text-gray-600 font-medium text-[20px] mt-2">Welcome back</h2>
+                    <p className="text-gray-400 text-[14px] mt-1 font-normal text-center">
+                        Sign in to manage your restaurant
+                    </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-6">
+                <form className="space-y-5" onSubmit={handleLogin}>
                     {error && (
-                        <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg text-center">
+                        <div className="bg-red-50 text-red-500 text-xs p-3 rounded-2xl text-center font-bold">
                             {error}
                         </div>
                     )}
-
-                    <div className="space-y-4">
-                        <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="email"
-                                placeholder="admin@gmail.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 bg-blue-50/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 border-transparent transition-all"
-                                required
-                            />
-                        </div>
-                        <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="password"
-                                placeholder="•••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 bg-blue-50/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 border-transparent transition-all"
-                                required
-                            />
-                        </div>
+                    <div>
+                        <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-6 py-3.5 rounded-full bg-transparent border border-gray-300 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all text-sm"
+                            placeholder="Email*"
+                        />
+                    </div>
+                    <div>
+                        <input
+                            type="password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-6 py-3.5 rounded-full bg-transparent border border-gray-300 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all text-sm"
+                            placeholder="Password*"
+                        />
                     </div>
 
-                    <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center gap-2 text-gray-500 cursor-pointer">
-                            <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
-                            Remember me?
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-400 px-2 font-normal">
+                        <label className="flex items-center cursor-pointer hover:text-gray-600">
+                            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black mr-2" />
+                            <span>Remember me?</span>
                         </label>
-                        <button type="button" className="text-gray-500 hover:text-gray-700">Forget Password?</button>
+                        <a href="#" className="hover:text-gray-600">Forget Password?</a>
                     </div>
 
                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-black text-white py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                        className="w-full bg-black text-white py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-gray-900 transition-all duration-200 text-base tracking-wide mt-4 disabled:opacity-70 flex items-center justify-center gap-2"
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : 'Login'}
                     </button>
-
-                    <div className="text-center text-sm text-gray-500">
-                        New User? <Link to="/signup" className="text-blue-500 font-medium hover:underline">Register</Link>
-                    </div>
                 </form>
-            </div>
+
+                <p className="mt-8 text-center text-sm text-gray-400">
+                    New User? <Link to="/signup" className="text-blue-500 font-medium hover:underline">Register</Link>
+                </p>
+            </motion.div>
         </div>
     );
-};
-
-export default AdminLogin;
+}

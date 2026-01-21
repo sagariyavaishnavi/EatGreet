@@ -5,7 +5,7 @@ const Category = require('../models/Category');
 // @access  Public
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Category.find();
+        const categories = await Category.find({ createdBy: req.user._id });
         res.json(categories);
     } catch (error) {
         res.status(500).json({ message: error.message });

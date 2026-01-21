@@ -36,6 +36,10 @@ const UserSchema = new mongoose.Schema({
     city: {
         type: String
     },
+    currency: {
+        type: String,
+        default: 'USD'
+    },
     createdAt: {
         type: Date,
         default: Date.now

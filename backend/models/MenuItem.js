@@ -27,6 +27,28 @@ const MenuItemSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    labels: {
+        type: [String],
+        default: []
+    },
+    media: [{
+        name: String,
+        url: String,
+        type: String,
+        size: String
+    }],
+    calories: {
+        type: String,
+        default: ''
+    },
+    time: {
+        type: String,
+        default: ''
+    },
+    isVeg: {
+        type: Boolean,
+        default: true
+    },
     restaurant: {
         type: mongoose.Schema.ObjectId,
         ref: 'User', // Admin/Manager user

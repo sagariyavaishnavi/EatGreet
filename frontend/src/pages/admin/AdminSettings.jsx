@@ -15,7 +15,8 @@ const AdminSettings = () => {
         name: user.name || '',
         phone: user.phone || '',
         restaurantName: user.restaurantName || '',
-        city: user.city || ''
+        city: user.city || '',
+        currency: user.currency || 'USD'
     });
 
     const [passwords, setPasswords] = useState({
@@ -207,6 +208,28 @@ const AdminSettings = () => {
                                     <InputGroup label="Contact Number" name="phone" value={profile.phone} onChange={handleProfileChange} />
                                     <InputGroup label="Business Email" defaultValue={user.email || ""} />
                                     <InputGroup label="GST Number" defaultValue="" />
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 mb-2">Currency</label>
+                                        <div className="relative">
+                                            <select
+                                                name="currency"
+                                                value={profile.currency}
+                                                onChange={handleProfileChange}
+                                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-gray-800 text-sm font-bold focus:ring-0 focus:bg-white focus:shadow-sm transition-all outline-none appearance-none cursor-pointer"
+                                            >
+                                                <option value="USD">USD ($)</option>
+                                                <option value="EUR">EUR (€)</option>
+                                                <option value="INR">INR (₹)</option>
+                                                <option value="GBP">GBP (£)</option>
+                                                <option value="JPY">JPY (¥)</option>
+                                                <option value="AUD">AUD (A$)</option>
+                                                <option value="CAD">CAD (C$)</option>
+                                            </select>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div className="md:col-span-2">
                                         <InputGroup label="Address" name="city" value={profile.city} onChange={handleProfileChange} />
                                     </div>

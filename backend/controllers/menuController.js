@@ -5,7 +5,14 @@ const MenuItem = require('../models/MenuItem');
 // @access  Public
 exports.getMenuItems = async (req, res) => {
     try {
-        const menuItems = await MenuItem.find().populate('category');
+        // If user is super-admin, maybe show all? For now, let's filter by the logged-in restaurant owner
+        // to support the requirement "every new restaurant new menu" (data isolation).
+        const query = { restaurant: req.user._id };
+
+        // If you want to allow Public access (e.g. for customers), you'd need a different route or logic.
+        // But this is likely the Admin API.
+
+        const menuItems = await MenuItem.find(query).populate('category');
         res.json(menuItems);
     } catch (error) {
         res.status(500).json({ message: error.message });

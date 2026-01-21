@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../../utils/api';
-import logo from '../../assets/logo-full.png';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -47,7 +46,7 @@ export default function Login() {
             >
                 <div className="flex flex-col items-center mb-8">
                     <div className="mb-2">
-                        <img src={logo} alt="EatGreet Logo" className="w-[180px]" />
+                        <img src="/logo-v.svg" alt="EatGreet Logo" className="w-[180px]" />
                     </div>
                     <p className="text-gray-500 text-sm mt-2 font-medium text-center">
                         Sign in to manage your restaurant

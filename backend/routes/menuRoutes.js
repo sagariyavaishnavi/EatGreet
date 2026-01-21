@@ -10,7 +10,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 router
     .route('/')
-    .get(getMenuItems)
+    .get(protect, getMenuItems)
     .post(protect, authorize('admin', 'super-admin'), createMenuItem);
 
 router

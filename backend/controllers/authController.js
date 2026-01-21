@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role, restaurantName, phone, city } = req.body;
+        const { name, email, password, role, restaurantName, phone, city, currency } = req.body;
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -29,7 +29,8 @@ exports.register = async (req, res) => {
             role: role || 'customer',
             restaurantName,
             phone,
-            city
+            city,
+            currency
         });
 
         if (user) {
@@ -41,6 +42,7 @@ exports.register = async (req, res) => {
                 restaurantName: user.restaurantName,
                 phone: user.phone,
                 city: user.city,
+                currency: user.currency,
                 token: generateToken(user._id)
             });
         }
@@ -68,6 +70,7 @@ exports.login = async (req, res) => {
                 restaurantName: user.restaurantName,
                 phone: user.phone,
                 city: user.city,
+                currency: user.currency,
                 token: generateToken(user._id)
             });
         } else {
@@ -93,7 +96,8 @@ exports.getProfile = async (req, res) => {
                 role: user.role,
                 restaurantName: user.restaurantName,
                 phone: user.phone,
-                city: user.city
+                city: user.city,
+                currency: user.currency
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -126,6 +130,7 @@ exports.updateProfile = async (req, res) => {
             user.phone = req.body.phone || user.phone;
             user.restaurantName = req.body.restaurantName || user.restaurantName;
             user.city = req.body.city || user.city;
+            user.currency = req.body.currency || user.currency;
 
             const updatedUser = await user.save();
 
@@ -137,6 +142,7 @@ exports.updateProfile = async (req, res) => {
                 restaurantName: updatedUser.restaurantName,
                 phone: updatedUser.phone,
                 city: updatedUser.city,
+                currency: updatedUser.currency,
                 token: generateToken(updatedUser._id)
             });
         } else {

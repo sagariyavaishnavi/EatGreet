@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { MENU_ITEMS_KEY, CATEGORIES_KEY } from '../../constants';
 import {
     Search, Heart, Plus, Minus, ShoppingBag,
@@ -96,7 +96,16 @@ const Menu = () => {
 
     const user = JSON.parse(localStorage.getItem('user')) || {};
 
-    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [searchParams] = useSearchParams();
+    const initialCategory = searchParams.get('category') || "All";
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+    
+    // Update selected category if URL params change
+    useEffect(() => {
+        const cat = searchParams.get('category');
+        if (cat) setSelectedCategory(cat);
+    }, [searchParams]);
+
     const [searchQuery, setSearchQuery] = useState("");
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [menuItems, setMenuItems] = useState([]);

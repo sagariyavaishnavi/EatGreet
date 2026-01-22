@@ -8,7 +8,7 @@ const MenuItemSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: [true, 'Please add a description']
+        default: ''
     },
     price: {
         type: Number,
@@ -31,12 +31,15 @@ const MenuItemSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
-    media: [{
-        name: String,
-        url: String,
-        type: String,
-        size: String
-    }],
+    media: {
+        type: [new mongoose.Schema({
+            name: String,
+            url: String,
+            type: String,
+            size: String
+        }, { _id: false })],
+        default: []
+    },
     calories: {
         type: String,
         default: ''

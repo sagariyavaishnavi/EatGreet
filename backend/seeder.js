@@ -4,12 +4,22 @@ const User = require('./models/User');
 const Category = require('./models/Category');
 const MenuItem = require('./models/MenuItem');
 
-dotenv.config();
+const path = require('path');
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const seedData = async () => {
     try {
+        // Fallback if env vars fail
+        if (!process.env.MONGO_URI) { 
+             process.env.MONGO_URI = 'mongodb://localhost:27017/eatgreet';
+        }
+        
+        console.log(`Connecting to: ${process.env.MONGO_URI}`);
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 }).catch(err => {
+            console.error('Failed to connect to primary URI, attempting fallback to local...');
+            return mongoose.connect('mongodb://localhost:27017/eatgreet');
+        });
         console.log('MongoDB Connected...');
 
         // Clear existing data
@@ -21,7 +31,7 @@ const seedData = async () => {
         const superAdmin = await User.create({
             name: 'Super Admin',
             email: 'admin@eatgreet.com',
-            password: 'admin', // In production, use a strong password
+            password: 'password123', // Must be at least 6 characters
             role: 'super-admin'
         });
 
@@ -29,7 +39,7 @@ const seedData = async () => {
         const restaurantAdmin = await User.create({
             name: 'John Doe',
             email: 'admin@gmail.com',
-            password: 'admin',
+            password: 'password123', // Must be at least 6 characters
             role: 'admin',
             restaurantName: "John's Kitchen"
         });

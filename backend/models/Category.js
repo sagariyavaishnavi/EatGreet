@@ -11,6 +11,11 @@ const CategorySchema = new mongoose.Schema({
         type: String, // lucide icon name or image url
         default: 'Utensils'
     },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'INACTIVE'],
+        default: 'ACTIVE'
+    },
     createdBy: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',

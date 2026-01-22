@@ -262,11 +262,14 @@
 
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet } from 'lucide-react';
+
 import { categoryAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const AdminCategory = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
@@ -278,11 +281,18 @@ const AdminCategory = () => {
 
     const iconOptions = [
         { icon: Utensils, label: 'Utensils' },
+        { icon: Leaf, label: 'Vegan/Veg' },
         { icon: Coffee, label: 'Coffee' },
         { icon: Pizza, label: 'Pizza' },
-        { icon: Salad, label: 'Salad' },
-        { icon: Cake, label: 'Cake' },
+        { icon: Salad, label: 'Healthy' },
+        { icon: Cake, label: 'Dessert' },
         { icon: Sandwich, label: 'Sandwich' },
+        { icon: Wheat, label: 'Grain' },
+        { icon: Flame, label: 'Spicy' },
+        { icon: Egg, label: 'Egg' },
+        { icon: Fish, label: 'Seafood' },
+        { icon: Milk, label: 'Dairy' },
+        { icon: Droplet, label: 'Liquid' },
     ];
 
     useEffect(() => {
@@ -318,11 +328,13 @@ const AdminCategory = () => {
         if (!newCategoryName.trim()) return;
 
         try {
+            // Find the label for the selected icon component
+            const selectedOpt = iconOptions.find(opt => opt.icon === selectedIcon);
+            const iconLabel = selectedOpt ? selectedOpt.label : 'Utensils';
+
             const categoryData = {
                 name: newCategoryName,
-                // Sending a default icon string for now as the backend expects a string,
-                // and the UI uses components. Ideally, we map the selected component to a string name.
-                icon: 'Utensils',
+                icon: iconLabel,
                 status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE'
             };
 
@@ -418,22 +430,29 @@ const AdminCategory = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Category Cards */}
-                    {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => (
-                        <div key={category._id} className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
+                    {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => {
+                         // Find the icon component based on the label, or default to Utensils
+                         const matchedOption = iconOptions.find(opt => opt.label === category.icon) || iconOptions[0];
+                         const DisplayIcon = matchedOption.icon;
+                         
+                         return (
+                        <div key={category._id} 
+                             onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
+                             className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:border-[#FD6941]">
                             {/* Top: Icon and Actions */}
                             <div className="flex justify-between items-start mb-6">
                                 <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
-                                    <Utensils className="w-7 h-7 text-gray-500" />
+                                    <DisplayIcon className="w-7 h-7" />
                                 </div>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        onClick={() => handleEdit(category)}
+                                        onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
                                         className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
                                     >
                                         <Pencil className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(category._id)}
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
                                         className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -456,7 +475,10 @@ const AdminCategory = () => {
                                     </span>
                                 </div>
 
-                                <label className="flex items-center cursor-pointer">
+                                <label
+                                    className="flex items-center cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <div className="relative">
                                         <input
                                             type="checkbox"
@@ -470,7 +492,8 @@ const AdminCategory = () => {
                                 </label>
                             </div>
                         </div>
-                    ))}
+                        ); // Closing the return statement of map
+                    })}
 
                     {/* Add New Category Card */}
                     <div
@@ -505,7 +528,7 @@ const AdminCategory = () => {
                                     {iconOptions.map((opt, idx) => (
                                         <button
                                             key={idx}
-                                            onClick={() => setSelectedIcon(opt.icon)}
+                                            onClick={() => setSelectedIcon(opt.icon)} // We select the component for visual feedback
                                             className={`p-2 rounded-xl flex items-center justify-center transition-all ${selectedIcon === opt.icon ? 'bg-[#FD6941] text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                                             title={opt.label}
                                         >
@@ -514,14 +537,12 @@ const AdminCategory = () => {
                                     ))}
                                 </div>
 
-                                {/* File Upload Area */}
-                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors group">
+                                {/* Active Icon Preview */}
+                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center group">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${selectedIcon ? 'bg-orange-100 text-[#FD6941]' : 'bg-gray-100 text-gray-400'}`}>
                                         <ActiveIcon className="w-5 h-5" />
                                     </div>
-                                    <p className="text-xs text-gray-500 font-medium">Click to upload custom SVG</p>
-                                    <p className="text-[10px] text-gray-400 mt-1">Recommended 24x24px</p>
-                                    <input type="file" className="hidden" accept=".svg" />
+                                    <p className="text-xs text-gray-500 font-medium">Selected Icon</p>
                                 </div>
                             </div>
 

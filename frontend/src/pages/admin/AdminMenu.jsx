@@ -427,7 +427,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
-import { menuAPI, categoryAPI } from '../../utils/api';
+import { menuAPI, categoryAPI, uploadAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 // Dietary Icons
@@ -453,6 +453,8 @@ const dietaryIcons = {
     'Vegan': veganIcon,
     'Dairy': dairyIcon,
     'Keto': ketoIcon,
+    'Vegetarian': veganIcon, // reused plant icon
+    'Non-Vegetarian': seafoodIcon, // reused seafood icon as proxy for meat
 };
 
 // Filter to make icons orange (#FD6941)
@@ -574,6 +576,25 @@ const AdminMenu = () => {
         fetchData();
     }, []);
 
+    // Filter Logic
+    useEffect(() => {
+        let result = menuItems;
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase();
+            result = result.filter(item => {
+                const catName = typeof item.category === 'object' ? item.category?.name : item.category;
+                return item.name.toLowerCase().includes(lowerTerm) ||
+                    (catName && catName.toLowerCase().includes(lowerTerm));
+            });
+        }
+        if (selectedCategoryFilter) {
+            result = result.filter(item => {
+                const catId = typeof item.category === 'object' ? item.category?._id : item.category;
+                return catId === selectedCategoryFilter;
+            });
+        }
+        setFilteredItems(result);
+    }, [menuItems, searchTerm, selectedCategoryFilter]);
     const [editingItem, setEditingItem] = useState(null);
 
     const toggleStatus = async (id) => {
@@ -602,6 +623,94 @@ const AdminMenu = () => {
         setSelectedLabels(item.labels || []);
         setMediaItems(item.media || (item.image ? [{ name: 'Image', url: item.image, type: 'image/jpeg' }] : []));
         setIsModalOpen(true);
+    };
+
+    const handleFileUpload = async (e) => {
+        let files = Array.from(e.target.files);
+        
+        // Calculate remaining slots
+        const maxSlots = 5;
+        const remainingSlots = maxSlots - mediaItems.length;
+
+        if (remainingSlots <= 0) {
+            toast.error("You have reached the maximum limit of 5 media items.");
+            return;
+        }
+
+        if (files.length > remainingSlots) {
+            toast(
+                `Only the first ${remainingSlots} file(s) will be uploaded due to the 5-item limit.`,
+                { icon: '⚠️' }
+            );
+            files = files.slice(0, remainingSlots);
+        }
+
+        const uploadToast = toast.loading(`Starting upload of ${files.length} media item(s)...`);
+        let successCount = 0;
+        let failCount = 0;
+        
+        try {
+            const uploadPromises = files.map(async (file) => {
+                try {
+                    // Check file size (100MB limit)
+                    if (file.size > 100 * 1024 * 1024) {
+                         throw new Error(`File ${file.name} exceeds 100MB limit`);
+                    }
+
+                    // Check video duration (30s limit)
+                    if (file.type.startsWith('video/')) {
+                        const duration = await new Promise((resolve, reject) => {
+                            const video = document.createElement('video');
+                            video.preload = 'metadata';
+                            video.onloadedmetadata = () => {
+                                window.URL.revokeObjectURL(video.src);
+                                resolve(video.duration);
+                            };
+                            video.onerror = () => reject(new Error("Invalid video file"));
+                            video.src = window.URL.createObjectURL(file);
+                        });
+
+                        if (duration > 30) {
+                            throw new Error(`Video ${file.name} exceeds the 30-second limit`);
+                        }
+                    }
+
+                    // Direct Upload to Cloudinary with Progress
+                    const res = await uploadAPI.uploadDirect(file, (percent) => {
+                        toast.loading(`Uploading ${successCount}/${files.length} items...\n${file.name}: ${percent}%`, { id: uploadToast });
+                    });
+                    
+                    const newItem = {
+                        name: file.name,
+                        url: res.data.secure_url, // Cloudinary returns secure_url
+                        type: file.type,
+                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+                    };
+
+                    // Update state immediately upon success
+                    setMediaItems(prev => [...prev, newItem].slice(0, 5));
+                    successCount++;
+                    toast.loading(`Uploaded ${successCount}/${files.length} media item(s)...`, { id: uploadToast });
+
+                } catch (error) {
+                    console.error('File Upload failed:', error);
+                    failCount++;
+                    toast.error(`Failed ${file.name}: ${error.message}`, { duration: 4000 });
+                }
+            });
+
+            await Promise.all(uploadPromises);
+
+            if (failCount === 0) {
+                toast.success(`Successfully uploaded ${successCount} item(s)`, { id: uploadToast });
+            } else {
+                toast.error(`Completed with ${failCount} error(s)`, { id: uploadToast });
+            }
+
+        } catch (error) {
+            console.error('Batch Upload Error:', error);
+            toast.error('Unexpected error during upload', { id: uploadToast });
+        }
     };
 
     const handleDelete = async (id) => {
@@ -931,44 +1040,7 @@ const AdminMenu = () => {
                                                 className="hidden"
                                                 accept="image/*,video/*"
                                                 multiple
-                                                onChange={async (e) => {
-                                                    const files = Array.from(e.target.files);
-                                                    const newMedia = [];
-
-                                                    for (const file of files) {
-                                                        if (file.type.startsWith('video')) {
-                                                            const duration = await new Promise((resolve) => {
-                                                                const video = document.createElement('video');
-                                                                video.preload = 'metadata';
-                                                                video.onloadedmetadata = function () {
-                                                                    window.URL.revokeObjectURL(video.src);
-                                                                    resolve(video.duration);
-                                                                }
-                                                                video.src = URL.createObjectURL(file);
-                                                            });
-
-                                                            if (duration > 30) {
-                                                                alert(`Video ${file.name} exceeds 30 seconds limit.`);
-                                                                continue;
-                                                            }
-                                                        }
-
-                                                        newMedia.push({
-                                                            name: file.name,
-                                                            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                                                            url: URL.createObjectURL(file),
-                                                            type: file.type
-                                                        });
-                                                    }
-
-                                                    // Determine how many can be added
-                                                    const remainingSlots = 5 - mediaItems.length;
-                                                    const itemsToAdd = newMedia.slice(0, remainingSlots);
-
-                                                    if (itemsToAdd.length > 0) {
-                                                        setMediaItems([...mediaItems, ...itemsToAdd]);
-                                                    }
-                                                }}
+                                                onChange={handleFileUpload}
                                             />
                                             <label htmlFor="file-upload" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
                                                 <div className={`bg-orange-100 rounded-full flex items-center justify-center text-[#FD6941] mb-2 ${mediaItems.length === 0 ? 'w-12 h-12' : 'w-8 h-8'}`}>
@@ -1020,9 +1092,11 @@ const AdminMenu = () => {
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
                                             >
                                                 <option value="" disabled>Select Category</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                ))}
+                                                {categories
+                                                    .filter(cat => cat.status !== 'INACTIVE')
+                                                    .map((cat) => (
+                                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                    ))}
                                                 {categories.length === 0 && <option value="">No categories found</option>}
                                             </select>
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -1116,7 +1190,7 @@ const AdminMenu = () => {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-700 mb-2">Dietary Labels</label>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain',].map((label) => (
+                                        {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
                                             <button
                                                 key={label}
                                                 onClick={() => toggleLabel(label)}

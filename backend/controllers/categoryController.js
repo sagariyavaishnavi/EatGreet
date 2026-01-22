@@ -5,7 +5,13 @@ const Category = require('../models/Category');
 // @access  Public
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Category.find({ createdBy: req.user._id });
+        let query = {};
+        if (req.user.role === 'admin') {
+            query = { createdBy: req.user._id };
+        }
+        // If customer, query is empty (show all)
+
+        const categories = await Category.find(query);
         res.json(categories);
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -51,4 +51,34 @@ export const statsAPI = {
     getSuperAdminStats: () => api.get('/stats/super-admin')
 };
 
+export const uploadAPI = {
+    uploadFile: (formData) => api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    uploadDirect: async (file, onProgress) => {
+        // 1. Get Signature from backend
+        const { data: sigData } = await api.get('/upload/signature');
+        
+        // 2. Prepare FormData for Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', sigData.apiKey);
+        formData.append('timestamp', sigData.timestamp);
+        formData.append('signature', sigData.signature);
+        formData.append('folder', sigData.folder);
+
+        // 3. Upload directly to Cloudinary
+        const cloudUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`;
+        return axios.post(cloudUrl, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            onUploadProgress: (progressEvent) => {
+                if (onProgress) {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    onProgress(percentCompleted);
+                }
+            }
+        });
+    }
+};
+
 export default api;

@@ -5,12 +5,14 @@ const MenuItem = require('../models/MenuItem');
 // @access  Public
 exports.getMenuItems = async (req, res) => {
     try {
-        // If user is super-admin, maybe show all? For now, let's filter by the logged-in restaurant owner
-        // to support the requirement "every new restaurant new menu" (data isolation).
-        const query = { restaurant: req.user._id };
+        let query = {};
 
-        // If you want to allow Public access (e.g. for customers), you'd need a different route or logic.
-        // But this is likely the Admin API.
+        // If user is a customer (role 'user'), show ALL menu items (from all restaurants)
+        // If user is admin, show only THEIR menu items (so they can manage them)
+        // If super-admin, show all
+        if (req.user.role === 'admin') {
+            query = { restaurant: req.user._id };
+        }
 
         const menuItems = await MenuItem.find(query).populate('category');
         res.json(menuItems);
@@ -28,7 +30,11 @@ exports.createMenuItem = async (req, res) => {
         const menuItem = await MenuItem.create(req.body);
         res.status(201).json(menuItem);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Create Menu Item Error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: Object.values(error.errors).map(val => val.message).join(', ') });
+        }
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 

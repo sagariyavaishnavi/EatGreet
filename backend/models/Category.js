@@ -4,12 +4,11 @@ const CategorySchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Please add a category name'],
-        unique: true,
         trim: true
     },
     icon: {
-        type: String, // lucide icon name or image url
-        default: 'Utensils'
+        type: String,
+        required: [true, 'Please add an icon']
     },
     status: {
         type: String,
@@ -27,4 +26,6 @@ const CategorySchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Category', CategorySchema);
+CategorySchema.index({ name: 1, createdBy: 1 }, { unique: true });
+
+module.exports = CategorySchema;

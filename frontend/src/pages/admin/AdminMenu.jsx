@@ -627,7 +627,7 @@ const AdminMenu = () => {
 
     const handleFileUpload = async (e) => {
         let files = Array.from(e.target.files);
-        
+
         // Calculate remaining slots
         const maxSlots = 5;
         const remainingSlots = maxSlots - mediaItems.length;
@@ -648,13 +648,13 @@ const AdminMenu = () => {
         const uploadToast = toast.loading(`Starting upload of ${files.length} media item(s)...`);
         let successCount = 0;
         let failCount = 0;
-        
+
         try {
             const uploadPromises = files.map(async (file) => {
                 try {
                     // Check file size (100MB limit)
                     if (file.size > 100 * 1024 * 1024) {
-                         throw new Error(`File ${file.name} exceeds 100MB limit`);
+                        throw new Error(`File ${file.name} exceeds 100MB limit`);
                     }
 
                     // Check video duration (30s limit)
@@ -679,7 +679,7 @@ const AdminMenu = () => {
                     const res = await uploadAPI.uploadDirect(file, (percent) => {
                         toast.loading(`Uploading ${successCount}/${files.length} items...\n${file.name}: ${percent}%`, { id: uploadToast });
                     });
-                    
+
                     const newItem = {
                         name: file.name,
                         url: res.data.secure_url, // Cloudinary returns secure_url
@@ -713,16 +713,35 @@ const AdminMenu = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this item?')) {
-            try {
-                await menuAPI.delete(id);
-                toast.success('Item deleted successfully');
-                fetchData();
-            } catch (error) {
-                toast.error('Failed to delete item');
-            }
-        }
+    const handleDelete = (id) => {
+        toast((t) => (
+            <div className="flex flex-col gap-3">
+                <p className="font-medium text-gray-800 text-sm">Delete this item?</p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                await menuAPI.delete(id);
+                                toast.success('Item deleted successfully');
+                                fetchData();
+                            } catch (error) {
+                                toast.error('Failed to delete item');
+                            }
+                        }}
+                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     const handleSave = async () => {

@@ -33,14 +33,14 @@ export const authAPI = {
 };
 
 export const menuAPI = {
-    getAll: () => api.get('/menu'),
+    getAll: (restaurantId) => api.get('/menu', { params: { restaurantId } }),
     create: (itemData) => api.post('/menu', itemData),
     update: (id, itemData) => api.put(`/menu/${id}`, itemData),
     delete: (id) => api.delete(`/menu/${id}`)
 };
 
 export const categoryAPI = {
-    getAll: () => api.get('/categories'),
+    getAll: (restaurantId) => api.get('/categories', { params: { restaurantId } }),
     create: (categoryData) => api.post('/categories', categoryData),
     update: (id, categoryData) => api.put(`/categories/${id}`, categoryData),
     delete: (id) => api.delete(`/categories/${id}`)
@@ -51,6 +51,17 @@ export const statsAPI = {
     getSuperAdminStats: () => api.get('/stats/super-admin')
 };
 
+export const orderAPI = {
+    getOrders: (restaurantId) => api.get('/orders', { params: { restaurantId } }),
+    create: (orderData) => api.post('/orders', orderData),
+    updateStatus: (id, status) => api.put(`/orders/${id}`, { status })
+};
+
+export const restaurantAPI = {
+    getDetails: (restaurantId) => api.get(`/restaurant/${restaurantId}`),
+    updateDetails: (details) => api.put('/restaurant', details)
+};
+
 export const uploadAPI = {
     uploadFile: (formData) => api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -58,7 +69,7 @@ export const uploadAPI = {
     uploadDirect: async (file, onProgress) => {
         // 1. Get Signature from backend
         const { data: sigData } = await api.get('/upload/signature');
-        
+
         // 2. Prepare FormData for Cloudinary
         const formData = new FormData();
         formData.append('file', file);

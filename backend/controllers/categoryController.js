@@ -1,17 +1,12 @@
-const Category = require('../models/Category');
-
 // @desc    Get all categories
 // @route   GET /api/categories
 // @access  Public
 exports.getCategories = async (req, res) => {
     try {
-        let query = {};
-        if (req.user.role === 'admin') {
-            query = { createdBy: req.user._id };
-        }
-        // If customer, query is empty (show all)
+        if (!req.tenantModels) return res.json([]);
+        const { Category } = req.tenantModels;
 
-        const categories = await Category.find(query);
+        const categories = await Category.find({});
         res.json(categories);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -23,11 +18,21 @@ exports.getCategories = async (req, res) => {
 // @access  Private/Admin
 exports.createCategory = async (req, res) => {
     try {
+        if (!req.tenantModels) return res.status(400).json({ message: 'Tenant resolution failed' });
+        const { Category } = req.tenantModels;
+
         const { name, icon } = req.body;
+
+        // Validate required fields
+        if (!name || !icon) {
+            return res.status(400).json({
+                message: 'Please provide all required fields: name, icon'
+            });
+        }
 
         const category = await Category.create({
             name,
-            icon: icon || 'Utensils',
+            icon,
             createdBy: req.user._id
         });
 
@@ -43,11 +48,11 @@ exports.createCategory = async (req, res) => {
 // @access  Private/Admin
 exports.updateCategory = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        if (!req.tenantModels) return res.status(400).json({ message: 'Tenant resolution failed' });
+        const { Category } = req.tenantModels;
 
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
+        const category = await Category.findById(req.params.id);
+        if (!category) return res.status(404).json({ message: 'Category not found' });
 
         const updatedCategory = await Category.findByIdAndUpdate(
             req.params.id,
@@ -66,11 +71,11 @@ exports.updateCategory = async (req, res) => {
 // @access  Private/Admin
 exports.deleteCategory = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        if (!req.tenantModels) return res.status(400).json({ message: 'Tenant resolution failed' });
+        const { Category } = req.tenantModels;
 
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
+        const category = await Category.findById(req.params.id);
+        if (!category) return res.status(404).json({ message: 'Category not found' });
 
         await category.deleteOne();
         res.json({ message: 'Category removed' });

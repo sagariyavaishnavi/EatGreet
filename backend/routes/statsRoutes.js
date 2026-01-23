@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const MenuItem = require('../models/MenuItem');
-const Category = require('../models/Category');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const { resolveTenant } = require('../middleware/tenantMiddleware');
 
 // Get stats for Admin (Restaurant Manager)
-router.get('/admin', protect, authorize('admin'), async (req, res) => {
+router.get('/admin', protect, authorize('admin'), resolveTenant, async (req, res) => {
     try {
-        const menuCount = await MenuItem.countDocuments({ restaurant: req.user._id });
-        const categoryCount = await Category.countDocuments({ createdBy: req.user._id });
+        if (!req.tenantModels) {
+            return res.status(400).json({ message: 'Tenant context required' });
+        }
+        const { MenuItem, Category } = req.tenantModels;
+
+        const menuCount = await MenuItem.countDocuments({});
+        const categoryCount = await Category.countDocuments({});
 
         // Generate semi-random but consistent stats for demo
         const totalOrders = Math.floor(Math.random() * 50) + 100;
@@ -38,13 +42,12 @@ router.get('/super-admin', protect, authorize('super-admin'), async (req, res) =
         const totalRestaurants = await User.countDocuments({ role: 'admin' });
         const totalCustomers = await User.countDocuments({ role: 'customer' });
 
-        // Structure data for frontend
         res.json({
             totalRestaurants,
             totalCustomers,
-            activeSubscriptions: totalRestaurants, // Assuming all admins are active for now
-            monthlyRevenue: totalRestaurants * 1200, // Mocked 1200 per restaurant
-            unpaidRestaurants: Math.floor(totalRestaurants * 0.1), // Mocked 10% unpaid
+            activeSubscriptions: totalRestaurants,
+            monthlyRevenue: totalRestaurants * 1200,
+            unpaidRestaurants: Math.floor(totalRestaurants * 0.1),
             revenueData: [
                 { name: 'Jan', value: totalRestaurants * 1000 },
                 { name: 'Feb', value: totalRestaurants * 1100 },

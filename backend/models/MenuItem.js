@@ -8,7 +8,7 @@ const MenuItemSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        default: ''
+        required: [true, 'Please add a description']
     },
     price: {
         type: Number,
@@ -16,7 +16,7 @@ const MenuItemSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        default: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'
+        required: [true, 'Please add an image']
     },
     category: {
         type: mongoose.Schema.ObjectId,
@@ -27,43 +27,14 @@ const MenuItemSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    labels: {
-        type: [String],
-        default: []
-    },
-    media: {
-        type: [new mongoose.Schema({
-            name: String,
-            url: String,
-            type: String,
-            size: String
-        }, { _id: false })],
-        default: []
-    },
-    calories: {
-        type: String,
-        default: ''
-    },
-    time: {
-        type: String,
-        default: ''
-    },
     isVeg: {
         type: Boolean,
-        default: true
+        required: [true, 'Please specify if the item is vegetarian']
     },
     restaurant: {
         type: mongoose.Schema.ObjectId,
-        ref: 'User', // Admin/Manager user
+        ref: 'User',
         required: true
-    },
-    rating: {
-        type: Number,
-        default: 4.5
-    },
-    reviews: {
-        type: Number,
-        default: 0
     },
     createdAt: {
         type: Date,
@@ -71,4 +42,4 @@ const MenuItemSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('MenuItem', MenuItemSchema);
+module.exports = MenuItemSchema;

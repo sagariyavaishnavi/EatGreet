@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const connectDB = require('./config/db');
 
 // Load env vars with absolute path and fallback
 dotenv.config({ path: path.resolve(__dirname, '.env') });
@@ -16,15 +15,13 @@ if (!process.env.PORT) {
     process.env.PORT = 5000;
 }
 
-// Connect to database
-connectDB();
+const { resolveTenant } = require('./middleware/tenantMiddleware');
 
 const app = express();
 
 // Body parser
 app.use(express.json());
 
-// Enable CORS
 // Enable CORS
 app.use(cors({
     origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
@@ -39,8 +36,11 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/menu', require('./routes/menuRoutes'));
-app.use('/api/categories', require('./routes/categoryRoutes'));
+
+// Apply tenant resolution to data routes
+app.use('/api/menu', resolveTenant, require('./routes/menuRoutes'));
+app.use('/api/categories', resolveTenant, require('./routes/categoryRoutes'));
+app.use('/api/orders', resolveTenant, require('./routes/orderRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 

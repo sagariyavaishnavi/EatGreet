@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { getTenantModels } = require('../utils/tenantHelper');
 
 // Create Token
 const generateToken = (id) => {
@@ -13,7 +14,14 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role, restaurantName, phone, city, currency } = req.body;
+        const { name, email, password, restaurantName, phone, city } = req.body;
+
+        // Validate all required fields
+        if (!name || !email || !password || !restaurantName || !phone || !city) {
+            return res.status(400).json({
+                message: 'Please provide all required fields: name, email, password, restaurantName, phone, city'
+            });
+        }
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -26,11 +34,10 @@ exports.register = async (req, res) => {
             name,
             email,
             password,
-            role: role || 'customer',
             restaurantName,
             phone,
             city,
-            currency
+            role: 'admin'
         });
 
         if (user) {
@@ -42,7 +49,6 @@ exports.register = async (req, res) => {
                 restaurantName: user.restaurantName,
                 phone: user.phone,
                 city: user.city,
-                currency: user.currency,
                 token: generateToken(user._id)
             });
         }
@@ -70,7 +76,6 @@ exports.login = async (req, res) => {
                 restaurantName: user.restaurantName,
                 phone: user.phone,
                 city: user.city,
-                currency: user.currency,
                 token: generateToken(user._id)
             });
         } else {
@@ -96,8 +101,7 @@ exports.getProfile = async (req, res) => {
                 role: user.role,
                 restaurantName: user.restaurantName,
                 phone: user.phone,
-                city: user.city,
-                currency: user.currency
+                city: user.city
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -130,7 +134,6 @@ exports.updateProfile = async (req, res) => {
             user.phone = req.body.phone || user.phone;
             user.restaurantName = req.body.restaurantName || user.restaurantName;
             user.city = req.body.city || user.city;
-            user.currency = req.body.currency || user.currency;
 
             const updatedUser = await user.save();
 
@@ -142,7 +145,6 @@ exports.updateProfile = async (req, res) => {
                 restaurantName: updatedUser.restaurantName,
                 phone: updatedUser.phone,
                 city: updatedUser.city,
-                currency: updatedUser.currency,
                 token: generateToken(updatedUser._id)
             });
         } else {

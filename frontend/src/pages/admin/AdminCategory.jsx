@@ -377,16 +377,35 @@ const AdminCategory = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this category?')) {
-            try {
-                await categoryAPI.delete(id);
-                toast.success('Category deleted');
-                fetchCategories();
-            } catch (error) {
-                toast.error('Failed to delete category');
-            }
-        }
+    const handleDelete = (id) => {
+        toast((t) => (
+            <div className="flex flex-col gap-3">
+                <p className="font-medium text-gray-800 text-sm">Delete this category? Items will be uncategorized.</p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                await categoryAPI.delete(id);
+                                toast.success('Category deleted successfully');
+                                fetchCategories();
+                            } catch (error) {
+                                toast.error('Failed to delete category');
+                            }
+                        }}
+                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     const ActiveIcon = selectedIcon || Utensils;
@@ -431,67 +450,67 @@ const AdminCategory = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Category Cards */}
                     {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => {
-                         // Find the icon component based on the label, or default to Utensils
-                         const matchedOption = iconOptions.find(opt => opt.label === category.icon) || iconOptions[0];
-                         const DisplayIcon = matchedOption.icon;
-                         
-                         return (
-                        <div key={category._id} 
-                             onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
-                             className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:border-[#FD6941]">
-                            {/* Top: Icon and Actions */}
-                            <div className="flex justify-between items-start mb-6">
-                                <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
-                                    <DisplayIcon className="w-7 h-7" />
-                                </div>
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
-                                        className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
-                                        className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
+                        // Find the icon component based on the label, or default to Utensils
+                        const matchedOption = iconOptions.find(opt => opt.label === category.icon) || iconOptions[0];
+                        const DisplayIcon = matchedOption.icon;
 
-                            {/* Middle: Title */}
-                            <div className="mb-8">
-                                <h3 className="text-xl font-bold text-gray-800 mb-1">{category.name}</h3>
-                                <p className="text-gray-400 text-sm font-medium">{category.count || 0} Items Available</p>
-                            </div>
-
-                            {/* Bottom: Status & Toggle */}
-                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                        {category.status || 'INACTIVE'}
-                                    </span>
-                                </div>
-
-                                <label
-                                    className="flex items-center cursor-pointer"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <div className="relative">
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only"
-                                            checked={category.status === 'ACTIVE'}
-                                            onChange={() => toggleStatus(category._id)}
-                                        />
-                                        <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ${category.status === 'ACTIVE' ? 'bg-[#FD6941]' : 'bg-gray-300'}`}></div>
-                                        <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                        return (
+                            <div key={category._id}
+                                onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
+                                className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:border-[#FD6941]">
+                                {/* Top: Icon and Actions */}
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
+                                        <DisplayIcon className="w-7 h-7" />
                                     </div>
-                                </label>
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
+                                            className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Middle: Title */}
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{category.name}</h3>
+                                    <p className="text-gray-400 text-sm font-medium">{category.count || 0} Items Available</p>
+                                </div>
+
+                                {/* Bottom: Status & Toggle */}
+                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                            {category.status || 'INACTIVE'}
+                                        </span>
+                                    </div>
+
+                                    <label
+                                        className="flex items-center cursor-pointer"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={category.status === 'ACTIVE'}
+                                                onChange={() => toggleStatus(category._id)}
+                                            />
+                                            <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ${category.status === 'ACTIVE' ? 'bg-[#FD6941]' : 'bg-gray-300'}`}></div>
+                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
                         ); // Closing the return statement of map
                     })}
 

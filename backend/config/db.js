@@ -10,6 +10,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017';
 const getURI = (dbName) => {
     try {
         const url = new URL(MONGO_URI);
+        // Remove strictly the path, keep query params
         url.pathname = `/${dbName}`;
         return url.toString();
     } catch (e) {
@@ -19,7 +20,7 @@ const getURI = (dbName) => {
 
 /**
  * 1. Registry Database: 'restaurent'
- * Stores: 'resto_names'
+ * Stores: 'resto_names' (User/Admin accounts)
  */
 const mainConn = mongoose.createConnection(getURI('restaurent'), {
     serverSelectionTimeoutMS: 5000
@@ -27,17 +28,30 @@ const mainConn = mongoose.createConnection(getURI('restaurent'), {
 mainConn.on('connected', () => console.log('DB Connected: restaurent (Registry)'));
 
 /**
- * 2. Business Database: 'resto_info'
- * Single database containing all restaurant data.
- * Collections are prefixed by restaurant name for isolation.
- * e.g., 'cestro_categories', 'cestro_menu_items', 'cestro_orders'
+ * 2. Dynamic Tenant Connections
+ * Maintains a cache of database connections for each restaurant.
  */
-const restoInfoConn = mongoose.createConnection(getURI('resto_info'), {
-    serverSelectionTimeoutMS: 5000
-});
-restoInfoConn.on('connected', () => console.log('DB Connected: resto_info (Business)'));
+const connectionCache = {};
+
+const getTenantConnection = (dbName) => {
+    if (connectionCache[dbName]) {
+        return connectionCache[dbName];
+    }
+
+    const conn = mongoose.createConnection(getURI(dbName), {
+        serverSelectionTimeoutMS: 5000
+    });
+
+    conn.on('connected', () => console.log(`DB Connected: ${dbName} (Tenant)`));
+
+    // Handle errors/disconnections to prevent stale connections in cache? 
+    // For simple use case, we just cache.
+
+    connectionCache[dbName] = conn;
+    return conn;
+};
 
 module.exports = {
     mainConn,
-    restoInfoConn
+    getTenantConnection
 };

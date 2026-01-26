@@ -6,8 +6,80 @@ import {
     ChevronRight, Star, Clock, Flame
 } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
+import sugarFreeIcon from '../../assets/suger-free.svg';
+import jainIcon from '../../assets/jain.svg';
+import spicyIcon from '../../assets/red-chilli.svg';
+import seafoodIcon from '../../assets/seafood.svg';
+import lowCalIcon from '../../assets/LOW-KCAL.svg';
+import glutenFreeIcon from '../../assets/Wheat-Off--Streamline-Lucide.svg';
+import eggIcon from '../../assets/Egg--Streamline-Rounded-Material-Symbols.svg';
+import veganIcon from '../../assets/Plant-Thin--Streamline-Phosphor-Thin.svg';
+import dairyIcon from '../../assets/Water-Bottle-Glass--Streamline-Ultimate.svg';
+import ketoIcon from '../../assets/Pear--Streamline-Atlas.svg';
+import vegIcon from '../../assets/veg.svg';
+import nonVegIcon from '../../assets/non-veg.svg';
 
-const mockMenuData = [];
+const dietaryIcons = {
+    'Sugar-Free': sugarFreeIcon,
+    'Jain': jainIcon,
+    'Spicy': spicyIcon,
+    'Seafood': seafoodIcon,
+    'Low-Calorie': lowCalIcon,
+    'Gluten-Free': glutenFreeIcon,
+    'Egg': eggIcon,
+    'Vegan': veganIcon,
+    'Dairy': dairyIcon,
+    'Keto': ketoIcon,
+    'Vegetarian': veganIcon,
+    'Non-Vegetarian': seafoodIcon,
+};
+
+const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(1600%) hue-rotate(335deg) brightness(101%) contrast(98%)";
+
+const mockMenuData = [
+    {
+        _id: '101',
+        name: 'Truffle Mushroom Risotto',
+        category: 'Main Course',
+        price: 450,
+        description: 'Creamy arborio rice cooked to perfection with mixed wild mushrooms, finished with premium black truffle oil and a crispy parmesan tuile.',
+        calories: '420 kcal',
+        time: '25-30 min',
+        isVeg: true,
+        rating: 4.8,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80',
+        labels: ['Chef Special', 'Gluten-Free']
+    },
+    {
+        _id: '102',
+        name: 'Spicy Peri-Peri Chicken',
+        category: 'Main Course',
+        price: 380,
+        description: 'Succulent chicken breast marinated for 24 hours in our house-special peri-peri spice blend, grilled over open flame and served with roasted veggies.',
+        calories: '350 kcal',
+        time: '20-25 min',
+        isVeg: false,
+        rating: 4.6,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+        labels: ['Spicy', 'High Protein']
+    },
+    {
+        _id: '103',
+        name: 'Classic Gourmet Burger',
+        category: 'Burgers',
+        price: 299,
+        description: 'A juicy handmade patty topped with melting sharp cheddar, caramelized onions, fresh lettuce, and our secret signature sauce on a toasted brioche bun.',
+        calories: '550 kcal',
+        time: '15-20 min',
+        isVeg: false,
+        rating: 4.9,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+        labels: ['Bestseller']
+    }
+];
 
 const offers = [
     { id: 1, title: "50% OFF", subtitle: "On your first order", code: "WELCOME50", bg: "bg-black", text: "text-white" },
@@ -171,12 +243,14 @@ const Menu = () => {
 
                             {/* Card Header / Image Slider */}
                             <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4 bg-gray-100">
-                                {/* Veg/Non-Veg Indicator */}
-                                <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                                    <div className={`w-3 h-3 border-2 rounded-sm flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                                    </div>
-                                    <span className={`text-[10px] font-bold ${item.isVeg ? 'text-green-700' : 'text-red-700'}`}>{item.isVeg ? 'VEG' : 'NON-VEG'}</span>
+
+                                {/* Veg/Non-Veg Symbol on Image */}
+                                <div className="absolute top-4 left-4 z-10 w-5 h-5 bg-white/90 backdrop-blur rounded-md shadow-sm p-0.5">
+                                    <img
+                                        src={item.isVeg ? vegIcon : nonVegIcon}
+                                        alt={item.isVeg ? "Veg" : "Non-Veg"}
+                                        className="w-full h-full object-contain"
+                                    />
                                 </div>
 
                                 {/* Like Button */}
@@ -207,9 +281,9 @@ const Menu = () => {
                             {/* Content */}
                             <div className="px-2 pb-2">
                                 <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h3 className="text-xl font-black text-gray-800 leading-tight mb-1">{item.name}</h3>
-                                        <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-black text-gray-800 leading-tight mb-2 pr-2">{item.name}</h3>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-bold text-gray-500">
                                             <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-md">
                                                 <Star className="w-3 h-3 fill-current" /> {item.rating}
                                             </span>
@@ -219,9 +293,25 @@ const Menu = () => {
                                             <span className="flex items-center gap-1">
                                                 <Flame className="w-3 h-3 text-[#FD6941]" /> {item.calories}
                                             </span>
+
+                                            {/* Dietary Labels in Description */}
+                                            {item.labels && item.labels.length > 0 && (
+                                                <div className="flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
+                                                    {item.labels.map(label => dietaryIcons[label] && (
+                                                        <img
+                                                            key={label}
+                                                            src={dietaryIcons[label]}
+                                                            alt={label}
+                                                            title={label}
+                                                            className="w-3.5 h-3.5"
+                                                            style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right shrink-0">
                                         <span className="block text-2xl font-black text-gray-800">₹{item.price}</span>
                                     </div>
                                 </div>

@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/landing/LandingPage';
 import Login from './pages/auth/Login';
@@ -46,9 +47,59 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const TitleUpdater = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    let title = 'EatGreet';
+
+    // Admin Routes
+    if (pathname === '/admin') title = 'Dashboard';
+    else if (pathname === '/admin/menu') title = 'Menu';
+    else if (pathname === '/admin/category') title = 'Category';
+    else if (pathname === '/admin/orders') title = 'Orders';
+    else if (pathname === '/admin/table') title = 'Tables';
+    else if (pathname === '/admin/profile') title = 'Profile';
+    else if (pathname === '/admin/settings') title = 'Settings';
+
+    // Super Admin Routes
+    else if (pathname === '/super-admin') title = 'Super Admin';
+    else if (pathname === '/super-admin/restaurants') title = 'Restaurants';
+    else if (pathname === '/super-admin/payments') title = 'Payments';
+    else if (pathname === '/super-admin/reports') title = 'Reports';
+    else if (pathname === '/super-admin/users') title = 'Users';
+    else if (pathname === '/super-admin/profile') title = 'Profile';
+    else if (pathname === '/super-admin/settings') title = 'Settings';
+
+    // Customer Routes
+    else if (pathname.includes('/customer/menu') || pathname === '/menu') title = 'Menu';
+    else if (pathname.includes('/customer/favorites')) title = 'Favorites';
+    else if (pathname.includes('/customer/profile')) title = 'Profile';
+
+    // Auth & Landing
+    else if (pathname === '/login') title = 'Login';
+    else if (pathname === '/signup') title = 'Signup';
+    else if (pathname === '/') title = 'EatGreet';
+
+    // Default fallback for other sub-pages
+    else {
+      const pathSegments = pathname.split('/').filter(Boolean);
+      if (pathSegments.length > 0) {
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        title = lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
+      }
+    }
+
+    document.title = title;
+  }, [pathname]);
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <TitleUpdater />
       <Toaster position="top-right" />
       <Routes>
         {/* Public Routes */}
@@ -67,7 +118,6 @@ function App() {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="menu" element={<AdminMenu />} />
-          <Route path="category" element={<AdminCategory />} />
           <Route path="category" element={<AdminCategory />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="table" element={<AdminTable />} />

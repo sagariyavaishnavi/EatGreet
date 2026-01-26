@@ -55,7 +55,33 @@ export const statsAPI = {
   },
   getSuperAdminStats: async () => {
     await mockDelay();
-    return { data: {} };
+    return {
+      data: {
+        totalRestaurants: 12,
+        activeSubscriptions: 10,
+        monthlyRevenue: 154000,
+        unpaidRestaurants: 2,
+        revenueData: [
+          { name: 'Jan', value: 40000 },
+          { name: 'Feb', value: 45000 },
+          { name: 'Mar', value: 55000 },
+          { name: 'Apr', value: 60000 },
+          { name: 'May', value: 58000 },
+          { name: 'Jun', value: 65000 },
+          { name: 'Jul', value: 70000 },
+          { name: 'Aug', value: 85000 },
+          { name: 'Sep', value: 90000 },
+          { name: 'Oct', value: 110000 },
+          { name: 'Nov', value: 125000 },
+          { name: 'Dec', value: 154000 },
+        ],
+        paymentStatusData: [
+          { name: 'Paid', value: 85, color: '#10B981' },
+          { name: 'Pending', value: 10, color: '#F59E0B' },
+          { name: 'Overdue', value: 5, color: '#EF4444' },
+        ]
+      }
+    };
   }
 };
 

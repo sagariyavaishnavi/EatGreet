@@ -441,6 +441,8 @@ import eggIcon from '../../assets/Egg--Streamline-Rounded-Material-Symbols.svg';
 import veganIcon from '../../assets/Plant-Thin--Streamline-Phosphor-Thin.svg';
 import dairyIcon from '../../assets/Water-Bottle-Glass--Streamline-Ultimate.svg';
 import ketoIcon from '../../assets/Pear--Streamline-Atlas.svg';
+import vegIcon from '../../assets/veg.svg';
+import nonVegIcon from '../../assets/non-veg.svg';
 
 const dietaryIcons = {
     'Sugar-Free': sugarFreeIcon,
@@ -461,7 +463,50 @@ const dietaryIcons = {
 const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(1600%) hue-rotate(335deg) brightness(101%) contrast(98%)";
 
 // Default mock data if storage is empty
-const DEFAULT_MENU_ITEMS = [];
+const DEFAULT_MENU_ITEMS = [
+    {
+        _id: '101',
+        name: 'Truffle Mushroom Risotto',
+        category: 'Main Course',
+        price: 450,
+        description: 'Creamy arborio rice cooked to perfection with mixed wild mushrooms, finished with premium black truffle oil and a crispy parmesan tuile.',
+        calories: '420 kcal',
+        time: '25-30 min',
+        isVeg: true,
+        rating: 4.8,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80',
+        labels: ['Chef Special']
+    },
+    {
+        _id: '102',
+        name: 'Spicy Peri-Peri Chicken',
+        category: 'Main Course',
+        price: 380,
+        description: 'Succulent chicken breast marinated for 24 hours in our house-special peri-peri spice blend, grilled over open flame and served with roasted veggies.',
+        calories: '350 kcal',
+        time: '20-25 min',
+        isVeg: false,
+        rating: 4.6,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+        labels: ['Spicy']
+    },
+    {
+        _id: '103',
+        name: 'Classic Gourmet Burger',
+        category: 'Burgers',
+        price: 299,
+        description: 'A juicy handmade patty topped with melting sharp cheddar, caramelized onions, fresh lettuce, and our secret signature sauce on a toasted brioche bun.',
+        calories: '550 kcal',
+        time: '15-20 min',
+        isVeg: false,
+        rating: 4.9,
+        isAvailable: true,
+        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+        labels: ['Bestseller']
+    }
+];
 
 const AdminMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -530,7 +575,7 @@ const AdminMenu = () => {
             const menuData = menuRes.data || [];
             const catData = catRes.data || [];
 
-            setMenuItems(Array.isArray(menuData) ? menuData : []);
+            setMenuItems((Array.isArray(menuData) && menuData.length > 0) ? menuData : DEFAULT_MENU_ITEMS);
             setCategories(Array.isArray(catData) ? catData : []);
         } catch (error) {
             console.error('Fetch error:', error);
@@ -892,27 +937,21 @@ const AdminMenu = () => {
                                         media={item.media && item.media.length > 0 ? item.media : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
-                                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    {/* Availability Tag */}
+                                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                                         <div className={`w-2 h-2 rounded-full ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                         <span className="text-[10px] font-bold text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
                                     </div>
-                                    <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
-                                        {item.labels && item.labels.map(label => dietaryIcons[label] && (
-                                            <div key={label} className="bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm" title={label}>
-                                                <img
-                                                    src={dietaryIcons[label]}
-                                                    alt={label}
-                                                    className="w-3 h-3 sm:w-4 sm:h-4"
-                                                    style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
-                                                />
-                                            </div>
-                                        ))}
+
+                                    {/* Veg/Non-Veg Symbol - Top Left */}
+                                    <div className="absolute top-3 left-3 z-10 w-5 h-5 bg-white/90 backdrop-blur-sm rounded-md shadow-sm p-0.5">
+                                        <img
+                                            src={item.isVeg ? vegIcon : nonVegIcon}
+                                            alt={item.isVeg ? "Veg" : "Non-Veg"}
+                                            className="w-full h-full object-contain"
+                                        />
                                     </div>
-                                    <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                                        <div className={`w-3 h-3 border-2 rounded-sm flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                                        </div>
-                                    </div>
+
                                 </div>
 
                                 {/* Content */}
@@ -926,10 +965,26 @@ const AdminMenu = () => {
                                         <span className="font-bold text-xl text-gray-800">₹{item.price || 0}</span>
                                     </div>
 
-                                    <div className="flex gap-2 text-[10px] font-bold text-gray-400">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold text-gray-400">
                                         <span>{item.calories || '- kcal'}</span>
                                         <span>•</span>
                                         <span>{item.time || '- min'}</span>
+
+                                        {/* Dietary Labels in Description */}
+                                        {item.labels && item.labels.length > 0 && (
+                                            <div className="flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
+                                                {item.labels.map(label => dietaryIcons[label] && (
+                                                    <img
+                                                        key={label}
+                                                        src={dietaryIcons[label]}
+                                                        alt={label}
+                                                        title={label}
+                                                        className="w-3.5 h-3.5"
+                                                        style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 h-10">
@@ -941,17 +996,15 @@ const AdminMenu = () => {
                                 <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                                     {/* Toggle Switch */}
                                     <div>
-                                        <label className="flex items-center cursor-pointer">
-                                            <div className="relative">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only"
-                                                    checked={item.isAvailable}
-                                                    onChange={() => toggleStatus(item._id)}
-                                                />
-                                                <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ${item.isAvailable ? 'bg-[#FD6941]' : 'bg-gray-300'}`}></div>
-                                                <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                            </div>
+                                        <label className="flex items-center cursor-pointer relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={item.isAvailable}
+                                                onChange={() => toggleStatus(item._id)}
+                                            />
+                                            <div className="block w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
+                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`}></div>
                                         </label>
                                     </div>
 

@@ -10,17 +10,28 @@ router.get('/admin', protect, authorize('admin'), resolveTenant, async (req, res
         if (!req.tenantModels) {
             return res.status(400).json({ message: 'Tenant context required' });
         }
-        const { MenuItem, Category } = req.tenantModels;
+        const { MenuItem, Category, Order } = req.tenantModels;
 
         const menuCount = await MenuItem.countDocuments({});
         const categoryCount = await Category.countDocuments({});
 
-        // Generate semi-random but consistent stats for demo
-        const totalOrders = Math.floor(Math.random() * 50) + 100;
-        const revenue = totalOrders * 450;
-        const activeOrders = Math.floor(Math.random() * 5) + 2;
-        const dineIn = Math.floor(totalOrders * 0.7);
-        const takeaway = totalOrders - dineIn;
+        // Real Order Stats
+        const totalOrders = await Order.countDocuments({});
+
+        // Calculate Revenue
+        const revenueAgg = await Order.aggregate([
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+        const revenue = revenueAgg.length > 0 ? revenueAgg[0].total : 0;
+
+        // Active Orders (Pending, Preparing, Ready)
+        const activeOrders = await Order.countDocuments({
+            status: { $in: ['pending', 'preparing', 'ready'] }
+        });
+
+        // Order Types
+        const dineIn = await Order.countDocuments({ orderType: 'dine-in' });
+        const takeaway = await Order.countDocuments({ orderType: 'takeaway' });
 
         res.json({
             menuItems: menuCount,

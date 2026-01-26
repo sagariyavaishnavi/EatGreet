@@ -24,7 +24,7 @@ export default function Users() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+                        <h1 className="text-3xl font-medium text-gray-900">User Management</h1>
                         <p className="text-gray-500 font-medium text-sm mt-1">Manage system access and roles.</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -50,11 +50,11 @@ export default function Users() {
                         <table className="w-full">
                             <thead className="bg-gray-50/50 sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Role</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Joined</th>
-                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Action</th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Joined</th>
+                                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -68,11 +68,11 @@ export default function Users() {
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-blue-600 font-bold">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-blue-600 font-medium">
                                                     {user.name.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-gray-900">{user.name}</div>
+                                                    <div className="font-medium text-gray-900">{user.name}</div>
                                                     <div className="text-xs text-gray-500 flex items-center gap-1">
                                                         <Mail className="w-3 h-3" /> {user.email}
                                                     </div>
@@ -89,7 +89,7 @@ export default function Users() {
                                             <span className="text-sm text-gray-500">{user.joined}</span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${user.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
+                                            <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide ${user.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
                                                 }`}>
                                                 {user.status}
                                             </span>

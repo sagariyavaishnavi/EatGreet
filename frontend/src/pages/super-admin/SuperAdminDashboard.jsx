@@ -51,19 +51,19 @@ const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) =>
     >
         <div className="flex justify-between items-start">
             <div>
-                <p className="text-gray-600 text-xs font-bold mb-1">{title}</p>
-                <h3 className="text-3xl font-extrabold text-gray-900">{value}</h3>
+                <p className="text-gray-600 text-xs font-medium mb-1">{title}</p>
+                <h3 className="text-3xl font-normal text-gray-900">{value}</h3>
             </div>
             <div className="bg-white/60 p-3 rounded-2xl shadow-sm border border-white/40">
                 <Icon className="w-6 h-6 text-gray-700" />
             </div>
         </div>
         <div className="flex items-center gap-2">
-            <div className={`flex items-center gap-1 ${colorClass} bg-white/50 px-3 py-1 rounded-full text-xs font-bold`}>
+            <div className={`flex items-center gap-1 ${colorClass} bg-white/50 px-3 py-1 rounded-full text-xs font-medium`}>
                 <TrendingUp className="w-3 h-3" />
                 {change}
             </div>
-            <span className="text-xs text-gray-500 font-medium text-nowrap">Current Status</span>
+            <span className="text-xs text-gray-500 font-normal text-nowrap">Current Status</span>
         </div>
     </motion.div>
 );
@@ -96,8 +96,8 @@ export default function SuperAdminDashboard() {
                 {/* Welcome Section */}
                 <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
-                        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-800">Dashboard</h1>
-                        <p className="text-gray-500 text-sm font-medium">Welcome back, <span className="text-gray-800 font-bold">Super Admin</span></p>
+                        <h1 className="text-3xl font-medium bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-800">Dashboard</h1>
+                        <p className="text-gray-500 text-sm font-normal">Welcome back, <span className="text-gray-800 font-medium">Super Admin</span></p>
                     </div>
                 </div>
 
@@ -146,7 +146,7 @@ export default function SuperAdminDashboard() {
                         className="lg:col-span-2 bg-white/60 backdrop-blur-sm p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col"
                     >
                         <div className="mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Subscription Revenue</h3>
+                            <h3 className="text-lg font-medium text-gray-900">Subscription Revenue</h3>
                             <p className="text-xs text-gray-500">Monthly recurring revenue trends</p>
                         </div>
                         <div className="flex-1 w-full min-h-[300px]">
@@ -189,7 +189,7 @@ export default function SuperAdminDashboard() {
                         className="bg-white/60 backdrop-blur-sm p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col items-center justify-between"
                     >
                         <div className="w-full text-left mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Payment Status</h3>
+                            <h3 className="text-lg font-medium text-gray-900">Payment Status</h3>
                             <p className="text-xs text-gray-500">Restaurant payment breakdown</p>
                         </div>
 
@@ -213,8 +213,8 @@ export default function SuperAdminDashboard() {
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-3xl font-extrabold text-gray-900">{statsData.totalRestaurants}</span>
-                                    <span className="text-xs text-gray-400 font-bold tracking-widest">TOTAL</span>
+                                    <span className="text-3xl font-medium text-gray-900">{statsData.totalRestaurants}</span>
+                                    <span className="text-xs text-gray-400 font-medium tracking-widest">TOTAL</span>
                                 </div>
                             </div>
                         </div>
@@ -224,9 +224,9 @@ export default function SuperAdminDashboard() {
                                 <div key={item.name} className="flex flex-col items-center">
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                        <span className="text-xs font-bold text-gray-700">{item.value}</span>
+                                        <span className="text-xs font-medium text-gray-700">{item.value}</span>
                                     </div>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">{item.name}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">{item.name}</span>
                                 </div>
                             ))}
                         </div>

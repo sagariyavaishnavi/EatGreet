@@ -1,11 +1,25 @@
-// import axios from 'axios';
+import axios from 'axios';
 
-// const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
-/**
- * MOCKED API for Frontend Design Phase
- * Backend disconnected.
- */
+// Create axios instance
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add request interceptor to include token
+apiClient.interceptors.request.use(config => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (user && user.token) {
+    config.headers.Authorization = `Bearer ${user.token}`;
+  }
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
 
 const mockDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -13,130 +27,104 @@ const mockUser = {
   _id: 'mock-user-id',
   name: 'Frontend Designer',
   email: 'design@eatgreet.com',
-  role: 'admin', // Default to admin to see dashboard
+  role: 'admin',
   token: 'mock-jwt-token'
 };
 
+/* 
+   REAL APIs 
+*/
+/* 
+   REAL APIs 
+*/
 export const authAPI = {
   login: async (credentials) => {
-    await mockDelay();
-    console.log('Mock Login with:', credentials);
-    // Simulate success
-    // Return mockUser directly as data (it includes token and role)
-    return { data: mockUser };
+    try {
+      const response = await apiClient.post('/auth/login', credentials);
+      return response; // Return full Axios response object
+    } catch (error) {
+      console.error("Login API Error:", error);
+      throw error;
+    }
   },
   register: async (userData) => {
-    await mockDelay();
-    console.log('Mock Register with:', userData);
-    return { data: { ...mockUser, ...userData } };
+    try {
+      const response = await apiClient.post('/auth/register', userData);
+      return response;
+    } catch (error) {
+      console.error("Register API Error:", error);
+      throw error;
+    }
   },
   getProfile: async () => {
-    await mockDelay();
-    return { data: mockUser };
+    return apiClient.get('/auth/profile');
   },
   updateProfile: async (userData) => {
-    await mockDelay();
-    return { data: { ...mockUser, ...userData } };
+    return apiClient.put('/auth/profile', userData);
   },
-  updatePassword: async () => {
-    await mockDelay();
-    return { data: { message: 'Password updated' } };
+  updatePassword: async (data) => {
+    return apiClient.put('/auth/password', data);
   },
   getRestaurants: async () => {
-    await mockDelay();
-    return { data: [] }; // No static data
+    // Super Admin endpoint to list restaurants
+    return apiClient.get('/auth/restaurants');
   }
 };
 
 export const statsAPI = {
   getAdminStats: async () => {
-    await mockDelay();
-    return { data: { totalOrders: 0, totalSales: 0, activeMenu: 0 } };
+    return apiClient.get('/stats/admin');
   },
   getSuperAdminStats: async () => {
-    await mockDelay();
-    return {
-      data: {
-        totalRestaurants: 12,
-        activeSubscriptions: 10,
-        monthlyRevenue: 154000,
-        unpaidRestaurants: 2,
-        revenueData: [
-          { name: 'Jan', value: 40000 },
-          { name: 'Feb', value: 45000 },
-          { name: 'Mar', value: 55000 },
-          { name: 'Apr', value: 60000 },
-          { name: 'May', value: 58000 },
-          { name: 'Jun', value: 65000 },
-          { name: 'Jul', value: 70000 },
-          { name: 'Aug', value: 85000 },
-          { name: 'Sep', value: 90000 },
-          { name: 'Oct', value: 110000 },
-          { name: 'Nov', value: 125000 },
-          { name: 'Dec', value: 154000 },
-        ],
-        paymentStatusData: [
-          { name: 'Paid', value: 85, color: '#10B981' },
-          { name: 'Pending', value: 10, color: '#F59E0B' },
-          { name: 'Overdue', value: 5, color: '#EF4444' },
-        ]
-      }
-    };
+    return apiClient.get('/stats/super-admin');
   }
 };
 
 export const menuAPI = {
   getAll: async () => {
-    await mockDelay();
-    return { data: [] }; // No static data
+    return apiClient.get('/menu');
   },
   create: async (itemData) => {
-    await mockDelay();
-    return { data: itemData };
+    return apiClient.post('/menu', itemData);
   },
   update: async (id, itemData) => {
-    await mockDelay();
-    return { data: itemData };
+    return apiClient.put(`/menu/${id}`, itemData);
   },
-  delete: async () => {
-    await mockDelay();
-    return { data: { message: 'Deleted' } };
+  delete: async (id) => {
+    return apiClient.delete(`/menu/${id}`);
   }
 };
 
 export const categoryAPI = {
   getAll: async () => {
-    await mockDelay();
-    return { data: [] }; // No static data
+    return apiClient.get('/categories');
   },
   create: async (categoryData) => {
-    await mockDelay();
-    return { data: categoryData };
+    return apiClient.post('/categories', categoryData);
   },
   update: async (id, categoryData) => {
-    await mockDelay();
-    return { data: categoryData };
+    return apiClient.put(`/categories/${id}`, categoryData);
   },
-  delete: async () => {
-    await mockDelay();
-    return { data: { message: 'Deleted' } };
+  delete: async (id) => {
+    return apiClient.delete(`/categories/${id}`);
   }
 };
 
 export const orderAPI = {
   getOrders: async () => {
-    await mockDelay();
-    return { data: [] }; // No static data
+    return apiClient.get('/orders');
   },
   create: async (orderData) => {
-    await mockDelay();
-    return { data: orderData };
+    return apiClient.post('/orders', orderData);
   },
-  updateStatus: async () => {
-    await mockDelay();
-    return { data: { message: 'Status updated' } };
+  updateStatus: async (orderId, status) => {
+    return apiClient.put(`/orders/${orderId}/status`, { status });
   }
 };
+
+/* 
+   MOCKED APIs (Preserved for Customer/Restaurant specific flows not fully integrated yet)
+*/
 
 export const customerAPI = {
   login: async (credentials) => {

@@ -463,50 +463,7 @@ const dietaryIcons = {
 const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(1600%) hue-rotate(335deg) brightness(101%) contrast(98%)";
 
 // Default mock data if storage is empty
-const DEFAULT_MENU_ITEMS = [
-    {
-        _id: '101',
-        name: 'Truffle Mushroom Risotto',
-        category: 'Main Course',
-        price: 450,
-        description: 'Creamy arborio rice cooked to perfection with mixed wild mushrooms, finished with premium black truffle oil and a crispy parmesan tuile.',
-        calories: '420 kcal',
-        time: '25-30 min',
-        isVeg: true,
-        rating: 4.8,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80',
-        labels: ['Chef Special']
-    },
-    {
-        _id: '102',
-        name: 'Spicy Peri-Peri Chicken',
-        category: 'Main Course',
-        price: 380,
-        description: 'Succulent chicken breast marinated for 24 hours in our house-special peri-peri spice blend, grilled over open flame and served with roasted veggies.',
-        calories: '350 kcal',
-        time: '20-25 min',
-        isVeg: false,
-        rating: 4.6,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
-        labels: ['Spicy']
-    },
-    {
-        _id: '103',
-        name: 'Classic Gourmet Burger',
-        category: 'Burgers',
-        price: 299,
-        description: 'A juicy handmade patty topped with melting sharp cheddar, caramelized onions, fresh lettuce, and our secret signature sauce on a toasted brioche bun.',
-        calories: '550 kcal',
-        time: '15-20 min',
-        isVeg: false,
-        rating: 4.9,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
-        labels: ['Bestseller']
-    }
-];
+// Default mock data removed per live data requirement
 
 const AdminMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -575,7 +532,7 @@ const AdminMenu = () => {
             const menuData = menuRes.data || [];
             const catData = catRes.data || [];
 
-            setMenuItems((Array.isArray(menuData) && menuData.length > 0) ? menuData : DEFAULT_MENU_ITEMS);
+            setMenuItems(Array.isArray(menuData) ? menuData : []);
             setCategories(Array.isArray(catData) ? catData : []);
         } catch (error) {
             console.error('Fetch error:', error);

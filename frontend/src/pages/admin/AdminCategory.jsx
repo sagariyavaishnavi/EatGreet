@@ -1,271 +1,8 @@
-// import { useState, useEffect } from 'react';
-// import { Search, Plus, ListFilter, Trash2, Camera, User, Pizza, Coffee, Utensils, IceCream, Beef, Egg, Wine, Cake, Sandwich, ChevronRight, Pencil, CheckCircle, XCircle } from 'lucide-react';
-// import { categoryAPI } from '../../utils/api';
-// import toast from 'react-hot-toast';
-
-// const ICON_MAP = {
-//     Pizza: Pizza,
-//     Coffee: Coffee,
-//     Utensils: Utensils,
-//     IceCream: IceCream,
-//     Beef: Beef,
-//     Egg: Egg,
-//     Wine: Wine,
-//     Cake: Cake,
-//     Sandwich: Sandwich,
-//     ListFilter: ListFilter
-// };
-
-// const iconOptions = Object.keys(ICON_MAP);
-
-// const AdminCategory = () => {
-//     const [categories, setCategories] = useState([]);
-//     const [isModalOpen, setIsModalOpen] = useState(false);
-//     const [editingCategory, setEditingCategory] = useState(null);
-//     const [searchTerm, setSearchTerm] = useState('');
-//     const [isLoading, setIsLoading] = useState(false);
-
-//     // Form state
-//     const [name, setName] = useState('');
-//     const [selectedIcon, setSelectedIcon] = useState('Utensils');
-//     const [status, setStatus] = useState('ACTIVE');
-
-//     useEffect(() => {
-//         fetchCategories();
-//     }, []);
-
-//     const fetchCategories = async () => {
-//         setIsLoading(true);
-//         try {
-//             const response = await categoryAPI.getAll();
-//             setCategories(response.data);
-//         } catch (error) {
-//             console.error('Error fetching categories:', error);
-//         } finally {
-//             setIsLoading(false);
-//         }
-//     };
-
-//     const handleSave = async () => {
-//         if (!name.trim()) {
-//             toast.error('Please enter a category name');
-//             return;
-//         }
-
-//         const loadToast = toast.loading(editingCategory ? 'Updating category...' : 'Creating category...');
-
-//         try {
-//             const categoryData = {
-//                 name,
-//                 icon: selectedIcon
-//             };
-
-//             if (editingCategory) {
-//                 await categoryAPI.update(editingCategory._id, categoryData);
-//                 toast.success('Category updated successfully!', { id: loadToast });
-//             } else {
-//                 await categoryAPI.create(categoryData);
-//                 toast.success('Category created successfully!', { id: loadToast });
-//             }
-
-//             fetchCategories();
-//             closeModal();
-//         } catch (error) {
-//             const errorMsg = error.response?.data?.message || error.message || 'Failed to save category';
-//             toast.error(errorMsg, { id: loadToast });
-//         }
-//     };
-
-//     const handleDelete = async (id) => {
-//         toast((t) => (
-//             <div className="flex flex-col gap-3">
-//                 <p className="font-medium text-gray-800 text-sm">Delete this category? Items will become uncategorized.</p>
-//                 <div className="flex gap-2">
-//                     <button
-//                         onClick={async () => {
-//                             toast.dismiss(t.id);
-//                             try {
-//                                 await categoryAPI.delete(id);
-//                                 toast.success('Category deleted successfully!');
-//                                 fetchCategories();
-//                             } catch (error) {
-//                                 toast.error('Failed to delete category');
-//                             }
-//                         }}
-//                         className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
-//                     >
-//                         Delete
-//                     </button>
-//                     <button
-//                         onClick={() => toast.dismiss(t.id)}
-//                         className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
-//                     >
-//                         Cancel
-//                     </button>
-//                 </div>
-//             </div>
-//         ), { duration: 5000 });
-//     };
-
-//     const openModal = (cat = null) => {
-//         if (cat) {
-//             setEditingCategory(cat);
-//             setName(cat.name);
-//             setSelectedIcon(cat.icon || 'Utensils');
-//         } else {
-//             setEditingCategory(null);
-//             setName('');
-//             setSelectedIcon('Utensils');
-//         }
-//         setIsModalOpen(true);
-//     };
-
-//     const closeModal = () => {
-//         setIsModalOpen(false);
-//         setEditingCategory(null);
-//     };
-
-//     const filteredCategories = categories.filter(cat =>
-//         cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-//     );
-
-//     return (
-//         <div className="space-y-6">
-//             <div className="flex justify-between items-center">
-//                 <h1 className="text-2xl font-bold text-gray-800">Category Management</h1>
-//                 <button
-//                     onClick={() => openModal()}
-//                     className="bg-[#FD6941] hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 transition-colors shadow-sm"
-//                 >
-//                     <Plus className="w-5 h-5" />
-//                     Add Category
-//                 </button>
-//             </div>
-
-//             <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
-//                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-//                     <h2 className="text-xl font-bold text-gray-800">All Categories</h2>
-//                     <div className="relative w-full md:w-80">
-//                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-//                         <input
-//                             type="text"
-//                             placeholder="Search categories..."
-//                             value={searchTerm}
-//                             onChange={(e) => setSearchTerm(e.target.value)}
-//                             className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
-//                         />
-//                     </div>
-//                 </div>
-
-//                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-//                     {filteredCategories.map((cat) => {
-//                         const IconComponent = ICON_MAP[cat.icon] || Utensils;
-//                         return (
-//                             <div key={cat._id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-//                                 <div className="flex justify-between items-start mb-4">
-//                                     <div className="p-4 rounded-2xl bg-orange-50 text-[#FD6941]">
-//                                         <IconComponent className="w-8 h-8" />
-//                                     </div>
-//                                     <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-600">
-//                                         ACTIVE
-//                                     </span>
-//                                 </div>
-//                                 <h3 className="font-bold text-lg text-gray-800 mb-1">{cat.name}</h3>
-//                                 <p className="text-sm text-gray-500 mb-6">Category for menu items</p>
-
-//                                 <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-//                                     <div className="flex gap-2">
-//                                         <button
-//                                             onClick={() => openModal(cat)}
-//                                             className="px-3 py-2 hover:bg-gray-100 rounded-xl text-gray-600 font-bold text-sm transition-colors flex items-center gap-1.5"
-//                                         >
-//                                             <Pencil className="w-3.5 h-3.5" />
-//                                             Edit
-//                                         </button>
-//                                         <button
-//                                             onClick={() => handleDelete(cat._id)}
-//                                             className="p-2 hover:bg-red-50 rounded-xl text-gray-400 hover:text-red-500 transition-colors"
-//                                         >
-//                                             <Trash2 className="w-4 h-4" />
-//                                         </button>
-//                                     </div>
-//                                 </div>
-//                             </div>
-//                         );
-//                     })}
-//                 </div>
-//             </div>
-
-//             {/* Modal */}
-//             {isModalOpen && (
-//                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//                     <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-//                         <div className="p-8 border-b border-gray-100">
-//                             <h2 className="text-2xl font-bold text-gray-800">{editingCategory ? 'Edit Category' : 'New Category'}</h2>
-//                             <p className="text-gray-500 text-sm mt-1">Configure your menu category details</p>
-//                         </div>
-
-//                         <div className="p-8 space-y-6">
-//                             <div>
-//                                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Category Name</label>
-//                                 <input
-//                                     type="text"
-//                                     value={name}
-//                                     onChange={(e) => setName(e.target.value)}
-//                                     className="w-full px-5 py-3 rounded-2xl bg-gray-50 border-none text-gray-800 text-sm font-bold focus:ring-1 focus:ring-[#FD6941] transition-all"
-//                                     placeholder="e.g. Italian Pizza"
-//                                 />
-//                             </div>
-
-//                             <div>
-//                                 <label className="block text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Choose Icon</label>
-//                                 <div className="grid grid-cols-5 gap-3">
-//                                     {iconOptions.map((iconName) => {
-//                                         const IconOpt = ICON_MAP[iconName];
-//                                         return (
-//                                             <button
-//                                                 key={iconName}
-//                                                 onClick={() => setSelectedIcon(iconName)}
-//                                                 className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${selectedIcon === iconName ? 'border-[#FD6941] bg-orange-50 text-[#FD6941]' : 'border-gray-100 hover:border-gray-200 text-gray-400'
-//                                                     }`}
-//                                             >
-//                                                 <IconOpt className="w-6 h-6" />
-//                                             </button>
-//                                         );
-//                                     })}
-//                                 </div>
-//                             </div>
-//                         </div>
-
-//                         <div className="p-8 bg-gray-50 flex gap-4">
-//                             <button
-//                                 onClick={closeModal}
-//                                 className="flex-1 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
-//                             >
-//                                 Cancel
-//                             </button>
-//                             <button
-//                                 onClick={handleSave}
-//                                 className="flex-1 py-4 rounded-2xl font-bold bg-[#FD6941] text-white hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all"
-//                             >
-//                                 {editingCategory ? 'Update Category' : 'Create Category'}
-//                             </button>
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-//         </div>
-//     );
-// };
-
-// export default AdminCategory;
-
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet, Image as ImageIcon } from 'lucide-react';
 
-import { categoryAPI } from '../../utils/api';
+import { categoryAPI, uploadAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const AdminCategory = () => {
@@ -278,6 +15,8 @@ const AdminCategory = () => {
     const [selectedIcon, setSelectedIcon] = useState(Utensils);
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [categoryImage, setCategoryImage] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
 
     const iconOptions = [
         { icon: Utensils, label: 'Utensils' },
@@ -316,26 +55,59 @@ const AdminCategory = () => {
         setEditingCategory(category);
         setNewCategoryName(category.name);
         setNewCategoryStatus(category.status === 'ACTIVE');
-        // Note: Icon string to component mapping logic might be needed if backend stores icon name as string
-        // For now assuming backend might not store icon, or we default. 
-        // If backend stores 'Utensils', we need to map back. 
-        // Simplification: just reset to default or keep current if valid.
-        setSelectedIcon(Utensils);
+        setCategoryImage(category.image || '');
+
+        if (category.image) {
+            setSelectedIcon(null);
+        } else {
+            const matchedOption = iconOptions.find(opt => opt.label === category.icon);
+            setSelectedIcon(matchedOption ? matchedOption.icon : Utensils);
+        }
         setIsModalOpen(true);
     };
 
-    const handleSave = async () => {
-        if (!newCategoryName.trim()) return;
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const uploadToast = toast.loading('Uploading image...');
 
         try {
-            // Find the label for the selected icon component
+            const res = await uploadAPI.uploadDirect(file, (percent) => {
+                toast.loading(`Uploading: ${percent}%`, { id: uploadToast });
+            });
+            setCategoryImage(res.data.secure_url);
+            setSelectedIcon(null); // Clear icon logic
+            toast.success('Image uploaded successfully', { id: uploadToast });
+        } catch (error) {
+            console.error('Upload failed:', error);
+            toast.error('Failed to upload image', { id: uploadToast });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!newCategoryName.trim()) {
+            toast.error("Please enter a category name.");
+            return;
+        }
+
+        if (!categoryImage && !selectedIcon) {
+            toast.error("Please select an image OR an icon to represent the category.");
+            return;
+        }
+
+        try {
             const selectedOpt = iconOptions.find(opt => opt.icon === selectedIcon);
-            const iconLabel = selectedOpt ? selectedOpt.label : 'Utensils';
+            const iconLabel = selectedOpt ? selectedOpt.label : '';
 
             const categoryData = {
                 name: newCategoryName,
                 icon: iconLabel,
-                status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE'
+                status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE',
+                image: categoryImage
             };
 
             if (editingCategory) {
@@ -358,19 +130,18 @@ const AdminCategory = () => {
         setEditingCategory(null);
         setNewCategoryName('');
         setNewCategoryStatus(true);
+        setCategoryImage('');
         setSelectedIcon(Utensils);
     };
 
     const toggleStatus = async (id) => {
-        // Optimistic update or wait for API? Let's wait for API for safety.
-        // Assuming current status.
         const cat = categories.find(c => c._id === id);
         if (!cat) return;
 
         const newStatus = cat.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
         try {
             await categoryAPI.update(id, { status: newStatus });
-            toast.success('Status updated');
+            toast.success(`Category is now ${newStatus === 'ACTIVE' ? 'Available' : 'Not Available'}`);
             fetchCategories();
         } catch (error) {
             toast.error('Failed to update status');
@@ -408,7 +179,7 @@ const AdminCategory = () => {
         ), { duration: 5000 });
     };
 
-    const ActiveIcon = selectedIcon || Utensils;
+    const ActiveIcon = selectedIcon;
 
     return (
         <div className="space-y-6 relative">
@@ -458,26 +229,48 @@ const AdminCategory = () => {
                             <div key={category._id}
                                 onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
                                 className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:border-[#FD6941]">
-                                {/* Top: Icon and Actions */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
-                                        <DisplayIcon className="w-7 h-7" />
+                                {category.image ? (
+                                    <div className="relative h-40 rounded-2xl overflow-hidden mb-4 bg-gray-50 border border-gray-100">
+                                        <img src={category.image} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+
+                                        {/* Overlay Actions for Image Mode */}
+                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-sm">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                                                className="p-1.5 hover:bg-gray-100 text-gray-500 hover:text-gray-700 rounded-md transition-colors"
+                                            >
+                                                <Pencil className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
+                                                className="p-1.5 hover:bg-red-50 text-gray-500 hover:text-red-500 rounded-md transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
-                                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
-                                            className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                ) : (
+                                    /* Icon Mode Layout */
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
+                                            <DisplayIcon className="w-7 h-7" />
+                                        </div>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                                                className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
+                                                className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Middle: Title */}
                                 <div className="mb-8">
@@ -540,6 +333,33 @@ const AdminCategory = () => {
                         <div className="space-y-6">
                             {/* SVG Icon Upload & Selection */}
                             <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Category Image</label>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-20 h-20 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                                        {categoryImage ? (
+                                            <img src={categoryImage} alt="cat" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <ImageIcon className="w-8 h-8 text-gray-300" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <input
+                                            type="file"
+                                            id="cat-image"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleFileUpload}
+                                        />
+                                        <label
+                                            htmlFor="cat-image"
+                                            className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-xs font-bold cursor-pointer transition-colors"
+                                        >
+                                            {isUploading ? 'Uploading...' : 'Choose Image'}
+                                        </label>
+                                        <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                                    </div>
+                                </div>
+
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Icon</label>
 
                                 {/* Icon Selection Grid */}
@@ -547,7 +367,7 @@ const AdminCategory = () => {
                                     {iconOptions.map((opt, idx) => (
                                         <button
                                             key={idx}
-                                            onClick={() => setSelectedIcon(opt.icon)} // We select the component for visual feedback
+                                            onClick={() => { setSelectedIcon(opt.icon); setCategoryImage(''); }} // Choose icon, clear image
                                             className={`p-2 rounded-xl flex items-center justify-center transition-all ${selectedIcon === opt.icon ? 'bg-[#FD6941] text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                                             title={opt.label}
                                         >
@@ -559,7 +379,7 @@ const AdminCategory = () => {
                                 {/* Active Icon Preview */}
                                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center text-center group">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${selectedIcon ? 'bg-orange-100 text-[#FD6941]' : 'bg-gray-100 text-gray-400'}`}>
-                                        <ActiveIcon className="w-5 h-5" />
+                                        {ActiveIcon ? <ActiveIcon className="w-5 h-5" /> : <span className="text-[10px]">None</span>}
                                     </div>
                                     <p className="text-xs text-gray-500 font-medium">Selected Icon</p>
                                 </div>

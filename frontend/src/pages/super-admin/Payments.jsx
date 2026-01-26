@@ -1,16 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, DollarSign, Download, Calendar } from 'lucide-react';
-
-const MOCK_TRANSACTIONS = [
-    { id: "TXN10239", restaurant: "Pizza Heaven", amount: "₹4,500", date: "Jan 24, 2024", status: "Completed", method: "Razorpay" },
-    { id: "TXN10240", restaurant: "Burger King", amount: "₹2,100", date: "Jan 24, 2024", status: "Pending", method: "UPI" },
-    { id: "TXN10241", restaurant: "Subway Outlet", amount: "₹1,850", date: "Jan 23, 2024", status: "Completed", method: "Card" },
-    { id: "TXN10242", restaurant: "Taco Bell", amount: "₹3,200", date: "Jan 23, 2024", status: "Failed", method: "NetBanking" },
-    { id: "TXN10243", restaurant: "KFC Downtown", amount: "₹5,600", date: "Jan 22, 2024", status: "Completed", method: "Razorpay" },
-];
+import { paymentAPI, statsAPI } from '../../utils/api';
 
 export default function Payments() {
+    const [transactions, setTransactions] = useState([]);
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        pendingAmount: 0,
+        activeSubscriptions: 0
+    });
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [paymentsRes, statsRes] = await Promise.all([
+                    paymentAPI.getAll(),
+                    statsAPI.getSuperAdminStats()
+                ]);
+
+                setTransactions(paymentsRes.data.transactions);
+                setStats({
+                    totalRevenue: paymentsRes.data.stats.totalRevenue,
+                    pendingAmount: paymentsRes.data.stats.pendingAmount,
+                    activeSubscriptions: statsRes.data.activeSubscriptions
+                });
+            } catch (error) {
+                console.error("Failed to load payment data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
     return (
         <div className="h-screen bg-[#F0F2F4] p-4 md:p-6 flex flex-col overflow-hidden">
             <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col space-y-6 min-h-0">
@@ -33,7 +66,7 @@ export default function Payments() {
                             <span className="text-gray-500 text-sm font-medium">Total Revenue</span>
                             <div className="p-2 bg-green-50 text-green-600 rounded-full"><DollarSign className="w-5 h-5" /></div>
                         </div>
-                        <h3 className="text-3xl font-medium text-gray-900">₹8.4M</h3>
+                        <h3 className="text-3xl font-medium text-gray-900">₹{stats.totalRevenue.toLocaleString()}</h3>
                         <p className="text-green-600 text-xs font-medium mt-2 flex items-center gap-1">↑ 12.5% <span className="text-gray-400 font-normal">vs last month</span></p>
                     </div>
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
@@ -41,7 +74,7 @@ export default function Payments() {
                             <span className="text-gray-500 text-sm font-medium">Pending</span>
                             <div className="p-2 bg-orange-50 text-orange-600 rounded-full"><Calendar className="w-5 h-5" /></div>
                         </div>
-                        <h3 className="text-3xl font-medium text-gray-900">₹42K</h3>
+                        <h3 className="text-3xl font-medium text-gray-900">₹{stats.pendingAmount.toLocaleString()}</h3>
                         <p className="text-orange-600 text-xs font-medium mt-2">Due this week</p>
                     </div>
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
@@ -49,8 +82,8 @@ export default function Payments() {
                             <span className="text-gray-500 text-sm font-medium">Subscriptions</span>
                             <div className="p-2 bg-blue-50 text-blue-600 rounded-full"><CreditCard className="w-5 h-5" /></div>
                         </div>
-                        <h3 className="text-3xl font-medium text-gray-900">856</h3>
-                        <p className="text-blue-600 text-xs font-medium mt-2 flex items-center gap-1">↑ 5 new <span className="text-gray-400 font-normal">today</span></p>
+                        <h3 className="text-3xl font-medium text-gray-900">{stats.activeSubscriptions}</h3>
+                        <p className="text-blue-600 text-xs font-medium mt-2 flex items-center gap-1">Active Accounts</p>
                     </div>
                 </div>
 
@@ -72,42 +105,52 @@ export default function Payments() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {MOCK_TRANSACTIONS.map((txn, idx) => (
-                                    <motion.tr
-                                        key={txn.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className="hover:bg-gray-50 transition-colors"
-                                    >
-                                        <td className="px-6 py-4">
-                                            <span className="font-mono text-xs font-medium text-gray-500">{txn.id}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-medium text-gray-900 text-sm">{txn.restaurant}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs text-gray-500 font-medium">{txn.date}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-4 rounded bg-gray-200"></div>
-                                                <span className="text-xs text-gray-600 font-medium">{txn.method}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="font-medium text-gray-900">{txn.amount}</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${txn.status === 'Completed' ? 'bg-green-50 text-green-600 border-green-100' :
-                                                txn.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                                    'bg-red-50 text-red-600 border-red-100'
-                                                }`}>
-                                                {txn.status}
-                                            </span>
-                                        </td>
-                                    </motion.tr>
-                                ))}
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-8 text-gray-500">Loading transactions...</td>
+                                    </tr>
+                                ) : transactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-8 text-gray-500">No transactions found</td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((txn, idx) => (
+                                        <motion.tr
+                                            key={txn._id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="hover:bg-gray-50 transition-colors"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <span className="font-mono text-xs font-medium text-gray-500">{txn.transactionId}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="font-medium text-gray-900 text-sm">{txn.restaurant?.name || 'Unknown Restaurant'}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-xs text-gray-500 font-medium">{formatDate(txn.date)}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-4 rounded bg-gray-200"></div>
+                                                    <span className="text-xs text-gray-600 font-medium">{txn.method}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <span className="font-medium text-gray-900">₹{txn.amount.toLocaleString()}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${txn.status === 'Completed' ? 'bg-green-50 text-green-600 border-green-100' :
+                                                    txn.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                                        'bg-red-50 text-red-600 border-red-100'
+                                                    }`}>
+                                                    {txn.status}
+                                                </span>
+                                            </td>
+                                        </motion.tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

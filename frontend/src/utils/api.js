@@ -1,169 +1,123 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
-// Create axios instance
-const apiClient = axios.create({
+
+const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
 });
 
-// Add request interceptor to include token
-apiClient.interceptors.request.use(config => {
-  const user = JSON.parse(localStorage.getItem('user'));
-  if (user && user.token) {
-    config.headers.Authorization = `Bearer ${user.token}`;
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+// Add a request interceptor to include the JWT token
+api.interceptors.request.use(
+  (config) => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+        // Add restaurantName for tenant resolution
+        if (user.restaurantName) {
+          config.headers['x-restaurant-name'] = user.restaurantName;
+          config.params = { ...config.params, restaurantName: user.restaurantName };
+        }
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-const mockDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
-
-const mockUser = {
-  _id: 'mock-user-id',
-  name: 'Frontend Designer',
-  email: 'design@eatgreet.com',
-  role: 'admin',
-  token: 'mock-jwt-token'
-};
-
-/* 
-   REAL APIs 
-*/
-/* 
-   REAL APIs 
-*/
 export const authAPI = {
-  login: async (credentials) => {
-    try {
-      const response = await apiClient.post('/auth/login', credentials);
-      return response; // Return full Axios response object
-    } catch (error) {
-      console.error("Login API Error:", error);
-      throw error;
-    }
-  },
-  register: async (userData) => {
-    try {
-      const response = await apiClient.post('/auth/register', userData);
-      return response;
-    } catch (error) {
-      console.error("Register API Error:", error);
-      throw error;
-    }
-  },
-  getProfile: async () => {
-    return apiClient.get('/auth/profile');
-  },
-  updateProfile: async (userData) => {
-    return apiClient.put('/auth/profile', userData);
-  },
-  updatePassword: async (data) => {
-    return apiClient.put('/auth/password', data);
-  },
-  getRestaurants: async () => {
-    // Super Admin endpoint to list restaurants
-    return apiClient.get('/auth/restaurants');
-  }
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (userData) => api.post('/auth/register', userData),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (userData) => api.put('/auth/profile', userData),
+  updatePassword: () => Promise.resolve({ data: { message: 'Password update not implemented yet' } }), // Pending backend
+  getRestaurants: () => api.get('/restaurant/all'),
 };
 
 export const statsAPI = {
   getAdminStats: async () => {
-    return apiClient.get('/stats/admin');
+    return api.get('/stats/admin');
   },
   getSuperAdminStats: async () => {
-    return apiClient.get('/stats/super-admin');
+    return api.get('/stats/super-admin');
   }
+};
+
+export const paymentAPI = {
+  getAll: () => api.get('/payments'),
 };
 
 export const menuAPI = {
-  getAll: async () => {
-    return apiClient.get('/menu');
-  },
-  create: async (itemData) => {
-    return apiClient.post('/menu', itemData);
-  },
-  update: async (id, itemData) => {
-    return apiClient.put(`/menu/${id}`, itemData);
-  },
-  delete: async (id) => {
-    return apiClient.delete(`/menu/${id}`);
-  }
+  getAll: (params) => api.get('/menu', { params }), // params can contain restaurantId
+  create: (itemData) => api.post('/menu', itemData),
+  update: (id, itemData) => api.put(`/menu/${id}`, itemData),
+  delete: (id) => api.delete(`/menu/${id}`),
 };
 
 export const categoryAPI = {
-  getAll: async () => {
-    return apiClient.get('/categories');
-  },
-  create: async (categoryData) => {
-    return apiClient.post('/categories', categoryData);
-  },
-  update: async (id, categoryData) => {
-    return apiClient.put(`/categories/${id}`, categoryData);
-  },
-  delete: async (id) => {
-    return apiClient.delete(`/categories/${id}`);
-  }
+  getAll: (params) => api.get('/categories', { params }),
+  create: (categoryData) => api.post('/categories', categoryData),
+  update: (id, categoryData) => api.put(`/categories/${id}`, categoryData),
+  delete: (id) => api.delete(`/categories/${id}`),
 };
 
 export const orderAPI = {
-  getOrders: async () => {
-    return apiClient.get('/orders');
-  },
-  create: async (orderData) => {
-    return apiClient.post('/orders', orderData);
-  },
-  updateStatus: async (orderId, status) => {
-    return apiClient.put(`/orders/${orderId}/status`, { status });
-  }
+  getOrders: () => api.get('/orders'),
+  create: (orderData) => api.post('/orders', orderData),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
 };
 
 /* 
-   MOCKED APIs (Preserved for Customer/Restaurant specific flows not fully integrated yet)
+   CUSTOMER / OTHER FLOWS
 */
-
 export const customerAPI = {
-  login: async (credentials) => {
-    await mockDelay();
-    return { data: { ...mockUser, role: 'customer' } };
-  },
-  register: async (data) => {
-    await mockDelay();
-    return { data: { ...mockUser, ...data, role: 'customer' } };
-  },
-  getProfile: async () => {
-    await mockDelay();
-    return { data: mockUser };
-  }
+  // Customers use the same auth endpoints but different flows in frontend potentially
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (data) => api.post('/auth/register', { ...data, role: 'customer' }),
+  getProfile: () => api.get('/auth/profile'),
 };
 
 export const restaurantAPI = {
-  getDetails: async () => {
-    await mockDelay();
-    return { data: {} };
-  },
-  updateDetails: async (details) => {
-    await mockDelay();
-    return { data: details };
-  }
+  getDetails: () => api.get('/restaurant'),
+  updateDetails: (details) => api.put('/restaurant', details),
 };
 
 export const uploadAPI = {
-  uploadFile: async () => {
-    await mockDelay();
-    return { data: { url: 'https://via.placeholder.com/150' } };
+  uploadFile: (fileOrFormData) => {
+    let data = fileOrFormData;
+    if (fileOrFormData instanceof File) {
+      data = new FormData();
+      data.append('file', fileOrFormData);
+    }
+    return api.post('/upload', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   },
-  uploadDirect: async () => {
-    await mockDelay();
-    return { data: { url: 'https://via.placeholder.com/150' } };
-  }
+  uploadDirect: (fileOrFormData, onUploadProgress) => {
+    let data = fileOrFormData;
+    if (fileOrFormData instanceof File) {
+      data = new FormData();
+      data.append('file', fileOrFormData);
+    }
+    return api.post('/upload', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        if (onUploadProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onUploadProgress(percentCompleted);
+        }
+      }
+    });
+  },
 };
 
-export default {
+const apis = {
   authAPI,
   statsAPI,
   menuAPI,
@@ -173,3 +127,5 @@ export default {
   restaurantAPI,
   uploadAPI
 };
+
+export default apis;

@@ -23,8 +23,10 @@ export default function AdminLogin() {
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('userRole', userData.role);
 
-            if (userData.role === 'super-admin') {
-                navigate('/super-admin');
+            if (userData.role === 'superadmin') {
+                // Enforce separation: Super Admins must use their own login portal
+                navigate('/super-admin/login');
+                return;
             } else if (userData.role === 'admin') {
                 navigate('/admin');
             } else {

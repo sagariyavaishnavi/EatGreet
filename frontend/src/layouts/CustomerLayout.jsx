@@ -109,7 +109,8 @@ const CustomerLayout = () => {
                     cart, addToCart, removeFromCart, clearCart,
                     favorites, toggleFavorite,
                     showBill, setShowBill,
-                    tableNo, setTableNo
+                    tableNo, setTableNo,
+                    restaurantId
                 }} />
             </main>
 

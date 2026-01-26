@@ -34,7 +34,7 @@ const TimeStatusGauge = () => (
         <h3 className="text-[24px] font-medium text-black mb-1">Time Status</h3>
         <div className="flex-1 flex items-center justify-center relative translate-y-6">
             <div className="relative w-full h-full flex items-center justify-center overflow-visible">
-                <svg width="100%" height="auto" viewBox="0 0 220 120" className="max-w-[340px] overflow-visible">
+                <svg width="100%" height="100%" viewBox="0 0 220 120" className="max-w-[340px] overflow-visible">
                     <defs>
                         <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                             <stop offset="0%" stopColor="#22C55E" />
@@ -115,13 +115,13 @@ const AdminDashboard = () => {
 
                 // Process Feed (Latest 3 Active Orders)
                 const activeOrdersList = orders
-                    .filter(o => ['pending', 'preparing', 'ready'].includes(o.status))
+                    .filter(o => o.status && ['pending', 'preparing', 'ready'].includes(o.status))
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                     .slice(0, 3)
                     .map(o => ({
                         id: o._id,
                         title: `Order #${o._id.slice(-4)}`,
-                        sub: o.items.map(i => i.name).join(', '),
+                        sub: (o.items || []).map(i => i.name || 'Item').join(', '),
                         icon: tableIcon // Default icon for now
                     }));
                 setFeedItems(activeOrdersList);
@@ -157,9 +157,9 @@ const AdminDashboard = () => {
                 <div className="lg:col-span-8 flex flex-col gap-6">
                     {/* Top Row: KPI Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <DashboardCard value={stats.activeOrders} label="Total Active Orders" icon={activityIcon} />
-                        <DashboardCard value={stats.dineIn} subValue={stats.totalOrders} label="Dine-in / Total" icon={tableIcon} />
-                        <DashboardCard value={stats.revenue.toLocaleString()} label="Total Revenue" icon={revenueIcon} isCurrency />
+                        <DashboardCard value={stats.activeOrders || 0} label="Total Active Orders" icon={activityIcon} />
+                        <DashboardCard value={stats.dineIn || 0} subValue={stats.totalOrders || 0} label="Dine-in / Total" icon={tableIcon} />
+                        <DashboardCard value={(stats.revenue || 0).toLocaleString()} label="Total Revenue" icon={revenueIcon} isCurrency />
                     </div>
 
                     {/* Middle Row: Sales Analytics */}

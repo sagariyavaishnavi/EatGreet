@@ -89,14 +89,16 @@ const offers = [
 
 // Initial like counts are no longer needed since we are not showing counts
 
-import { menuAPI, categoryAPI } from '../../utils/api';
+import { menuAPI, categoryAPI, orderAPI } from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const Menu = () => {
     const {
         cart, addToCart, removeFromCart, clearCart,
         favorites, toggleFavorite,
         showBill, setShowBill,
-        tableNo, setTableNo
+        tableNo, setTableNo,
+        restaurantId
     } = useOutletContext();
 
     const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -121,16 +123,17 @@ const Menu = () => {
         // Poll for updates every 10 seconds
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
-    }, []);
+    }, [restaurantId]); // Added restaurantId to dependencies
 
     const fetchData = async () => {
         try {
+            const params = restaurantId ? { restaurantId } : {};
             const [menuRes, catRes] = await Promise.all([
-                menuAPI.getAll(),
-                categoryAPI.getAll()
+                menuAPI.getAll(params),
+                categoryAPI.getAll(params)
             ]);
-            setMenuItems(menuRes.data);
-            setCategories(["All", ...catRes.data.map(c => c.name)]);
+            setMenuItems(menuRes.data || []);
+            setCategories(["All", ...(catRes.data || []).map(c => c.name)]);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -147,16 +150,53 @@ const Menu = () => {
         setCustomerDetails(prev => ({ ...prev, tableNo }));
     }, [tableNo]);
 
-    const handlePlaceOrder = (e) => {
+    const handlePlaceOrder = async (e) => {
         e.preventDefault();
-        setOrderPlaced(true);
-        // Reset after 3 seconds for demo
-        setTimeout(() => {
-            setOrderPlaced(false);
-            setShowBill(false);
-            clearCart();
-            setCustomerDetails({ name: "", phone: "", tableNo: "4", notes: "" });
-        }, 3000);
+
+        if (Object.keys(cart).length === 0) {
+            toast.error("Your cart is empty");
+            return;
+        }
+
+        const orderData = {
+            restaurantId, // Pass the restaurant context
+            customerInfo: {
+                name: customerDetails.name,
+                phone: customerDetails.phone,
+                id: user?._id || null
+            },
+            tableNumber: customerDetails.tableNo,
+            items: Object.values(cart).map(item => ({
+                menuItem: item._id,
+                name: item.name,
+                quantity: item.qty,
+                price: item.price
+            })),
+            totalAmount: grandTotal,
+            instruction: customerDetails.notes
+        };
+
+        const loadToast = toast.loading('Placing your order...');
+        try {
+            await orderAPI.create(orderData);
+            toast.success('Order placed successfully!', { id: loadToast });
+            setOrderPlaced(true);
+
+            setTimeout(() => {
+                setOrderPlaced(false);
+                setShowBill(false);
+                clearCart();
+                setCustomerDetails({
+                    name: user?.name || "",
+                    phone: user?.phone || "",
+                    tableNo: tableNo,
+                    notes: ""
+                });
+            }, 3000);
+        } catch (error) {
+            console.error('Order Error:', error);
+            toast.error(error.response?.data?.message || 'Failed to place order', { id: loadToast });
+        }
     };
 
     const totalItems = Object.values(cart).reduce((acc, item) => acc + item.qty, 0);

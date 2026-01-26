@@ -22,26 +22,7 @@ import { motion } from 'framer-motion';
 import { statsAPI } from '../../utils/api';
 
 
-const revenueData = [
-    { name: 'Jan', value: 0 },
-    { name: 'Feb', value: 0 },
-    { name: 'Mar', value: 0 },
-    { name: 'Apr', value: 0 },
-    { name: 'May', value: 0 },
-    { name: 'Jun', value: 0 },
-    { name: 'Jul', value: 0 },
-    { name: 'Aug', value: 0 },
-    { name: 'Sep', value: 0 },
-    { name: 'Oct', value: 0 },
-    { name: 'Nov', value: 0 },
-    { name: 'Dec', value: 0 },
-];
-
-const paymentStatusData = [
-    { name: 'Paid', value: 0, color: '#10B981' },
-    { name: 'Pending', value: 0, color: '#F59E0B' },
-    { name: 'Overdue', value: 0, color: '#EF4444' },
-];
+// Static data removed. Data is now fetched dynamically.
 
 const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) => (
     <motion.div
@@ -82,7 +63,10 @@ export default function SuperAdminDashboard() {
         const fetchStats = async () => {
             try {
                 const response = await statsAPI.getSuperAdminStats();
-                setStatsData(response.data);
+                setStatsData(prev => ({
+                    ...prev,
+                    ...response.data
+                }));
             } catch (error) {
                 console.error('Error fetching super admin stats:', error);
             }
@@ -105,7 +89,7 @@ export default function SuperAdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
                         title="Total Restaurants"
-                        value={statsData.totalRestaurants}
+                        value={statsData.totalRestaurants || 0}
                         change="Live"
                         icon={Store}
                         gradient="bg-gradient-to-br from-[#E2F0E9] to-[#D4E9F2]"
@@ -113,7 +97,7 @@ export default function SuperAdminDashboard() {
                     />
                     <StatCard
                         title="Active Subscriptions"
-                        value={statsData.activeSubscriptions}
+                        value={statsData.activeSubscriptions || 0}
                         change="Live"
                         icon={Ticket}
                         gradient="bg-gradient-to-br from-[#E6F3E6] to-[#CDE7CD]"
@@ -121,7 +105,7 @@ export default function SuperAdminDashboard() {
                     />
                     <StatCard
                         title="Monthly Revenue"
-                        value={`₹${statsData.monthlyRevenue.toLocaleString()}`}
+                        value={`₹${(statsData.monthlyRevenue || 0).toLocaleString()}`}
                         change="Live"
                         icon={BarChart3}
                         gradient="bg-gradient-to-br from-[#E9F5E9] to-[#DFF0DF]"
@@ -129,7 +113,7 @@ export default function SuperAdminDashboard() {
                     />
                     <StatCard
                         title="Unpaid Restaurants"
-                        value={statsData.unpaidRestaurants}
+                        value={statsData.unpaidRestaurants || 0}
                         change="Alert"
                         icon={AlertTriangle}
                         gradient="bg-gradient-to-br from-[#FAF3E5] to-[#F1E4C9]"
@@ -151,7 +135,7 @@ export default function SuperAdminDashboard() {
                         </div>
                         <div className="flex-1 w-full min-h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={statsData.revenueData.length > 0 ? statsData.revenueData : revenueData}>
+                                <LineChart data={statsData.revenueData || []}>
                                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#eee" />
                                     <XAxis
                                         dataKey="name"
@@ -198,14 +182,14 @@ export default function SuperAdminDashboard() {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
-                                            data={statsData.paymentStatusData.length > 0 ? statsData.paymentStatusData : paymentStatusData}
+                                            data={statsData.paymentStatusData || []}
                                             innerRadius="70%"
                                             outerRadius="100%"
                                             paddingAngle={5}
                                             dataKey="value"
                                             stroke="none"
                                         >
-                                            {(statsData.paymentStatusData.length > 0 ? statsData.paymentStatusData : paymentStatusData).map((entry, index) => (
+                                            {(statsData.paymentStatusData || []).map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
@@ -213,14 +197,14 @@ export default function SuperAdminDashboard() {
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-3xl font-medium text-gray-900">{statsData.totalRestaurants}</span>
+                                    <span className="text-3xl font-medium text-gray-900">{statsData.totalRestaurants || 0}</span>
                                     <span className="text-xs text-gray-400 font-medium tracking-widest">TOTAL</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="w-full grid grid-cols-3 gap-2 mt-4">
-                            {(statsData.paymentStatusData.length > 0 ? statsData.paymentStatusData : paymentStatusData).map((item) => (
+                            {(statsData.paymentStatusData || []).map((item) => (
                                 <div key={item.name} className="flex flex-col items-center">
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>

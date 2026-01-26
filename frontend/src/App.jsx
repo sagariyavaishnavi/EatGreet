@@ -13,6 +13,7 @@ import Reports from './pages/super-admin/Reports';
 import Users from './pages/super-admin/Users';
 import SuperAdminProfile from './pages/super-admin/SuperAdminProfile';
 import SuperAdminSettings from './pages/super-admin/SuperAdminSettings';
+import SuperAdminLogin from './pages/super-admin/SuperAdminLogin';
 
 // Admin Imports
 import AdminLogin from './pages/admin/AdminLogin';
@@ -38,11 +39,28 @@ import CustomerProfile from './pages/customer/CustomerProfile';
 import CustomerSettings from './pages/customer/CustomerSettings';
 import CustomerFavorites from './pages/customer/Favorites';
 
-// Protected Route Component
+// Protected Route for Store Admins
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const role = localStorage.getItem('userRole');
+
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
+  }
+  // Redirect Super Admins to their own dashboard if they try to access admin routes
+  if (role === 'superadmin') {
+    return <Navigate to="/super-admin" replace />;
+  }
+  return children;
+};
+
+// Protected Route for Super Admin
+const SuperAdminRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const role = localStorage.getItem('userRole');
+
+  if (!isAuthenticated || role !== 'superadmin') {
+    return <Navigate to="/super-admin/login" replace />;
   }
   return children;
 };
@@ -57,31 +75,15 @@ const TitleUpdater = () => {
     if (pathname === '/admin') title = 'Dashboard';
     else if (pathname === '/admin/menu') title = 'Menu';
     else if (pathname === '/admin/category') title = 'Category';
-    else if (pathname === '/admin/orders') title = 'Orders';
-    else if (pathname === '/admin/table') title = 'Tables';
-    else if (pathname === '/admin/profile') title = 'Profile';
-    else if (pathname === '/admin/settings') title = 'Settings';
-
     // Super Admin Routes
     else if (pathname === '/super-admin') title = 'Super Admin';
-    else if (pathname === '/super-admin/restaurants') title = 'Restaurants';
-    else if (pathname === '/super-admin/payments') title = 'Payments';
-    else if (pathname === '/super-admin/reports') title = 'Reports';
-    else if (pathname === '/super-admin/users') title = 'Users';
-    else if (pathname === '/super-admin/profile') title = 'Profile';
-    else if (pathname === '/super-admin/settings') title = 'Settings';
-
-    // Customer Routes
-    else if (pathname.includes('/customer/menu') || pathname === '/menu') title = 'Menu';
-    else if (pathname.includes('/customer/favorites')) title = 'Favorites';
-    else if (pathname.includes('/customer/profile')) title = 'Profile';
+    else if (pathname === '/super-admin/login') title = 'Super Admin Login';
 
     // Auth & Landing
     else if (pathname === '/login') title = 'Login';
     else if (pathname === '/signup') title = 'Signup';
-    else if (pathname === '/') title = 'EatGreet';
 
-    // Default fallback for other sub-pages
+    // Default fallback
     else {
       const pathSegments = pathname.split('/').filter(Boolean);
       if (pathSegments.length > 0) {
@@ -110,6 +112,9 @@ function App() {
         {/* Admin Auth */}
         <Route path="/admin/login" element={<AdminLogin />} />
 
+        {/* Super Admin Auth */}
+        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+
         {/* Protected Admin Routes */}
         <Route path="/admin" element={
           <ProtectedRoute>
@@ -127,7 +132,11 @@ function App() {
         </Route>
 
         {/* Super Admin Routes */}
-        <Route path="/super-admin" element={<SuperAdminLayout />}>
+        <Route path="/super-admin" element={
+          <SuperAdminRoute>
+            <SuperAdminLayout />
+          </SuperAdminRoute>
+        }>
           <Route index element={<SuperAdminDashboard />} />
           <Route path="restaurants" element={<Restaurants />} />
           <Route path="payments" element={<Payments />} />

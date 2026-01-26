@@ -7,6 +7,7 @@ import logo from '../../assets/logo-full.png';
 
 const AdminHeader = () => {
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const isActive = (path) => {
     return location.pathname === path ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:text-black hover:bg-gray-50';
@@ -17,6 +18,7 @@ const AdminHeader = () => {
     { label: 'Menu', path: '/admin/menu' },
     { label: 'Category', path: '/admin/category' },
     { label: 'Order', path: '/admin/orders' },
+    { label: 'Table', path: '/admin/table' },
     { label: 'Sales', path: '/admin/sales' },
   ];
 
@@ -65,10 +67,10 @@ const AdminHeader = () => {
         {/* Profile Capsule */}
         <Link to="/admin/profile" className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
           <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
-            <img src="https://ui-avatars.com/api/?name=Admin&background=FD6941&color=fff" alt="Admin" className="w-full h-full object-cover" />
+            <img src={`https://ui-avatars.com/api/?name=${user?.name || 'Admin'}&background=FD6941&color=fff`} alt={user?.name || 'Admin'} className="w-full h-full object-cover" />
           </div>
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-800">Admin</span>
+            <span className="text-sm font-medium text-gray-800">{user?.name || 'Admin'}</span>
             <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>

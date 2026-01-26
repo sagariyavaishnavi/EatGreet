@@ -54,15 +54,23 @@ export default function LandingPage() {
         setIsLoading(true);
 
         try {
-            const isManager = formData.interestedIn.includes('Manager Dashboard');
+            // Landing page registration is always for creating a NEW Restaurant (Admin)
+            // The user request explicitly states "create new folder... create dynamically database"
+
+            if (!formData.businessName) {
+                setError('Restaurant/Business Name is required to set up your system.');
+                setIsLoading(false);
+                return;
+            }
+
             const signupData = {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
                 phone: formData.phone,
                 city: formData.city,
-                role: isManager ? 'admin' : 'customer',
-                restaurantName: isManager ? formData.businessName : undefined
+                role: 'admin', // Always admin for improved landing page flow
+                restaurantName: formData.businessName
             };
 
             const response = await authAPI.register(signupData);
@@ -275,8 +283,9 @@ export default function LandingPage() {
                         {/* Left Side: Illustration & Text */}
                         <div className="space-y-6">
                             <div>
-                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">Join EatGreet Today</h2>
-                                <p className="text-gray-500 text-lg">Create your account and experience the future of dining. Register as a manager to set up your restaurant!</p>
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">We’d Love to answer your
+                                    questions</h2>
+                                <p className="text-gray-500 text-lg">Have a query? We'd be happy to answer any questions you might have.</p>
                             </div>
                             <div className="flex justify-center lg:justify-start">
                                 <img src={contactIllustrationHD} alt="Contact Illustration" className="w-full max-w-md object-contain" />
@@ -352,13 +361,14 @@ export default function LandingPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-800 ml-1">Business Name (for Managers)</label>
+                                        <label className="text-sm font-bold text-gray-800 ml-1">Business Name (Restaurant)<span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
+                                            required
                                             value={formData.businessName}
                                             onChange={e => setFormData({ ...formData, businessName: e.target.value })}
                                             className="w-full px-5 py-3.5 bg-[#EAEAEA] border-none rounded-2xl focus:ring-2 focus:ring-orange-200 outline-none transition-all placeholder-gray-400"
-                                            placeholder="Your Restaurant"
+                                            placeholder="Your Restaurant Name"
                                         />
                                     </div>
                                 </div>

@@ -28,7 +28,7 @@ export default function AdminLogin() {
             } else if (userData.role === 'admin') {
                 navigate('/admin');
             } else {
-                navigate('/customer/menu');
+                navigate('/admin');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');

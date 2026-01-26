@@ -23,10 +23,16 @@ exports.register = async (req, res) => {
             });
         }
 
-        // Check if user exists
+        // Check if user exists (Email)
         const userExists = await User.findOne({ email });
         if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'User with this email already exists' });
+        }
+
+        // Check if restaurant name exists (since it must be unique)
+        const schoolExists = await User.findOne({ restaurantName });
+        if (schoolExists) {
+            return res.status(400).json({ message: 'This Restaurant Name is already registered. Please choose another.' });
         }
 
         // Create user
@@ -53,6 +59,14 @@ exports.register = async (req, res) => {
             });
         }
     } catch (error) {
+        console.error('Register Error:', error);
+
+        // Handle Mongoose Duplicate Key Error
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyValue)[0];
+            return res.status(400).json({ message: `This ${field} is already taken.` });
+        }
+
         res.status(500).json({ message: error.message });
     }
 };

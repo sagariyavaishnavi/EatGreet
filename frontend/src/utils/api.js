@@ -1,95 +1,161 @@
-import axios from 'axios';
+// import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'http://localhost:5000/api';
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
+/**
+ * MOCKED API for Frontend Design Phase
+ * Backend disconnected.
+ */
 
-// Add a request interceptor to add the token to every request
-api.interceptors.request.use(
-    (config) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.token) {
-            config.headers.Authorization = `Bearer ${user.token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+const mockDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+
+const mockUser = {
+  _id: 'mock-user-id',
+  name: 'Frontend Designer',
+  email: 'design@eatgreet.com',
+  role: 'admin', // Default to admin to see dashboard
+  token: 'mock-jwt-token'
+};
 
 export const authAPI = {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    getProfile: () => api.get('/auth/profile'),
-    updateProfile: (userData) => api.put('/auth/profile', userData),
-    updatePassword: (passwordData) => api.put('/auth/password', passwordData),
-    getRestaurants: () => api.get('/auth/restaurants')
-};
-
-export const menuAPI = {
-    getAll: (restaurantId) => api.get('/menu', { params: { restaurantId } }),
-    create: (itemData) => api.post('/menu', itemData),
-    update: (id, itemData) => api.put(`/menu/${id}`, itemData),
-    delete: (id) => api.delete(`/menu/${id}`)
-};
-
-export const categoryAPI = {
-    getAll: (restaurantId) => api.get('/categories', { params: { restaurantId } }),
-    create: (categoryData) => api.post('/categories', categoryData),
-    update: (id, categoryData) => api.put(`/categories/${id}`, categoryData),
-    delete: (id) => api.delete(`/categories/${id}`)
+  login: async (credentials) => {
+    await mockDelay();
+    console.log('Mock Login with:', credentials);
+    // Simulate success
+    // Return mockUser directly as data (it includes token and role)
+    return { data: mockUser };
+  },
+  register: async (userData) => {
+    await mockDelay();
+    console.log('Mock Register with:', userData);
+    return { data: { ...mockUser, ...userData } };
+  },
+  getProfile: async () => {
+    await mockDelay();
+    return { data: mockUser };
+  },
+  updateProfile: async (userData) => {
+    await mockDelay();
+    return { data: { ...mockUser, ...userData } };
+  },
+  updatePassword: async () => {
+    await mockDelay();
+    return { data: { message: 'Password updated' } };
+  },
+  getRestaurants: async () => {
+    await mockDelay();
+    return { data: [] }; // No static data
+  }
 };
 
 export const statsAPI = {
-    getAdminStats: () => api.get('/stats/admin'),
-    getSuperAdminStats: () => api.get('/stats/super-admin')
+  getAdminStats: async () => {
+    await mockDelay();
+    return { data: { totalOrders: 0, totalSales: 0, activeMenu: 0 } };
+  },
+  getSuperAdminStats: async () => {
+    await mockDelay();
+    return { data: {} };
+  }
+};
+
+export const menuAPI = {
+  getAll: async () => {
+    await mockDelay();
+    return { data: [] }; // No static data
+  },
+  create: async (itemData) => {
+    await mockDelay();
+    return { data: itemData };
+  },
+  update: async (id, itemData) => {
+    await mockDelay();
+    return { data: itemData };
+  },
+  delete: async () => {
+    await mockDelay();
+    return { data: { message: 'Deleted' } };
+  }
+};
+
+export const categoryAPI = {
+  getAll: async () => {
+    await mockDelay();
+    return { data: [] }; // No static data
+  },
+  create: async (categoryData) => {
+    await mockDelay();
+    return { data: categoryData };
+  },
+  update: async (id, categoryData) => {
+    await mockDelay();
+    return { data: categoryData };
+  },
+  delete: async () => {
+    await mockDelay();
+    return { data: { message: 'Deleted' } };
+  }
 };
 
 export const orderAPI = {
-    getOrders: (restaurantId) => api.get('/orders', { params: { restaurantId } }),
-    create: (orderData) => api.post('/orders', orderData),
-    updateStatus: (id, status) => api.put(`/orders/${id}`, { status })
+  getOrders: async () => {
+    await mockDelay();
+    return { data: [] }; // No static data
+  },
+  create: async (orderData) => {
+    await mockDelay();
+    return { data: orderData };
+  },
+  updateStatus: async () => {
+    await mockDelay();
+    return { data: { message: 'Status updated' } };
+  }
+};
+
+export const customerAPI = {
+  login: async (credentials) => {
+    await mockDelay();
+    return { data: { ...mockUser, role: 'customer' } };
+  },
+  register: async (data) => {
+    await mockDelay();
+    return { data: { ...mockUser, ...data, role: 'customer' } };
+  },
+  getProfile: async () => {
+    await mockDelay();
+    return { data: mockUser };
+  }
 };
 
 export const restaurantAPI = {
-    getDetails: (restaurantId) => api.get(`/restaurant/${restaurantId}`),
-    updateDetails: (details) => api.put('/restaurant', details)
+  getDetails: async () => {
+    await mockDelay();
+    return { data: {} };
+  },
+  updateDetails: async (details) => {
+    await mockDelay();
+    return { data: details };
+  }
 };
 
 export const uploadAPI = {
-    uploadFile: (formData) => api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
-    uploadDirect: async (file, onProgress) => {
-        // 1. Get Signature from backend
-        const { data: sigData } = await api.get('/upload/signature');
-
-        // 2. Prepare FormData for Cloudinary
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('api_key', sigData.apiKey);
-        formData.append('timestamp', sigData.timestamp);
-        formData.append('signature', sigData.signature);
-        formData.append('folder', sigData.folder);
-
-        // 3. Upload directly to Cloudinary
-        const cloudUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`;
-        return axios.post(cloudUrl, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            onUploadProgress: (progressEvent) => {
-                if (onProgress) {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    onProgress(percentCompleted);
-                }
-            }
-        });
-    }
+  uploadFile: async () => {
+    await mockDelay();
+    return { data: { url: 'https://via.placeholder.com/150' } };
+  },
+  uploadDirect: async () => {
+    await mockDelay();
+    return { data: { url: 'https://via.placeholder.com/150' } };
+  }
 };
 
-export default api;
+export default {
+  authAPI,
+  statsAPI,
+  menuAPI,
+  categoryAPI,
+  orderAPI,
+  customerAPI,
+  restaurantAPI,
+  uploadAPI
+};

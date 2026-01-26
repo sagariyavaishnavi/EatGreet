@@ -2,6 +2,7 @@ const { getTenantConnection } = require('../config/db');
 const CategorySchema = require('../models/Category');
 const MenuItemSchema = require('../models/MenuItem');
 const OrderSchema = require('../models/Order');
+const CustomerSchema = require('../models/Customer');
 
 /**
  * Returns tenant-specific models.
@@ -53,7 +54,15 @@ const getTenantModels = (restaurantName) => {
         Order = tenantConn.model('Order', tenantOrderSchema, 'orders');
     }
 
-    return { Category, MenuItem, Order };
+    // 4. Customer Model (Tenant specific users)
+    let Customer;
+    if (tenantConn.models.Customer) {
+        Customer = tenantConn.models.Customer;
+    } else {
+        Customer = tenantConn.model('Customer', CustomerSchema, 'customers');
+    }
+
+    return { Category, MenuItem, Order, Customer };
 };
 
 module.exports = { getTenantModels };

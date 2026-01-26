@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Urbanist' !important;
 }
 
 body {
@@ -9,7 +9,7 @@ body {
 }
 
 * {
-    font-family: 'Urbanist', sans-serif !important;
+    font-family: 'Urbanist' !important;
 }
 
 @tailwind base;

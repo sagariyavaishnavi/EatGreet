@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
-import { User, Settings, ShoppingBag, UtensilsCrossed, Heart } from 'lucide-react';
+import { ShoppingBag, Heart, UtensilsCrossed } from 'lucide-react';
+import logo from '../assets/logo-full.png';
 
 const CustomerLayout = () => {
     const location = useLocation();
@@ -78,10 +79,7 @@ const CustomerLayout = () => {
             <header className="bg-white shadow-sm sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
                     <Link to={`${baseUrl}/menu`} className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
-                            <UtensilsCrossed className="w-5 h-5" />
-                        </div>
-                        <h1 className="text-xl font-bold text-gray-800">EatGreet</h1>
+                        <img src={logo} alt="EatGreet" className="h-8 w-auto object-contain" />
                     </Link>
 
                     <div className="flex items-center gap-2 md:gap-4">
@@ -89,19 +87,9 @@ const CustomerLayout = () => {
                             Table #{tableNo}
                         </div>
 
-                        <Link to={`${baseUrl}/profile`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
-                            <User className="w-5 h-5 text-gray-600 group-hover:text-black" />
-                        </Link>
-
                         <Link to={`${baseUrl}/favorites`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
                             <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500" />
                         </Link>
-
-                        {!restaurantId && (
-                            <Link to={`${baseUrl}/settings`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
-                                <Settings className="w-5 h-5 text-gray-600 group-hover:text-black" />
-                            </Link>
-                        )}
 
                         <button onClick={() => setShowBill(true)} className="relative p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
                             <ShoppingBag className="w-5 h-5" />
@@ -126,25 +114,15 @@ const CustomerLayout = () => {
             </main>
 
             {/* Mobile Bottom Nav */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 justify-around">
                 <Link to={`${baseUrl}/menu`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('menu') || location.pathname === baseUrl ? 'text-black' : 'text-gray-400'}`}>
                     <UtensilsCrossed className="w-5 h-5" />
                     <span className="text-[10px] font-bold">Menu</span>
-                </Link>
-                <Link to={`${baseUrl}/profile`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('profile') ? 'text-black' : 'text-gray-400'}`}>
-                    <User className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">Profile</span>
                 </Link>
                 <Link to={`${baseUrl}/favorites`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('favorites') ? 'text-black' : 'text-gray-400'}`}>
                     <Heart className="w-5 h-5" />
                     <span className="text-[10px] font-bold">Saved</span>
                 </Link>
-                {!restaurantId && (
-                    <Link to={`${baseUrl}/settings`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('settings') ? 'text-black' : 'text-gray-400'}`}>
-                        <Settings className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Settings</span>
-                    </Link>
-                )}
             </div>
         </div>
     );

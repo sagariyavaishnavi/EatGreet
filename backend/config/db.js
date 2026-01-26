@@ -23,7 +23,7 @@ const getURI = (dbName) => {
  * Stores: 'resto_names' (User/Admin accounts)
  */
 const mainConn = mongoose.createConnection(getURI('restaurent'), {
-    serverSelectionTimeoutMS: 5000
+    serverSelectionTimeoutMS: 30000
 });
 mainConn.on('connected', () => console.log('DB Connected: restaurent (Registry)'));
 
@@ -39,7 +39,7 @@ const getTenantConnection = (dbName) => {
     }
 
     const conn = mongoose.createConnection(getURI(dbName), {
-        serverSelectionTimeoutMS: 5000
+        serverSelectionTimeoutMS: 30000
     });
 
     conn.on('connected', () => console.log(`DB Connected: ${dbName} (Tenant)`));

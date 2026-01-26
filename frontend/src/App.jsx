@@ -19,6 +19,8 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMenu from './pages/admin/AdminMenu';
 import AdminCategory from './pages/admin/AdminCategory';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminTable from './pages/admin/AdminTable';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminSettings from './pages/admin/AdminSettings';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
@@ -66,7 +68,9 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="menu" element={<AdminMenu />} />
           <Route path="category" element={<AdminCategory />} />
-          <Route path="orders" element={<div className="p-4">Orders Page (Coming Soon)</div>} />
+          <Route path="category" element={<AdminCategory />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="table" element={<AdminTable />} />
           <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="settings" element={<AdminSettings />} />

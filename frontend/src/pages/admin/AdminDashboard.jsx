@@ -1,279 +1,221 @@
-// import { useState, useEffect } from 'react';
-// import { ShoppingBag, TrendingUp, CheckCircle, Clock } from 'lucide-react';
-// import { menuAPI, statsAPI } from '../../utils/api';
+import React from 'react';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+} from 'recharts';
+import { ArrowUpRight, ChevronDown } from 'lucide-react';
+import activityIcon from '../../assets/activity.svg';
+import tableIcon from '../../assets/Table-Bar--Streamline-Sharp-Material.svg';
+import revenueIcon from '../../assets/trending-up.svg';
+import kitchenIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
 
-// const AdminDashboard = () => {
-//     const [statsData, setStatsData] = useState({
-//         totalOrders: 0,
-//         revenue: 0,
-//         activeOrders: 0,
-//         menuItems: 0,
-//         dineIn: 0,
-//         takeaway: 0
-//     });
-//     const user = JSON.parse(localStorage.getItem('user'));
-//     const activeOrders = []; // To be implemented with real orders logic later
+// --- DATA MOCKS ---
+const salesData = [
+    { name: 'Sun', value: 40 },
+    { name: 'Mon', value: 60 },
+    { name: 'Tue', value: 35 },
+    { name: 'Wed', value: 85, highlight: true },
+    { name: 'Thu', value: 50 },
+    { name: 'Fri', value: 40 },
+    { name: 'Sat', value: 55 },
+];
 
-//     useEffect(() => {
-//         const fetchStats = async () => {
-//             try {
-//                 const response = await statsAPI.getAdminStats();
-//                 setStatsData(response.data);
-//             } catch (error) {
-//                 console.error('Error fetching admin stats:', error);
-//             }
-//         };
-//         fetchStats();
-//     }, []);
+const feedItems = [
+    { id: 1, title: 'Table #01', sub: 'Water required', icon: tableIcon },
+    { id: 2, title: 'Kitchen', sub: 'Order #12 ready', icon: kitchenIcon },
+    { id: 3, title: 'Table #04', sub: 'Extra Roti', icon: tableIcon },
+];
 
-//     const stats = [
-//         { label: 'Total Orders', value: statsData.totalOrders, icon: ShoppingBag, color: 'bg-blue-50 text-blue-600', trend: 'Live' },
-//         { label: 'Total Revenue', value: `₹${statsData.revenue.toLocaleString()}`, icon: TrendingUp, color: 'bg-green-50 text-green-600', trend: 'Live' },
-//         { label: 'Active Orders', value: statsData.activeOrders, icon: Clock, color: 'bg-orange-50 text-orange-600', trend: 'Live' },
-//         { label: 'Menu Items', value: statsData.menuItems, icon: CheckCircle, color: 'bg-purple-50 text-purple-600', trend: 'Active' },
-//     ];
+// --- COMPONENTS ---
 
-//     return (
-//         <div className="space-y-8">
-//             {/* Header */}
-//             <div>
-//                 <h1 className="text-3xl font-bold text-gray-800">{user?.restaurantName || 'Restaurant'} Overview</h1>
-//                 <p className="text-gray-500 mt-1">Welcome back, {user?.name || 'Admin'}! Manage your orders and track performance.</p>
-//             </div>
-
-//             {/* Stats Grid */}
-//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-//                 {stats.map((stat, idx) => (
-//                     <div key={idx} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-44">
-//                         <div className="flex justify-between items-start">
-//                             <div className={`${stat.color} p-4 rounded-2xl`}>
-//                                 <stat.icon className="w-6 h-6" />
-//                             </div>
-//                             <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase tracking-widest">{stat.trend}</span>
-//                         </div>
-//                         <div>
-//                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-//                             <h3 className="text-3xl font-bold text-gray-800">{stat.value}</h3>
-//                         </div>
-//                     </div>
-//                 ))}
-//             </div>
-
-//             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-//                 {/* Active Orders List */}
-//                 <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col min-h-[500px]">
-//                     <div className="flex justify-between items-center mb-8">
-//                         <h2 className="text-2xl font-bold text-gray-800">Active Orders</h2>
-//                         <button className="text-[#FD6941] text-sm font-bold hover:underline">View All</button>
-//                     </div>
-
-//                     {activeOrders.length > 0 ? (
-//                         <div className="space-y-4">
-//                             {/* Order items would go here */}
-//                         </div>
-//                     ) : (
-//                         <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">
-//                             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-//                                 <ShoppingBag className="w-8 h-8 text-gray-300" />
-//                             </div>
-//                             <h3 className="text-lg font-bold text-gray-800">No Active Orders</h3>
-//                             <p className="text-gray-500 text-sm max-w-xs mt-1">
-//                                 When customers place orders, they will appear here in real-time.
-//                             </p>
-//                         </div>
-//                     )}
-//                 </div>
-
-//                 {/* Performance Summary Card */}
-//                 <div className="bg-[#1A1C1E] rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
-//                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#FD6941] rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
-
-//                     <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
-//                         <TrendingUp className="w-5 h-5 text-[#FD6941]" />
-//                         Today Orders Complete
-//                     </h2>
-
-//                     <div className="space-y-8">
-//                         <div className="flex items-end gap-3">
-//                             <span className="text-6xl font-bold">{statsData.totalOrders}</span>
-//                             <span className="text-gray-400 font-bold mb-2 uppercase tracking-widest text-xs">Total</span>
-//                         </div>
-
-//                         <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-//                             <div
-//                                 className="h-full bg-[#FD6941] rounded-full shadow-[0_0_15px_rgba(253,105,65,0.5)] transition-all duration-1000"
-//                                 style={{ width: `${(statsData.totalOrders / (statsData.totalOrders + 20)) * 100}%` }}
-//                             ></div>
-//                         </div>
-
-//                         <div className="grid grid-cols-2 gap-4">
-//                             <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-//                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Dine-in</p>
-//                                 <p className="text-xl font-bold">{statsData.dineIn}</p>
-//                             </div>
-//                             <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-//                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Takeaway</p>
-//                                 <p className="text-xl font-bold">{statsData.takeaway}</p>
-//                             </div>
-//                         </div>
-//                     </div>
-
-//                     <button className="w-full mt-12 py-4 rounded-2xl bg-[#FD6941] text-white font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20">
-//                         View Detailed Report
-//                     </button>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default AdminDashboard;
-
-
-import { Clock, Loader2, UtensilsCrossed } from 'lucide-react';
-import PropTypes from 'prop-types';
-import clockIcon from '../../assets/clock.svg';
-import chefHatIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
-import bellIcon from '../../assets/Bell--Streamline-Flex.svg';
-import { useState, useEffect } from 'react';
-
-
-const activeOrders = [];
-
-// eslint-disable-next-line no-unused-vars
-const StatCard = ({ icon: Icon, value, title }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
-        <div className="flex items-start gap-4">
-            <div className="p-3 bg-gray-50 rounded-full">
-                <Icon className="w-6 h-6 text-gray-700" />
+const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => (
+    <div className="bg-white rounded-[2rem] px-6 py-4 flex items-center h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
+        <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
+                <img src={icon} alt="icon" className="w-6 h-6 opacity-80" />
             </div>
-            <div>
-                <h3 className="text-4xl font-bold text-gray-800">{value}</h3>
+            <div className="flex flex-col">
+                <h3 className="text-[32px] font-medium text-black leading-none flex items-baseline">
+                    {isCurrency && <span className="text-[24px] mr-1 font-medium">₹</span>}
+                    {value}
+                    {subValue && <span className="text-[24px] text-gray-300 font-medium ml-1">/{subValue}</span>}
+                </h3>
+                <p className="text-[14px] text-gray-400 mt-2 font-medium tracking-tight">{label}</p>
             </div>
         </div>
-        <p className="text-gray-500 font-medium ml-1">{title}</p>
     </div>
 );
 
-StatCard.propTypes = {
-    icon: PropTypes.elementType.isRequired,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    title: PropTypes.string.isRequired,
+const TimeStatusGauge = () => (
+    <div className="bg-white rounded-[2rem] p-8 h-[320px] shadow-sm flex flex-col relative overflow-hidden transition-all border border-transparent">
+        <h3 className="text-[24px] font-medium text-black mb-1">Time Status</h3>
+        <div className="flex-1 flex items-center justify-center relative translate-y-6">
+            <div className="relative w-full h-full flex items-center justify-center overflow-visible">
+                <svg width="100%" height="auto" viewBox="0 0 220 120" className="max-w-[340px] overflow-visible">
+                    <defs>
+                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#22C55E" />
+                            <stop offset="65%" stopColor="#86EFAC" />
+                            <stop offset="100%" stopColor="#DCFCE7" />
+                        </linearGradient>
+                    </defs>
+                    {/* Gray Background Arc */}
+                    <path
+                        d="M 10 110 A 100 100 0 0 1 210 110"
+                        fill="none"
+                        stroke="#F3F5F7"
+                        strokeWidth="32"
+                        strokeLinecap="round"
+                    />
+                    {/* Green Gradient Overlap Arc */}
+                    <path
+                        d="M 10 110 A 100 100 0 0 1 180.7 39.3"
+                        fill="none"
+                        stroke="url(#gaugeGradient)"
+                        strokeWidth="32"
+                        strokeLinecap="round"
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
+                    <div className="text-center translate-y-2">
+                        <div className="flex items-baseline justify-center gap-1.5 leading-none mb-1.5">
+                            <span className="text-[36px] font-medium text-black tracking-tight">20</span>
+                            <span className="text-[26px] font-medium text-black">min</span>
+                        </div>
+                        <div className="text-[15px] text-gray-400 font-medium tracking-wide">Avg. wait Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const CustomPillBar = (props) => {
+    const { x, y, width, height, highlight } = props;
+    const pillWidth = 46;
+    const pillHeight = height > 20 ? height : 40;
+    const radius = 23;
+
+    return (
+        <g>
+            <rect
+                x={x + (width - pillWidth) / 2}
+                y={y}
+                width={pillWidth}
+                height={pillHeight}
+                rx={radius}
+                fill={highlight ? '#22C55E' : '#F1F5F9'}
+            />
+            {highlight && (
+                <>
+                    <line
+                        x1={x + width / 2}
+                        y1={y - 25}
+                        x2={x + width / 2}
+                        y2={y + pillHeight + 25}
+                        stroke="#22C55E"
+                        strokeWidth="2.5"
+                        strokeDasharray="4 4"
+                    />
+                    <circle
+                        cx={x + width / 2}
+                        cy={y + pillHeight / 2}
+                        r="9"
+                        fill="#22C55E"
+                        stroke="white"
+                        strokeWidth="4"
+                    />
+                </>
+            )}
+        </g>
+    );
 };
 
 const AdminDashboard = () => {
     return (
-        <div className="space-y-8">
-            {/* Dashboard Main Title */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-                <p className="text-gray-500">Welcome back, Admin</p>
+        <div className="min-h-screen bg-transparent px-4 py-8 space-y-4">
+            <div className="space-y-1">
+                <h1 className="text-[46px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
+                <p className="text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
             </div>
 
-            {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                {/* Pending Orders */}
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            <img src={clockIcon} alt="Pending" className="w-full h-full object-contain" />
-                        </div>
-                        <span className="text-4xl font-bold text-gray-900">0</span>
+            {/* Main Content Grid - 2 Columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left Column (Span 8) */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                    {/* Top Row: KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <DashboardCard value="122" label="Total Active Orders" icon={activityIcon} />
+                        <DashboardCard value="7" subValue="20" label="Occupied Tables" icon={tableIcon} />
+                        <DashboardCard value="25,250" label="Total Revenue" icon={revenueIcon} isCurrency />
                     </div>
-                    <p className="text-gray-400 text-sm font-medium pl-1">Total Pending Orders</p>
-                </div>
 
-                {/* Preparing Orders */}
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            <img src={chefHatIcon} alt="Preparing" className="w-full h-full object-contain" />
+                    {/* Middle Row: Sales Analytics (Height Increased to 740px to match total right column height) */}
+                    <div className="bg-white rounded-[2.8rem] p-8 relative shadow-sm h-[740px] flex flex-col border border-transparent">
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-[24px] font-medium text-black">Sales Analytics</h2>
+                            <button className="flex items-center gap-2 px-8 py-2.5 rounded-full border border-gray-100 text-[16px] font-medium text-gray-500 hover:bg-gray-50">
+                                Today <ChevronDown className="w-4 h-4 text-gray-400" />
+                            </button>
                         </div>
-                        <span className="text-4xl font-bold text-gray-900">0</span>
-                    </div>
-                    <p className="text-gray-400 text-sm font-medium pl-1">Preparing Orders</p>
-                </div>
 
-                {/* Ready Orders */}
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            <img src={bellIcon} alt="Ready" className="w-full h-full object-contain" />
-                        </div>
-                        <span className="text-4xl font-bold text-gray-900">0</span>
-                    </div>
-                    <p className="text-gray-400 text-sm font-medium pl-1">Ready to serve</p>
-                </div>
-
-                {/* Today Orders Complete Card */}
-                {(() => {
-                    const completed = 0;
-                    const total = 0;
-                    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-                    let gradientClass = "from-white to-[#F9FAFB]";
-                    let barColorClass = "bg-gray-200";
-
-                    return (
-                        <div className={`p-6 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden bg-gradient-to-b ${gradientClass} flex flex-col justify-between h-40 lg:col-span-2`}>
-                            <div className="flex justify-between items-start mb-2">
-                                <p className="text-gray-800 text-lg font-medium leading-tight max-w-[50%]">Today Orders Complete</p>
-                                <div className="text-right">
-                                    <span className="text-4xl font-normal text-gray-900">{completed}</span>
-                                    <span className="text-2xl font-light text-gray-400">/{total}</span>
-                                </div>
-                            </div>
-
-                            {/* Custom Process Bar */}
-                            <div className="w-full relative mt-auto">
-                                <div className="flex justify-between text-[10px] text-gray-400 font-medium mb-1 px-0.5">
-                                    <span>0%</span>
-                                    <span className="ml-[10%]">33%</span>
-                                    <span className="ml-[15%]">60%</span>
-                                    <span>100%</span>
-                                </div>
-                                <div className="h-4 w-full bg-gray-200/50 rounded-full overflow-hidden relative flex">
-                                    <div className="absolute inset-0 w-full h-full bg-black/5"></div>
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${barColorClass}`}
-                                        style={{ width: `${percentage}%` }}
-                                    ></div>
-                                    <div className="absolute top-0 left-[33%] w-0.5 h-full bg-white/80"></div>
-                                    <div className="absolute top-0 left-[60%] w-0.5 h-full bg-white/80"></div>
-                                </div>
+                        <div className="flex-1 w-full relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={salesData} margin={{ top: 0, right: 30, left: 10, bottom: 40 }}>
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#9CA3AF', fontSize: 16, fontWeight: 700, fontFamily: 'Urbanist' }}
+                                        dy={30}
+                                    />
+                                    <Tooltip cursor={false} content={() => null} />
+                                    <Bar
+                                        dataKey="value"
+                                        shape={<CustomPillBar />}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                            <div className="absolute top-[40%] left-0 right-0 border-t border-dashed border-gray-300 pointer-events-none flex items-center justify-between px-8">
+                                <span className="bg-white px-3 py-1 rounded-lg border border-gray-100 text-[12px] font-medium text-gray-400 -translate-y-1/2">₹6573</span>
+                                <span className="bg-white px-3 py-1 rounded-lg border border-gray-100 text-[12px] font-medium text-gray-400 -translate-y-1/2">78%</span>
                             </div>
                         </div>
-                    );
-                })()}
-            </div>
-
-            {/* Active Orders Section */}
-            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl font-bold text-gray-800">Active Order</h2>
-                    <div className="flex gap-4">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                className="pl-10 pr-4 py-3 bg-gray-50 rounded-full text-sm w-80 focus:outline-none focus:ring-1 focus:ring-primary placeholder-gray-400"
-                            />
-                            <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        </div>
-                        <button className="p-3 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
 
-                <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8 bg-gray-50/50 rounded-[2rem] border-2 border-dashed border-gray-100">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-                        <UtensilsCrossed className="w-8 h-8 text-gray-300" />
+                {/* Right Column (Span 4) */}
+                <div className="lg:col-span-4 flex flex-col gap-6">
+                    {/* Time Status Gauge */}
+                    <TimeStatusGauge />
+
+                    {/* Live Active Feed */}
+                    <div className="bg-white rounded-[2.8rem] p-8 shadow-sm flex flex-col h-[560px] border border-transparent">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-[24px] font-medium text-black">Live Active Feed</h2>
+                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100">
+                                <ArrowUpRight className="w-6 h-6 text-gray-400" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            {feedItems.map(item => (
+                                <div key={item.id} className="flex items-center justify-between p-5 bg-[#F9FAFB] rounded-[2.2rem] border border-gray-50 hover:bg-white hover:border-gray-100 transition-all cursor-pointer">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-[72px] h-[72px] rounded-full bg-[#F3F5F7] flex items-center justify-center shrink-0">
+                                            <img src={item.icon} alt={item.title} className="w-9 h-9 opacity-70" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h4 className="font-bold text-black text-[18px] leading-tight">{item.title}</h4>
+                                            <p className="text-[15px] text-gray-400 font-bold mt-0.5">{item.sub}</p>
+                                        </div>
+                                    </div>
+                                    <button className="bg-black text-white text-[14px] font-black px-7 py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95">
+                                        Handle
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">No Active Orders</h3>
-                    <p className="text-gray-400 text-sm max-w-[200px]">New orders will appear here in real-time once placed by customers.</p>
                 </div>
             </div>
         </div>

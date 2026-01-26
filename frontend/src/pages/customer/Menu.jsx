@@ -7,74 +7,7 @@ import {
 } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 
-const mockMenuData = [
-    {
-        id: "1",
-        name: "Double Whopper",
-        price: 249,
-        description: "Two flame-grilled beef patties topped with juicy tomatoes, fresh cut lettuce, creamy mayonnaise, ketchup, crunchy pickles, and sliced white onions on a soft sesame seed bun.",
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
-        rating: 4.5,
-        time: "15-20 min",
-        calories: "850 kcal",
-        category: "Burgers",
-        isVeg: false,
-        isAvailable: true,
-        images: [
-            { url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" },
-            { url: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" }
-        ]
-    },
-    {
-        id: "2",
-        name: "Paneer Royale Pizza",
-        price: 399,
-        description: "Rich tomato sauce, mozzarella cheese, spiced paneer cubes, red paprika, and golden corn.",
-        image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
-        rating: 4.8,
-        time: "20-25 min",
-        calories: "1200 kcal",
-        category: "Pizza",
-        isVeg: true,
-        isAvailable: true,
-        images: [
-            { url: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" },
-            { url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" }
-        ]
-    },
-    {
-        id: "3",
-        name: "Crispy Chicken Tacos",
-        price: 189,
-        description: "Crispy fried chicken strips, fresh lettuce, cheddar cheese, and spicy chipotle sauce in a soft tortilla.",
-        image: "https://images.unsplash.com/photo-1565299585323-38d68c8e1297?auto=format&fit=crop&w=800&q=80",
-        rating: 4.3,
-        time: "10-15 min",
-        calories: "450 kcal",
-        category: "Mexican",
-        isVeg: false,
-        isAvailable: true,
-        images: [
-            { url: "https://images.unsplash.com/photo-1565299585323-38d68c8e1297?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" }
-        ]
-    },
-    {
-        id: "4",
-        name: "Fries (Large)",
-        price: 109,
-        description: "Classic salted french fries, crispy on the outside and fluffy on the inside.",
-        image: "https://images.unsplash.com/photo-1573080496987-a199f8cd75ec?auto=format&fit=crop&w=800&q=80",
-        rating: 4.6,
-        time: "5-10 min",
-        calories: "380 kcal",
-        category: "Sides",
-        isVeg: true,
-        isAvailable: true,
-        images: [
-            { url: "https://images.unsplash.com/photo-1573080496987-a199f8cd75ec?auto=format&fit=crop&w=800&q=80", type: "image/jpeg" }
-        ]
-    }
-];
+const mockMenuData = [];
 
 const offers = [
     { id: 1, title: "50% OFF", subtitle: "On your first order", code: "WELCOME50", bg: "bg-black", text: "text-white" },
@@ -99,7 +32,7 @@ const Menu = () => {
     const [searchParams] = useSearchParams();
     const initialCategory = searchParams.get('category') || "All";
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-    
+
     // Update selected category if URL params change
     useEffect(() => {
         const cat = searchParams.get('category');

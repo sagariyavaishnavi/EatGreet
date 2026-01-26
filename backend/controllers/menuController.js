@@ -21,9 +21,15 @@ exports.createMenuItem = async (req, res) => {
         // Validate required fields
         const { name, description, price, image, category, isVeg } = req.body;
 
-        if (!name || !description || !price || !image || !category || isVeg === undefined) {
+        if (!name || !description || !price || !category || isVeg === undefined) {
             return res.status(400).json({
-                message: 'Please provide all required fields: name, description, price, image, category, isVeg'
+                message: 'Please provide all required fields: name, description, price, category, isVeg'
+            });
+        }
+
+        if (!image) {
+            return res.status(400).json({
+                message: 'Image is mandatory. Please upload an image/media before saving.'
             });
         }
 

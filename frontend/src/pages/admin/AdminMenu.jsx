@@ -461,37 +461,7 @@ const dietaryIcons = {
 const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(1600%) hue-rotate(335deg) brightness(101%) contrast(98%)";
 
 // Default mock data if storage is empty
-const DEFAULT_MENU_ITEMS = [
-    {
-        id: '1',
-        name: 'Margherita Pizza',
-        category: 'MAIN COURSE',
-        price: 199,
-        description: 'Fresh Mozzarella, Tomato sauce, and Basil on our signature wood-fire crust.',
-        image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
-        rating: 4.5,
-        time: '15-20 min',
-        calories: '850 kcal',
-        isVeg: true,
-        isAvailable: true
-    },
-    // ... (Adding a few more to match customer view initial state roughly if needed, or stick to simple admin defaults)
-    // For simplicity, let's trust the admin to add more, or use the ones from customer view as default?
-    // Let's use a robust default compatible with both views.
-    {
-        id: '2',
-        name: "Double Whopper",
-        price: 249,
-        description: "Two flame-grilled beef patties topped with juicy tomatoes, fresh cut lettuce, creamy mayonnaise, ketchup, crunchy pickles, and sliced white onions on a soft sesame seed bun.",
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
-        rating: 4.5,
-        time: "15-20 min",
-        calories: "850 kcal",
-        category: "BURGERS",
-        isVeg: false,
-        isAvailable: true
-    }
-];
+const DEFAULT_MENU_ITEMS = [];
 
 const AdminMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);

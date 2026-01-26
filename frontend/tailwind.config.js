@@ -10,7 +10,7 @@ export default {
         primary: '#FD6941',
       },
       fontFamily: {
-        sans: ['Urbanist', 'sans-serif'],
+        sans: ['Urbanist'],
       },
     },
   },

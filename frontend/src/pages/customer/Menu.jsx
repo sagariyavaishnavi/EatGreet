@@ -305,16 +305,16 @@ const Menu = () => {
                                 </button>
 
                                 {/* Media Slider if available, else Image */}
-                                {item.images && item.images.length > 0 ? (
-                                    <MediaSlider media={item.images} className="w-full h-full object-cover" />
+                                {item.media && item.media.length > 0 ? (
+                                    <MediaSlider media={item.media} className="w-full h-full object-cover" />
                                 ) : (
                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                 )}
 
                                 {/* Available Tag */}
-                                <div className="absolute bottom-4 left-4 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                                    Available
+                                <div className={`absolute bottom-4 left-4 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
+                                    <span className={`w-1.5 h-1.5 bg-white rounded-full ${item.isAvailable ? 'animate-pulse' : ''}`}></span>
+                                    {item.isAvailable ? 'Available' : 'Unavailable'}
                                 </div>
                             </div>
 
@@ -325,7 +325,7 @@ const Menu = () => {
                                         <h3 className="text-xl font-black text-gray-800 leading-tight mb-2 pr-2">{item.name}</h3>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-bold text-gray-500">
                                             <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-md">
-                                                <Star className="w-3 h-3 fill-current" /> {item.rating}
+                                                <Star className="w-3 h-3 fill-current" /> {item.rating || '4.5'}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Clock className="w-3 h-3" /> {item.time}
@@ -362,29 +362,35 @@ const Menu = () => {
 
                                 {/* Add Button / Qty Control */}
                                 <div className="flex items-center justify-center">
-                                    {cart[item._id] ? (
-                                        <div className="flex items-center gap-4 bg-black text-white px-2 py-2 rounded-full shadow-lg w-full max-w-[140px] justify-between">
-                                            <button
-                                                onClick={() => removeFromCart(item._id)}
-                                                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
-                                            >
-                                                <Minus className="w-4 h-4" />
-                                            </button>
-                                            <span className="font-bold text-lg w-6 text-center">{cart[item._id].qty}</span>
+                                    {item.isAvailable ? (
+                                        cart[item._id] ? (
+                                            <div className="flex items-center gap-4 bg-black text-white px-2 py-2 rounded-full shadow-lg w-full max-w-[140px] justify-between">
+                                                <button
+                                                    onClick={() => removeFromCart(item._id)}
+                                                    className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </button>
+                                                <span className="font-bold text-lg w-6 text-center">{cart[item._id].qty}</span>
+                                                <button
+                                                    onClick={() => addToCart(item)}
+                                                    className="w-8 h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
                                             <button
                                                 onClick={() => addToCart(item)}
-                                                className="w-8 h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
+                                                className="w-16 h-16 bg-[#FD6941] text-white rounded-full shadow-lg shadow-orange-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
                                             >
-                                                <Plus className="w-4 h-4" />
+                                                <Plus className="w-8 h-8" />
                                             </button>
-                                        </div>
+                                        )
                                     ) : (
-                                        <button
-                                            onClick={() => addToCart(item)}
-                                            className="w-16 h-16 bg-[#FD6941] text-white rounded-full shadow-lg shadow-orange-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
-                                        >
-                                            <Plus className="w-8 h-8" />
-                                        </button>
+                                        <div className="w-full text-center py-3 bg-gray-100 text-gray-400 font-bold rounded-xl text-sm">
+                                            Currently Unavailable
+                                        </div>
                                     )}
                                 </div>
                             </div>

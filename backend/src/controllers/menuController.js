@@ -1,3 +1,19 @@
+const cloudinary = require('cloudinary').v2;
+
+// Helper to extract Cloudinary Public ID
+const getPublicIdFromUrl = (url) => {
+    if (!url || !url.includes('cloudinary.com')) return null;
+    try {
+        const parts = url.split('/');
+        const filename = parts.pop();
+        const publicId = filename.split('.')[0];
+        const folder = parts.slice(parts.indexOf('upload') + 2).join('/'); // get folder path after /upload/v<version>/
+        return folder ? `${folder}/${publicId}` : publicId;
+    } catch (e) {
+        return null;
+    }
+};
+
 // @desc    Get all menu items
 // @route   GET /api/menu
 // @access  Public
@@ -67,6 +83,23 @@ const deleteMenuItem = async (req, res) => {
         const menuItem = await MenuItem.findById(req.params.id);
         if (!menuItem) return res.status(404).json({ message: 'Menu Item not found' });
 
+        // CLEANUP: Delete media from Cloudinary
+        if (menuItem.media && menuItem.media.length > 0) {
+            for (const media of menuItem.media) {
+                const publicId = getPublicIdFromUrl(media.url);
+                if (publicId) {
+                    const resourceType = media.type && media.type.startsWith('video') ? 'video' : 'image';
+                    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                }
+            }
+        } else if (menuItem.image) {
+            // Legacy/Single image fallback
+            const publicId = getPublicIdFromUrl(menuItem.image);
+            if (publicId) {
+                await cloudinary.uploader.destroy(publicId);
+            }
+        }
+
         await menuItem.deleteOne();
 
         const io = req.app.get('io');
@@ -74,6 +107,7 @@ const deleteMenuItem = async (req, res) => {
 
         res.json({ message: 'Item removed' });
     } catch (error) {
+        console.error("Delete Error", error);
         res.status(500).json({ message: error.message });
     }
 };

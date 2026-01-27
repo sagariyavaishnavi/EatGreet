@@ -173,7 +173,7 @@ const AdminMenu = () => {
         setIsModalOpen(true);
     };
 
-    const handleFileUpload = async (e) => {
+    const handleFileSelection = async (e) => {
         let files = Array.from(e.target.files);
 
         // Calculate remaining slots
@@ -187,78 +187,59 @@ const AdminMenu = () => {
 
         if (files.length > remainingSlots) {
             toast(
-                `Only the first ${remainingSlots} file(s) will be uploaded due to the 5-item limit.`,
+                `Only the first ${remainingSlots} file(s) will be added due to the 5-item limit.`,
                 { icon: '⚠️' }
             );
             files = files.slice(0, remainingSlots);
         }
 
-        const uploadToast = toast.loading(`Starting upload of ${files.length} media item(s)...`);
-        let successCount = 0;
-        let failCount = 0;
+        const newItems = [];
+        
+        for (const file of files) {
+            try {
+                // Check file size (100MB limit)
+                if (file.size > 100 * 1024 * 1024) {
+                    toast.error(`File ${file.name} exceeds 100MB limit`);
+                    continue;
+                }
 
-        try {
-            const uploadPromises = files.map(async (file) => {
-                try {
-                    // Check file size (100MB limit)
-                    if (file.size > 100 * 1024 * 1024) {
-                        throw new Error(`File ${file.name} exceeds 100MB limit`);
-                    }
-
-                    // Check video duration (30s limit)
-                    if (file.type.startsWith('video/')) {
-                        const duration = await new Promise((resolve, reject) => {
-                            const video = document.createElement('video');
-                            video.preload = 'metadata';
-                            video.onloadedmetadata = () => {
-                                window.URL.revokeObjectURL(video.src);
-                                resolve(video.duration);
-                            };
-                            video.onerror = () => reject(new Error("Invalid video file"));
-                            video.src = window.URL.createObjectURL(file);
-                        });
-
-                        if (duration > 30) {
-                            throw new Error(`Video ${file.name} exceeds the 30-second limit`);
-                        }
-                    }
-
-                    // Direct Upload to Cloudinary with Progress
-                    const res = await uploadAPI.uploadDirect(file, (percent) => {
-                        toast.loading(`Uploading ${successCount}/${files.length} items...\n${file.name}: ${percent}%`, { id: uploadToast });
+                // Check video duration (30s limit)
+                if (file.type.startsWith('video/')) {
+                    const duration = await new Promise((resolve, reject) => {
+                        const video = document.createElement('video');
+                        video.preload = 'metadata';
+                        video.onloadedmetadata = () => {
+                            window.URL.revokeObjectURL(video.src);
+                            resolve(video.duration);
+                        };
+                        video.onerror = () => reject(new Error("Invalid video file"));
+                        video.src = window.URL.createObjectURL(file);
                     });
 
-                    const newItem = {
-                        name: file.name,
-                        url: res.data.secure_url, // Cloudinary returns secure_url
-                        type: file.type,
-                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
-                    };
-
-                    // Update state immediately upon success
-                    setMediaItems(prev => [...prev, newItem].slice(0, 5));
-                    successCount++;
-                    toast.loading(`Uploaded ${successCount}/${files.length} media item(s)...`, { id: uploadToast });
-
-                } catch (error) {
-                    console.error('File Upload failed:', error);
-                    failCount++;
-                    toast.error(`Failed ${file.name}: ${error.message}`, { duration: 4000 });
+                    if (duration > 30) {
+                        toast.error(`Video ${file.name} exceeds the 30-second limit`);
+                        continue;
+                    }
                 }
-            });
 
-            await Promise.all(uploadPromises);
+                // Create Preview URL
+                const previewUrl = URL.createObjectURL(file);
+                
+                newItems.push({
+                    name: file.name,
+                    url: previewUrl, // Temporary blob URL for preview
+                    type: file.type,
+                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                    file: file // Store actual file for later upload
+                });
 
-            if (failCount === 0) {
-                toast.success(`Successfully uploaded ${successCount} item(s)`, { id: uploadToast });
-            } else {
-                toast.error(`Completed with ${failCount} error(s)`, { id: uploadToast });
+            } catch (error) {
+                console.error("File selection error", error);
+                toast.error(`Error processing ${file.name}`);
             }
-
-        } catch (error) {
-            console.error('Batch Upload Error:', error);
-            toast.error('Unexpected error during upload', { id: uploadToast });
         }
+
+        setMediaItems(prev => [...prev, ...newItems].slice(0, 5));
     };
 
     const handleDelete = (id) => {
@@ -292,50 +273,34 @@ const AdminMenu = () => {
         ), { duration: 5000 });
     };
 
-    const handleSave = async () => {
-        if (!newItemName.trim() || !newItemPrice || !newItemCategory) {
-            toast.error("Please fill in all required fields (Name, Category, Price).");
-            return;
-        }
 
-        if (mediaItems.length === 0) {
-            toast.error("Please upload at least one image.");
-            return;
-        }
 
-        const itemData = {
-            name: newItemName,
-            category: newItemCategory,
-            price: Number(newItemPrice),
-            description: newItemDescription,
-            calories: newItemCalories,
-            time: newItemTime,
-            isVeg: newItemIsVeg,
-            image: mediaItems.length > 0 ? mediaItems[0].url : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80',
-            isAvailable: isActiveStatus,
-            labels: selectedLabels,
-            media: mediaItems
-        };
+    const abortControllerRef = useRef(null); // Ref to hold the current upload controller
+    const uploadedPublicIdsRef = useRef([]); // Track IDs for cleanup on cancel
 
-        const loadToast = toast.loading(editingItem ? 'Updating item...' : 'Creating item...');
-
-        try {
-            if (editingItem) {
-                await menuAPI.update(editingItem._id, itemData);
-                toast.success('Item updated successfully', { id: loadToast });
-            } else {
-                await menuAPI.create(itemData);
-                toast.success('Item created successfully', { id: loadToast });
+    // Cancel uploads if component unmounts
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
             }
-            fetchData();
-            setIsModalOpen(false);
-            resetForm();
-        } catch (error) {
-            toast.error('Failed to save item: ' + (error.response?.data?.message || 'Error occurred'), { id: loadToast });
-        }
-    };
+        };
+    }, []);
 
     const resetForm = () => {
+        // Abort any ongoing uploads
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
+        // Cleanup orphaned files
+        if (uploadedPublicIdsRef.current.length > 0) {
+            const idsToClean = [...uploadedPublicIdsRef.current];
+            uploadAPI.cleanupFiles(idsToClean).catch(err => console.error("Cleanup error", err));
+            uploadedPublicIdsRef.current = [];
+        }
+
         setMediaItems([]);
         setIsActiveStatus(true);
         setSelectedLabels([]);
@@ -349,10 +314,155 @@ const AdminMenu = () => {
         setEditingItem(null);
     };
 
+    const handleSave = async () => {
+        if (!newItemName.trim() || !newItemPrice || !newItemCategory) {
+            toast.error("Please fill in all required fields (Name, Category, Price).");
+            return;
+        }
+
+        if (mediaItems.length === 0) {
+            toast.error("Please upload at least one image.");
+            return;
+        }
+
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+        uploadedPublicIdsRef.current = []; // Reset tracking for this batch
+
+        const loadToast = toast.loading('Initiating upload...', { duration: Infinity });
+        
+        try {
+            // Count items that need uploading
+            const filesToUploadIndices = mediaItems.map((item, idx) => item.file ? idx : -1).filter(idx => idx !== -1);
+            const totalUploads = filesToUploadIndices.length;
+            
+            let uploadedCount = 0;
+            const progressMap = {}; // idx -> percent
+
+            if (totalUploads > 0) {
+                toast.loading(`Uploading 0/${totalUploads} (0%)...`, { id: loadToast });
+            }
+
+            const uploadPromises = mediaItems.map(async (item, index) => {
+                if (item.file) {
+                    try {
+                        const res = await uploadAPI.uploadDirect(item.file, (percent) => {
+                            progressMap[index] = percent;
+                            
+                            // Calculate Average
+                            const currentTotal = Object.values(progressMap).reduce((a, b) => a + b, 0);
+                            const avgAsync = Math.round(currentTotal / totalUploads);
+                            const doneAsync = Object.values(progressMap).filter(p => p === 100).length;
+                            
+                            toast.loading(`Uploading ${doneAsync}/${totalUploads} (${avgAsync}%)...`, { id: loadToast });
+
+                        }, { signal });
+                        
+                        uploadedCount++;
+                        
+                        // Track ID for potential cleanup
+                        if (res.data.public_id) {
+                            uploadedPublicIdsRef.current.push(res.data.public_id);
+                        }
+
+                        return {
+                            name: item.name,
+                            url: res.data.secure_url,
+                            type: item.type,
+                            size: item.size
+                        };
+                    } catch (err) {
+                        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+                             throw err; 
+                        }
+                        throw new Error(`Failed to upload ${item.name}`);
+                    }
+                } else {
+                    return item;
+                }
+            });
+
+            const finalMediaItems = await Promise.all(uploadPromises);
+
+            // 2. Save Item Data
+            toast.loading('Saving item details...', { id: loadToast });
+            
+            const itemData = {
+                name: newItemName,
+                category: newItemCategory,
+                price: Number(newItemPrice),
+                description: newItemDescription,
+                calories: newItemCalories,
+                time: newItemTime,
+                isVeg: newItemIsVeg,
+                image: finalMediaItems.length > 0 ? finalMediaItems[0].url : '',
+                isAvailable: isActiveStatus,
+                labels: selectedLabels,
+                media: finalMediaItems
+            };
+
+            if (editingItem) {
+                await menuAPI.update(editingItem._id, itemData);
+                toast.success('Item updated successfully', { id: loadToast, duration: 2000 });
+            } else {
+                await menuAPI.create(itemData);
+                toast.success('Item created successfully', { id: loadToast, duration: 2000 });
+            }
+
+            // Success! Clear cleanup tracking because these files are now valid/saved.
+            uploadedPublicIdsRef.current = [];
+
+            fetchData();
+            setIsModalOpen(false);
+            resetForm();
+            
+        } catch (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+                toast.dismiss(loadToast);
+                toast('Upload cancelled', { icon: '🛑' });
+                // resetForm() will be called manually or via close, which cleans up files
+                // But here we might want to ensure immediate cleanup?
+                // resetForm is sufficient if we call it, or if we rely on handleCloseModal calling it.
+                // But if error is cancellation, we usually came from abort() which means resetForm might have been called?
+                // Actually handleSave logic runs AFTER abort if we cancel... wait.
+                // If I click 'Cancel', handleCloseModal -> resetForm -> abort.
+                // handleSave's await throws. Catch block runs.
+                // We show 'Upload cancelled'.
+                // resetForm (called by Cancel) already triggered cleanup of whatever was in ref.
+                // But what if we just cancelled via some other way? Safe to call explicit cleanup here?
+                // Yes, duplicate cleanup is harmless (idempotent-ish).
+                
+                if (uploadedPublicIdsRef.current.length > 0) {
+                     const ids = [...uploadedPublicIdsRef.current];
+                     uploadAPI.cleanupFiles(ids);
+                     uploadedPublicIdsRef.current = [];
+                }
+
+            } else {
+                console.error("Save Error", error);
+                toast.error('Failed: ' + (error.message || 'Unknown error'), { id: loadToast });
+                
+                // On error (e.g. backend failed), we SHOULD cleanup the images we just uploaded.
+                if (uploadedPublicIdsRef.current.length > 0) {
+                     const ids = [...uploadedPublicIdsRef.current];
+                     uploadAPI.cleanupFiles(ids); // Fire and forget
+                     uploadedPublicIdsRef.current = [];
+                }
+            }
+        } finally {
+             abortControllerRef.current = null;
+        }
+    };
+
     const openModal = () => {
         setIsModalOpen(true);
         setEditingItem(null);
         resetForm();
+    };
+
+    const handleCloseModal = () => {
+        resetForm(); // Triggers abort logic and state cleanup
+        setIsModalOpen(false);
     };
 
     return (
@@ -620,7 +730,7 @@ const AdminMenu = () => {
                                                 className="hidden"
                                                 accept="image/*,video/*"
                                                 multiple
-                                                onChange={handleFileUpload}
+                                                onChange={handleFileSelection}
                                             />
                                             <label htmlFor="file-upload" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
                                                 <div className={`bg-orange-100 rounded-full flex items-center justify-center text-[#FD6941] mb-2 ${mediaItems.length === 0 ? 'w-12 h-12' : 'w-8 h-8'}`}>
@@ -647,7 +757,7 @@ const AdminMenu = () => {
                             <div className="lg:col-span-8 p-4 sm:p-6 lg:p-8 space-y-4">
                                 <div className="flex justify-between items-center mb-2">
                                     <h3 className="text-lg sm:text-xl font-bold text-gray-800">Item Details</h3>
-                                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
+                                    <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
                                         <X className="w-5 h-5 text-gray-500" />
                                     </button>
                                 </div>
@@ -796,7 +906,7 @@ const AdminMenu = () => {
 
                                 <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
                                     <button
-                                        onClick={() => setIsModalOpen(false)}
+                                        onClick={handleCloseModal}
                                         className="px-6 py-2 rounded-full border border-gray-200 text-gray-600 text-xs font-bold hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel

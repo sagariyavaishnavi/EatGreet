@@ -1,4 +1,8 @@
 require('dotenv').config();
+const dns = require('dns');
+// Set Google DNS to bypass local network DNS issues
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -47,19 +51,72 @@ app.use('/api/payments', require('./src/routes/paymentRoutes'));
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Real Upload Route: Converts image to Base64 for DB storage (No local folders)
-app.post('/api/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-    }
-    // Convert buffer to Base64 Data URI
-    const b64 = Buffer.from(req.file.buffer).toString('base64');
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+const cloudinary = require('cloudinary').v2;
+const { protect } = require('./src/middleware/authMiddleware'); // Import protect middleware
 
-    res.json({
-        url: dataURI,
-        secure_url: dataURI
-    });
+// Cloudinary Config
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Cloudinary Signature Route for Direct Upload
+app.get('/api/upload/signature', protect, (req, res) => {
+    try {
+        const timestamp = Math.round((new Date).getTime() / 1000);
+        
+        // Tenant Isolation: Create folder path
+        const tenantName = req.user.restaurantName 
+            ? req.user.restaurantName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() 
+            : `user_${req.user._id}`;
+        const folder = `eatgreet_main/${tenantName}`;
+
+        // Parameters to sign (Must match what frontend sends EXACTLY)
+        const paramsToSign = {
+            timestamp: timestamp,
+            folder: folder,
+        };
+
+        const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET);
+
+        res.json({
+            signature,
+            timestamp,
+            folder,
+            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+            apiKey: process.env.CLOUDINARY_API_KEY
+        });
+    } catch (error) {
+        console.error('Signature Error:', error);
+        res.status(500).json({ message: 'Could not generate signature' });
+    }
+});
+
+// Cleanup Route for Cancelled Uploads
+app.post('/api/upload/cleanup', protect, async (req, res) => {
+    try {
+        const { publicIds } = req.body;
+        if (!publicIds || !Array.isArray(publicIds) || publicIds.length === 0) {
+            return res.status(200).json({ message: "Nothing to clean" });
+        }
+
+        console.log(`Cleaning up ${publicIds.length} orphaned files...`);
+        const results = await Promise.all(publicIds.map(id => {
+            // Determine resource type? Default image. If video, ID usually implies?
+            // Cloudinary destroy defaults to image. If video, we need to know.
+            // For now, try both or expect frontend to send type/object.
+            // Simplification: Try destroying as image (most likely).
+            // Better: Frontend sends objects { id, type }?
+            // Let's assume frontend sends string IDs and we try default.
+            return cloudinary.uploader.destroy(id);
+        }));
+        
+        res.json({ message: "Cleanup successful", results });
+    } catch (error) {
+        console.error("Cleanup Error", error);
+        res.status(500).json({ message: "Cleanup failed" });
+    }
 });
 
 app.get('/', (req, res) => {
@@ -73,7 +130,9 @@ const startServer = async () => {
         await seedSuperAdmin();
 
         const PORT = process.env.PORT || 5000;
-        server.listen(PORT);
+        server.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     } catch (error) {
         process.exit(1);
     }

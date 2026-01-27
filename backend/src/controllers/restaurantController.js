@@ -1,4 +1,3 @@
-const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 
 // @desc    Get restaurant details
@@ -84,12 +83,27 @@ const createRestaurant = async (req, res) => {
     }
 }
 
-// @desc Get public restaurant info by ID
+// @desc Get public restaurant info by ID (Mapped from User)
 const getRestaurantPublic = async (req, res) => {
     try {
-        const restaurant = await Restaurant.findById(req.params.id).select('-owner -dbName');
-        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
-        res.json(restaurant);
+        const user = await User.findById(req.params.id).select('-password');
+
+        // Check if user exists and is an admin (restaurant owner)
+        if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+            return res.status(404).json({ message: 'Restaurant not found' });
+        }
+
+        const restaurantData = {
+            _id: user._id,
+            name: user.restaurantName || user.name,
+            description: user.restaurantDetails?.description,
+            address: user.restaurantDetails?.address,
+            contactNumber: user.restaurantDetails?.contactNumber,
+            logo: user.restaurantDetails?.logo,
+            isActive: user.restaurantDetails?.isActive ?? true
+        };
+
+        res.json(restaurantData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

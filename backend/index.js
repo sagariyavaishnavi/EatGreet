@@ -14,10 +14,25 @@ const app = express();
 const server = http.createServer(app);
 
 // Update CORS to allow Socket.io and Frontend
-const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5000',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 const corsOptions = {
-    origin: allowedOrigins,
-    credentials: true
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-restaurant-name']
 };
 
 app.use(cors(corsOptions));
@@ -65,10 +80,10 @@ cloudinary.config({
 app.get('/api/upload/signature', protect, (req, res) => {
     try {
         const timestamp = Math.round((new Date).getTime() / 1000);
-        
+
         // Tenant Isolation: Create folder path
-        const tenantName = req.user.restaurantName 
-            ? req.user.restaurantName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() 
+        const tenantName = req.user.restaurantName
+            ? req.user.restaurantName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
             : `user_${req.user._id}`;
         const folder = `eatgreet_main/${tenantName}`;
 
@@ -111,7 +126,7 @@ app.post('/api/upload/cleanup', protect, async (req, res) => {
             // Let's assume frontend sends string IDs and we try default.
             return cloudinary.uploader.destroy(id);
         }));
-        
+
         res.json({ message: "Cleanup successful", results });
     } catch (error) {
         console.error("Cleanup Error", error);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 
 const api = axios.create({
@@ -102,46 +102,46 @@ export const uploadAPI = {
   uploadDirect: async (fileOrFormData, onUploadProgress, config = {}) => {
     let file = fileOrFormData;
     if (fileOrFormData instanceof FormData) {
-        file = fileOrFormData.get('file');
+      file = fileOrFormData.get('file');
     }
 
     try {
-        // 1. Get Signature from Backend
-        const signRes = await api.get('/upload/signature', config); // Pass signal to signature request too
-        const { signature, timestamp, folder, cloudName, apiKey } = signRes.data;
+      // 1. Get Signature from Backend
+      const signRes = await api.get('/upload/signature', config); // Pass signal to signature request too
+      const { signature, timestamp, folder, cloudName, apiKey } = signRes.data;
 
-        // 2. Prepare Direct Upload Data
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp);
-        formData.append('signature', signature);
-        formData.append('folder', folder);
+      // 2. Prepare Direct Upload Data
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp);
+      formData.append('signature', signature);
+      formData.append('folder', folder);
 
-        // 3. Upload Directly to Cloudinary
-        // Note: We use a naked axios instance to avoid sending our Backend Auth Headers to Cloudinary
-        const cloudinaryRes = await axios.post(
-            `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-            formData,
-            {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                onUploadProgress: (progressEvent) => {
-                    if (onUploadProgress) {
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        onUploadProgress(percentCompleted);
-                    }
-                },
-                ...config // Pass cancellation signal
+      // 3. Upload Directly to Cloudinary
+      // Note: We use a naked axios instance to avoid sending our Backend Auth Headers to Cloudinary
+      const cloudinaryRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: (progressEvent) => {
+            if (onUploadProgress) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onUploadProgress(percentCompleted);
             }
-        );
-
-        return cloudinaryRes; // Cloudinary returns { data: { secure_url, ... } } which matches our expectation
-    } catch (error) {
-        // Don't log if it's just a cancellation
-        if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED') {
-             console.error("Direct Upload Error", error);
+          },
+          ...config // Pass cancellation signal
         }
-        throw error;
+      );
+
+      return cloudinaryRes; // Cloudinary returns { data: { secure_url, ... } } which matches our expectation
+    } catch (error) {
+      // Don't log if it's just a cancellation
+      if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED') {
+        console.error("Direct Upload Error", error);
+      }
+      throw error;
     }
   },
   cleanupFiles: (publicIds) => api.post('/upload/cleanup', { publicIds }),

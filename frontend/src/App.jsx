@@ -162,8 +162,16 @@ function App() {
           <Route path="settings" element={<CustomerSettings />} />
         </Route>
 
-        {/* Dynamic Restaurant Routes for QR Code Access */}
+        {/* Dynamic Restaurant Routes */}
         <Route path="/r/:restaurantId" element={<CustomerLayout />}>
+          <Route index element={<Menu />} />
+          <Route path="menu" element={<Menu />} />
+          <Route path="profile" element={<CustomerProfile />} />
+          <Route path="favorites" element={<CustomerFavorites />} />
+        </Route>
+
+        {/* New Table Specific Route */}
+        <Route path="/:restaurantName/table/:tableNo" element={<CustomerLayout />}>
           <Route index element={<Menu />} />
           <Route path="menu" element={<Menu />} />
           <Route path="profile" element={<CustomerProfile />} />

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import { ShoppingBag, Heart, UtensilsCrossed } from 'lucide-react';
 import logo from '../assets/logo-full.png';
+import { restaurantAPI } from '../utils/api';
 
 const CustomerLayout = () => {
     const location = useLocation();
-    const { restaurantId } = useParams();
+    const { restaurantId, restaurantName, tableNo: paramTableNo } = useParams();
 
     // -- Shared State --
     const [cart, setCart] = useState({});
@@ -13,8 +14,41 @@ const CustomerLayout = () => {
         const saved = localStorage.getItem('eatgreet_favorites');
         return saved ? JSON.parse(saved) : {};
     });
-    const [tableNo, setTableNo] = useState(() => localStorage.getItem('eatgreet_table') || '4');
+    const [tableNo, setTableNo] = useState(() => {
+        // High priority: Params -> LocalStorage -> Default
+        return paramTableNo || localStorage.getItem('eatgreet_table') || '4';
+    });
     const [showBill, setShowBill] = useState(false);
+    const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantId);
+
+    const [isResolving, setIsResolving] = useState(!!restaurantName);
+    const [resolveError, setResolveError] = useState(null);
+
+    // Resolve Restaurant Name to ID if needed
+    useEffect(() => {
+        const fetchRestaurant = async () => {
+            if (restaurantName) {
+                setIsResolving(true);
+                try {
+                    const { data } = await restaurantAPI.getBySlug(restaurantName);
+                    if (data && data._id) {
+                        setResolvedRestaurantId(data._id);
+                    } else {
+                        setResolveError("Restaurant not found");
+                    }
+                } catch (error) {
+                    console.error("Failed to find restaurant", error);
+                    setResolveError("Invalid Restaurant Link");
+                } finally {
+                    setIsResolving(false);
+                }
+            } else if (restaurantId) {
+                setResolvedRestaurantId(restaurantId);
+                setIsResolving(false);
+            }
+        };
+        fetchRestaurant();
+    }, [restaurantName, restaurantId]);
 
     // Persist Favorites
     useEffect(() => {
@@ -23,8 +57,11 @@ const CustomerLayout = () => {
 
     // Persist Table No
     useEffect(() => {
+        if (paramTableNo) {
+            setTableNo(paramTableNo);
+        }
         localStorage.setItem('eatgreet_table', tableNo);
-    }, [tableNo]);
+    }, [tableNo, paramTableNo]);
 
     // -- Handlers --
     const addToCart = (item) => {
@@ -68,63 +105,83 @@ const CustomerLayout = () => {
     const totalItems = Object.values(cart).reduce((acc, item) => acc + item.qty, 0);
 
     const getBaseUrl = () => {
-        return restaurantId ? `/r/${restaurantId}` : '/customer';
+        if (restaurantName && paramTableNo) return `/${restaurantName}/table/${paramTableNo}`;
+        return resolvedRestaurantId ? `/r/${resolvedRestaurantId}` : '/customer';
     };
 
     const baseUrl = getBaseUrl();
 
     return (
         <div className="min-h-screen bg-white pb-20 md:pb-0">
-            {/* Header */}
-            <header className="bg-white shadow-sm sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <Link to={`${baseUrl}/menu`} className="flex items-center gap-2">
-                        <img src={logo} alt="EatGreet" className="h-8 w-auto object-contain" />
-                    </Link>
-
-                    <div className="flex items-center gap-2 md:gap-4">
-                        <div className="hidden md:flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-1.5 rounded-full">
-                            Table #{tableNo}
-                        </div>
-
-                        <Link to={`${baseUrl}/favorites`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
-                            <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500" />
-                        </Link>
-
-                        <button onClick={() => setShowBill(true)} className="relative p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
-                            <ShoppingBag className="w-5 h-5" />
-                            {totalItems > 0 && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center border border-white">
-                                    {totalItems}
-                                </span>
-                            )}
-                        </button>
-                    </div>
+            {/* Loading/Error States */}
+            {isResolving && (
+                <div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FD6941]"></div>
                 </div>
-            </header>
+            )}
 
-            {/* Content */}
-            <main className="max-w-7xl mx-auto px-4 py-6">
-                <Outlet context={{
-                    cart, addToCart, removeFromCart, clearCart,
-                    favorites, toggleFavorite,
-                    showBill, setShowBill,
-                    tableNo, setTableNo,
-                    restaurantId
-                }} />
-            </main>
+            {resolveError && !isResolving && (
+                <div className="flex flex-col items-center justify-center h-screen text-center p-4">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
+                    <p className="text-gray-500">{resolveError}</p>
+                    <Link to="/" className="mt-4 text-[#FD6941] font-bold hover:underline">Go Home</Link>
+                </div>
+            )}
 
-            {/* Mobile Bottom Nav */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 justify-around">
-                <Link to={`${baseUrl}/menu`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('menu') || location.pathname === baseUrl ? 'text-black' : 'text-gray-400'}`}>
-                    <UtensilsCrossed className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">Menu</span>
-                </Link>
-                <Link to={`${baseUrl}/favorites`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('favorites') ? 'text-black' : 'text-gray-400'}`}>
-                    <Heart className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">Saved</span>
-                </Link>
-            </div>
+            {!isResolving && !resolveError && (
+                <>
+                    {/* Header */}
+                    <header className="bg-white shadow-sm sticky top-0 z-50">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <Link to={`${baseUrl}/menu`} className="flex items-center gap-2">
+                                <img src={logo} alt="EatGreet" className="h-8 w-auto object-contain" />
+                            </Link>
+
+                            <div className="flex items-center gap-2 md:gap-4">
+                                <div className="hidden md:flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-1.5 rounded-full">
+                                    Table #{tableNo}
+                                </div>
+
+                                <Link to={`${baseUrl}/favorites`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
+                                    <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500" />
+                                </Link>
+
+                                <button onClick={() => setShowBill(true)} className="relative p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+                                    <ShoppingBag className="w-5 h-5" />
+                                    {totalItems > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center border border-white">
+                                            {totalItems}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Content */}
+                    <main className="max-w-7xl mx-auto px-4 py-6">
+                        <Outlet context={{
+                            cart, addToCart, removeFromCart, clearCart,
+                            favorites, toggleFavorite,
+                            showBill, setShowBill,
+                            tableNo, setTableNo,
+                            restaurantId: resolvedRestaurantId
+                        }} />
+                    </main>
+
+                    {/* Mobile Bottom Nav */}
+                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 justify-around">
+                        <Link to={`${baseUrl}/menu`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('menu') || location.pathname === baseUrl ? 'text-black' : 'text-gray-400'}`}>
+                            <UtensilsCrossed className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Menu</span>
+                        </Link>
+                        <Link to={`${baseUrl}/favorites`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('favorites') ? 'text-black' : 'text-gray-400'}`}>
+                            <Heart className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Saved</span>
+                        </Link>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getRestaurantDetails, updateRestaurantDetails, createRestaurant, getRestaurantPublic, getAllRestaurants } = require('../controllers/restaurantController');
+const { getRestaurantDetails, updateRestaurantDetails, createRestaurant, getRestaurantPublic, getAllRestaurants, getRestaurantByName } = require('../controllers/restaurantController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.route('/')
@@ -11,5 +11,6 @@ router.route('/')
 router.get('/all', protect, getAllRestaurants);
 
 router.get('/:id', getRestaurantPublic);
+router.get('/slug/:name', getRestaurantByName);
 
 module.exports = router;

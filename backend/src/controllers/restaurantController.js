@@ -111,8 +111,36 @@ const getRestaurantPublic = async (req, res) => {
 
 // @desc Get public restaurant info by DB Name (or slug) - useful for domains
 const getRestaurantByName = async (req, res) => {
-    // Implementation depends on if we expose dbName or slug.
-    // Skipping for now unless requested.
+    try {
+        const name = req.params.name;
+        // Case insensitive search for restaurantName OR name (as fallback)
+        const user = await User.findOne({
+            $or: [
+                { restaurantName: { $regex: new RegExp(`^${name}$`, 'i') } },
+                // Fallback to name if restaurantName not set
+                { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+            ]
+        }).select('-password');
+
+        if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+            return res.status(404).json({ message: 'Restaurant not found' });
+        }
+
+        const restaurantData = {
+            _id: user._id,
+            name: user.restaurantName || user.name,
+            description: user.restaurantDetails?.description,
+            address: user.restaurantDetails?.address,
+            contactNumber: user.restaurantDetails?.contactNumber,
+            logo: user.restaurantDetails?.logo,
+            isActive: user.restaurantDetails?.isActive ?? true
+        };
+
+        res.json(restaurantData);
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 // @desc    Get all restaurants (Super Admin) - Now fetching from Users
@@ -138,4 +166,4 @@ const getAllRestaurants = async (req, res) => {
     }
 };
 
-module.exports = { getRestaurantDetails, updateRestaurantDetails, createRestaurant, getRestaurantPublic, getAllRestaurants };
+module.exports = { getRestaurantDetails, updateRestaurantDetails, createRestaurant, getRestaurantPublic, getAllRestaurants, getRestaurantByName };

@@ -86,6 +86,7 @@ export const customerAPI = {
 export const restaurantAPI = {
   getDetails: () => api.get('/restaurant'),
   updateDetails: (details) => api.put('/restaurant', details),
+  getBySlug: (slug) => api.get(`/restaurant/slug/${slug}`),
 };
 
 export const uploadAPI = {

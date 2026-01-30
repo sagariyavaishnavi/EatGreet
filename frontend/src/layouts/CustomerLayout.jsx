@@ -20,19 +20,24 @@ const CustomerLayout = () => {
     });
     const [showBill, setShowBill] = useState(false);
     const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantId);
+    const [tenantName, setTenantName] = useState(restaurantName);
 
-    const [isResolving, setIsResolving] = useState(!!restaurantName);
+    const [isResolving, setIsResolving] = useState(!!(restaurantName || restaurantId));
     const [resolveError, setResolveError] = useState(null);
 
     // Resolve Restaurant Name to ID if needed
     useEffect(() => {
         const fetchRestaurant = async () => {
-            if (restaurantName) {
+            if (restaurantName || restaurantId) {
                 setIsResolving(true);
                 try {
-                    const { data } = await restaurantAPI.getBySlug(restaurantName);
-                    if (data && data._id) {
+                    const { data } = restaurantName
+                        ? await restaurantAPI.getBySlug(restaurantName)
+                        : await restaurantAPI.getPublicDetails(restaurantId);
+
+                    if (data) {
                         setResolvedRestaurantId(data._id);
+                        setTenantName(data.name); // This is the business name
                     } else {
                         setResolveError("Restaurant not found");
                     }
@@ -42,9 +47,6 @@ const CustomerLayout = () => {
                 } finally {
                     setIsResolving(false);
                 }
-            } else if (restaurantId) {
-                setResolvedRestaurantId(restaurantId);
-                setIsResolving(false);
             }
         };
         fetchRestaurant();
@@ -165,7 +167,8 @@ const CustomerLayout = () => {
                             favorites, toggleFavorite,
                             showBill, setShowBill,
                             tableNo, setTableNo,
-                            restaurantId: resolvedRestaurantId
+                            restaurantId: resolvedRestaurantId,
+                            tenantName: tenantName
                         }} />
                     </main>
 

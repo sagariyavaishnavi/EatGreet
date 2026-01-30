@@ -98,7 +98,8 @@ const Menu = () => {
         favorites, toggleFavorite,
         showBill, setShowBill,
         tableNo, setTableNo,
-        restaurantId
+        restaurantId,
+        tenantName
     } = useOutletContext();
 
     const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -119,15 +120,23 @@ const Menu = () => {
     const [categories, setCategories] = useState(["All"]);
 
     useEffect(() => {
-        fetchData();
+        if (tenantName) {
+            fetchData();
+        }
         // Poll for updates every 10 seconds
-        const interval = setInterval(fetchData, 10000);
+        const interval = setInterval(() => {
+            if (tenantName) fetchData();
+        }, 10000);
         return () => clearInterval(interval);
-    }, [restaurantId]); // Added restaurantId to dependencies
+    }, [restaurantId, tenantName]); // Added tenantName to dependencies
 
     const fetchData = async () => {
         try {
-            const params = restaurantId ? { restaurantId } : {};
+            // Include restaurantName for tenant resolution, restaurantId for filtering (if backend supports it)
+            const params = {
+                restaurantName: tenantName,
+                restaurantId
+            };
             const [menuRes, catRes] = await Promise.all([
                 menuAPI.getAll(params),
                 categoryAPI.getAll(params)
@@ -159,7 +168,8 @@ const Menu = () => {
         }
 
         const orderData = {
-            restaurantId, // Pass the restaurant context
+            restaurantId, // The _id for reference
+            restaurantName: tenantName, // Required for tenant resolution on backend
             customerInfo: {
                 name: customerDetails.name,
                 phone: customerDetails.phone,

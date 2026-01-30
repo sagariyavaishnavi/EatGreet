@@ -141,14 +141,20 @@ app.get('/', (req, res) => {
 // Database Connection and Server Startup
 const startServer = async () => {
     try {
+        console.log('Connecting to MongoDB...');
         await connectDB();
-        await seedSuperAdmin();
 
         const PORT = process.env.PORT || 5000;
-        server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+        server.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
         });
+
+        console.log('Seeding Super Admin if needed...');
+        await seedSuperAdmin();
+        console.log('✅ Startup complete');
     } catch (error) {
+        console.error('❌ Fatal Startup Error:', error);
         process.exit(1);
     }
 };

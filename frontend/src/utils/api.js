@@ -87,6 +87,7 @@ export const restaurantAPI = {
   getDetails: () => api.get('/restaurant'),
   updateDetails: (details) => api.put('/restaurant', details),
   getBySlug: (slug) => api.get(`/restaurant/slug/${slug}`),
+  getPublicDetails: (id) => api.get(`/restaurant/${id}`),
 };
 
 export const uploadAPI = {

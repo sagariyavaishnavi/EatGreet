@@ -242,7 +242,7 @@ const Menu = () => {
                         placeholder="Search for food, category..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-gray-100 rounded-2xl text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FD6941] focus:bg-white transition-all"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-100 rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FD6941] focus:bg-white transition-all"
                     />
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
@@ -253,11 +253,11 @@ const Menu = () => {
                 {offers.map(offer => (
                     <div key={offer.id} className={`snap-center shrink-0 w-[85%] md:w-[350px] h-40 rounded-[2rem] p-6 flex flex-col justify-center relative shadow-lg ${offer.bg}`}>
                         <div className="relative z-10">
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full mb-3 inline-block ${offer.text === 'text-white' ? 'bg-white/20 text-white' : 'bg-black/10 text-black'}`}>LIMITED TIME</span>
-                            <h3 className={`text-3xl font-black ${offer.text} leading-none mb-1`}>{offer.title}</h3>
-                            <p className={`text-sm font-medium ${offer.text} opacity-80 mb-3`}>{offer.subtitle}</p>
+                            <span className={`text-xs px-3 py-1 rounded-full mb-3 inline-block ${offer.text === 'text-white' ? 'bg-white/20 text-white' : 'bg-black/10 text-black'}`}>LIMITED TIME</span>
+                            <h3 className={`text-3xl ${offer.text} leading-none mb-1`}>{offer.title}</h3>
+                            <p className={`text-sm ${offer.text} opacity-80 mb-3`}>{offer.subtitle}</p>
                             <div className="flex items-center gap-2">
-                                <code className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold text-white border border-white/30 tracking-wider border-dashed">{offer.code}</code>
+                                <code className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs text-white border border-white/30 tracking-wider border-dashed">{offer.code}</code>
                             </div>
                         </div>
                         {/* Decorative Circles */}
@@ -272,7 +272,7 @@ const Menu = () => {
                     <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${selectedCategory === cat
+                        className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm transition-all shadow-sm ${selectedCategory === cat
                             ? 'bg-black text-white shadow-md transform scale-105'
                             : 'bg-white text-gray-500 hover:bg-gray-100'
                             }`}
@@ -284,9 +284,9 @@ const Menu = () => {
 
             {/* Menu Grid */}
             <div className="px-4 pb-20">
-                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <h2 className="text-xl text-gray-800 mb-6 flex items-center gap-2">
                     {selectedCategory}
-                    <span className="text-sm font-medium text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">{filteredItems.length}</span>
+                    <span className="text-sm text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">{filteredItems.length}</span>
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -327,7 +327,7 @@ const Menu = () => {
                                 )}
 
                                 {/* Available Tag - Mobile: Hidden or Small dot, Desktop: Full tag */}
-                                <div className={`absolute bottom-2 left-2 md:bottom-4 md:left-4 text-white text-[10px] font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-lg flex items-center gap-1 ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
+                                <div className={`absolute bottom-2 left-2 md:bottom-4 md:left-4 text-white text-[10px] px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-lg flex items-center gap-1 ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
                                     <span className={`w-1.5 h-1.5 bg-white rounded-full ${item.isAvailable ? 'animate-pulse' : ''}`}></span>
                                     <span className="hidden md:inline">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
                                 </div>
@@ -337,8 +337,8 @@ const Menu = () => {
                             <div className="flex-1 flex flex-col md:block justify-between md:px-2 md:pb-2 overflow-hidden">
                                 <div className="flex justify-between items-start mb-1 md:mb-2">
                                     <div className="flex-1 min-w-0 pr-2">
-                                        <h3 className="text-base md:text-xl font-black text-gray-800 leading-tight mb-1 md:mb-2 truncate md:whitespace-normal">{item.name}</h3>
-                                        <div className="flex flex-wrap items-center gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 text-[10px] md:text-xs font-bold text-gray-500">
+                                        <h3 className="text-base md:text-xl text-gray-800 leading-tight mb-1 md:mb-2 truncate md:whitespace-normal">{item.name}</h3>
+                                        <div className="flex flex-wrap items-center gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 text-[10px] md:text-xs text-gray-500">
                                             <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-md">
                                                 <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> {item.rating || '4.5'}
                                             </span>
@@ -367,15 +367,15 @@ const Menu = () => {
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0 hidden md:block">
-                                        <span className="block text-2xl font-black text-gray-800">₹{item.price}</span>
+                                        <span className="block text-2xl text-gray-800">₹{item.price}</span>
                                     </div>
                                 </div>
 
-                                <p className="text-xs md:text-sm text-gray-500 font-medium leading-relaxed line-clamp-2 md:mb-6 text-balance hidden md:block">
+                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-2 md:mb-6 text-balance hidden md:block">
                                     {item.description}
                                 </p>
                                 {/* Mobile-only description (shorter) */}
-                                <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-2 md:hidden">
+                                <p className="text-xs text-gray-400 line-clamp-2 mb-2 md:hidden">
                                     {item.description}
                                 </p>
 
@@ -383,7 +383,7 @@ const Menu = () => {
                                 <div className="flex items-end md:items-center justify-between md:justify-center mt-auto">
                                     {/* Mobile Price Display */}
                                     <div className="md:hidden">
-                                        <span className="block text-lg font-black text-gray-800">₹{item.price}</span>
+                                        <span className="block text-lg text-gray-800">₹{item.price}</span>
                                     </div>
 
                                     <div className="md:w-full md:flex md:justify-center">
@@ -396,7 +396,7 @@ const Menu = () => {
                                                     >
                                                         <Minus className="w-3 h-3 md:w-4 md:h-4" />
                                                     </button>
-                                                    <span className="font-bold text-sm md:text-lg w-4 md:w-6 text-center">{cart[item._id].qty}</span>
+                                                    <span className="text-sm md:text-lg w-4 md:w-6 text-center">{cart[item._id].qty}</span>
                                                     <button
                                                         onClick={() => addToCart(item)}
                                                         className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
@@ -413,7 +413,7 @@ const Menu = () => {
                                                 </button>
                                             )
                                         ) : (
-                                            <div className="text-center py-1 md:py-3 bg-gray-100 text-gray-400 font-bold rounded-lg md:rounded-xl text-[10px] md:text-sm px-2 md:w-full">
+                                            <div className="text-center py-1 md:py-3 bg-gray-100 text-gray-400 rounded-lg md:rounded-xl text-[10px] md:text-sm px-2 md:w-full">
                                                 <span className="md:hidden">N/A</span>
                                                 <span className="hidden md:inline">Currently Unavailable</span>
                                             </div>
@@ -436,19 +436,19 @@ const Menu = () => {
                         <div className="flex items-center gap-4 relative z-10">
                             <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center border border-white/10 relative">
                                 <ShoppingBag className="w-5 h-5 text-[#FD6941]" />
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FD6941] rounded-full text-[10px] font-bold flex items-center justify-center border border-black">
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FD6941] rounded-full text-[10px] flex items-center justify-center border border-black">
                                     {totalItems}
                                 </span>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Bill</p>
-                                <p className="text-xl font-bold">₹{grandTotal}</p>
+                                <p className="text-xs text-gray-400 uppercase tracking-wider">Total Bill</p>
+                                <p className="text-xl">₹{grandTotal}</p>
                             </div>
                         </div>
 
                         <button
                             onClick={() => isPreviewMode ? toast('Preview Mode: Checkout disabled') : setShowBill(true)}
-                            className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-bold text-sm hover:bg-gray-200 transition-colors relative z-10"
+                            className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full text-sm hover:bg-gray-200 transition-colors relative z-10"
                         >
                             View Cart <ChevronRight className="w-4 h-4" />
                         </button>
@@ -463,7 +463,7 @@ const Menu = () => {
 
                         {/* Header */}
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 sticky top-0 z-10">
-                            <h2 className="text-xl font-black text-gray-800">Your Order</h2>
+                            <h2 className="text-xl text-gray-800">Your Order</h2>
                             <button
                                 onClick={() => setShowBill(false)}
                                 className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"
@@ -481,7 +481,7 @@ const Menu = () => {
                                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500 animate-bounce">
                                         <ShoppingBag className="w-10 h-10" />
                                     </div>
-                                    <h3 className="text-2xl font-black text-gray-800 mb-2">Order Places!</h3>
+                                    <h3 className="text-2xl text-gray-800 mb-2">Order Places!</h3>
                                     <p className="text-gray-500">Kitchen is preparing your delicious meal.</p>
                                 </div>
                             ) : (
@@ -495,13 +495,13 @@ const Menu = () => {
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="font-bold text-gray-800 text-sm">{item.name}</h4>
-                                                        <span className="font-bold text-gray-800">₹{item.price * item.qty}</span>
+                                                        <h4 className="text-gray-800 text-sm">{item.name}</h4>
+                                                        <span className="text-gray-800">₹{item.price * item.qty}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-3 bg-gray-50 rounded-full px-2 py-1 h-7">
                                                             <button onClick={() => removeFromCart(item._id)} className="w-5 h-5 flex items-center justify-center bg-white rounded-full text-gray-600 shadow-sm text-xs"><Minus className="w-3 h-3" /></button>
-                                                            <span className="text-xs font-bold w-3 text-center">{item.qty}</span>
+                                                            <span className="text-xs w-3 text-center">{item.qty}</span>
                                                             <button onClick={() => addToCart(item)} className="w-5 h-5 flex items-center justify-center bg-black text-white rounded-full shadow-sm text-xs"><Plus className="w-3 h-3" /></button>
                                                         </div>
                                                     </div>
@@ -512,30 +512,30 @@ const Menu = () => {
 
                                     {/* Customer Details Form */}
                                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">Required Details</h3>
+                                        <h3 className="text-sm text-gray-800 uppercase tracking-wider">Required Details</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="col-span-2">
-                                                <label className="block text-xs font-bold text-gray-400 mb-1.5">Full Name</label>
+                                                <label className="block text-xs text-gray-400 mb-1.5">Full Name</label>
                                                 <input
                                                     type="text"
                                                     value={customerDetails.name}
                                                     onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
+                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
                                                     placeholder="Enter your name"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-gray-400 mb-1.5">Phone Number</label>
+                                                <label className="block text-xs text-gray-400 mb-1.5">Phone Number</label>
                                                 <input
                                                     type="tel"
                                                     value={customerDetails.phone}
                                                     onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
+                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
                                                     placeholder="+91..."
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-gray-400 mb-1.5">Table No.</label>
+                                                <label className="block text-xs text-gray-400 mb-1.5">Table No.</label>
                                                 <input
                                                     type="text"
                                                     value={customerDetails.tableNo}
@@ -544,16 +544,16 @@ const Menu = () => {
                                                         setCustomerDetails({ ...customerDetails, tableNo: val });
                                                         setTableNo(val);
                                                     }}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
+                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
                                                 />
                                             </div>
                                             <div className="col-span-2">
-                                                <label className="block text-xs font-bold text-gray-400 mb-1.5">Cooking Instructions (Optional)</label>
+                                                <label className="block text-xs text-gray-400 mb-1.5">Cooking Instructions (Optional)</label>
                                                 <textarea
                                                     rows="2"
                                                     value={customerDetails.notes}
                                                     onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] resize-none"
+                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] resize-none"
                                                     placeholder="Less spicy, extra cheese..."
                                                 />
                                             </div>
@@ -562,15 +562,15 @@ const Menu = () => {
 
                                     {/* Bill Summary */}
                                     <div className="space-y-2 pt-4 border-t border-gray-100">
-                                        <div className="flex justify-between text-sm text-gray-500 font-medium">
+                                        <div className="flex justify-between text-sm text-gray-500">
                                             <span>Subtotal</span>
                                             <span>₹{subTotal}</span>
                                         </div>
-                                        <div className="flex justify-between text-sm text-gray-500 font-medium">
+                                        <div className="flex justify-between text-sm text-gray-500">
                                             <span>Tax (5%)</span>
                                             <span>₹{tax}</span>
                                         </div>
-                                        <div className="flex justify-between text-lg font-black text-gray-900 pt-2 border-t border-dashed border-gray-200 mt-2">
+                                        <div className="flex justify-between text-lg text-gray-900 pt-2 border-t border-dashed border-gray-200 mt-2">
                                             <span>Grand Total</span>
                                             <span>₹{grandTotal}</span>
                                         </div>
@@ -584,7 +584,7 @@ const Menu = () => {
                             <div className="p-6 border-t border-gray-100 bg-gray-50 shrink-0 safety-pb">
                                 <button
                                     onClick={handlePlaceOrder}
-                                    className="w-full bg-[#FD6941] text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                    className="w-full bg-[#FD6941] text-white py-4 rounded-xl text-lg shadow-lg hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                 >
                                     Place Order <span className="text-white/60">•</span> ₹{grandTotal}
                                 </button>

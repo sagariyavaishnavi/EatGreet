@@ -172,17 +172,7 @@ const CustomerLayout = () => {
                         }} />
                     </main>
 
-                    {/* Mobile Bottom Nav */}
-                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 justify-around">
-                        <Link to={`${baseUrl}/menu`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('menu') || location.pathname === baseUrl ? 'text-black' : 'text-gray-400'}`}>
-                            <UtensilsCrossed className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Menu</span>
-                        </Link>
-                        <Link to={`${baseUrl}/favorites`} className={`flex flex-col items-center gap-1 ${location.pathname.includes('favorites') ? 'text-black' : 'text-gray-400'}`}>
-                            <Heart className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Saved</span>
-                        </Link>
-                    </div>
+
                 </>
             )}
         </div>

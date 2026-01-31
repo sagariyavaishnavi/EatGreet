@@ -102,6 +102,8 @@ const Menu = () => {
         tenantName
     } = useOutletContext();
 
+    const isPreviewMode = tableNo === 'preview';
+
     const user = JSON.parse(localStorage.getItem('user')) || {};
 
     const [searchParams] = useSearchParams();
@@ -289,13 +291,13 @@ const Menu = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredItems.map((item) => (
-                        <div key={item._id} className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-gray-100 hover:shadow-lg transition-all group relative overflow-hidden">
+                        <div key={item._id} className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 shadow-sm border border-gray-100 hover:shadow-lg transition-all group relative overflow-hidden flex flex-row md:flex-col gap-3 md:gap-0 h-40 md:h-auto">
 
                             {/* Card Header / Image Slider */}
-                            <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4 bg-gray-100">
+                            <div className="relative w-32 md:w-full h-full md:h-64 shrink-0 rounded-2xl md:rounded-[2rem] overflow-hidden md:mb-4 bg-gray-100">
 
                                 {/* Veg/Non-Veg Symbol on Image */}
-                                <div className="absolute top-4 left-4 z-10 w-5 h-5 bg-white/90 backdrop-blur rounded-md shadow-sm p-0.5">
+                                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 w-4 h-4 md:w-5 md:h-5 bg-white/90 backdrop-blur rounded-md shadow-sm p-0.5">
                                     <img
                                         src={item.isVeg ? vegIcon : nonVegIcon}
                                         alt={item.isVeg ? "Veg" : "Non-Veg"}
@@ -306,12 +308,15 @@ const Menu = () => {
                                 {/* Like Button */}
                                 <button
                                     onClick={() => toggleFavorite(item)}
-                                    className={`absolute top-4 right-4 z-20 w-9 h-9 backdrop-blur rounded-full flex items-center justify-center shadow-sm transition-all ${favorites[item._id]
-                                        ? 'bg-red-50 text-red-500'
-                                        : 'bg-white/90 text-gray-400 hover:text-red-500 hover:bg-white'
+                                    disabled={isPreviewMode}
+                                    className={`absolute top-2 right-2 md:top-4 md:right-4 z-20 w-7 h-7 md:w-9 md:h-9 backdrop-blur rounded-full flex items-center justify-center shadow-sm transition-all ${isPreviewMode
+                                        ? 'bg-white/90 text-gray-300 cursor-not-allowed'
+                                        : favorites[item._id]
+                                            ? 'bg-red-50 text-red-500'
+                                            : 'bg-white/90 text-gray-400 hover:text-red-500 hover:bg-white'
                                         }`}
                                 >
-                                    <Heart className={`w-5 h-5 ${favorites[item._id] ? 'fill-current' : ''}`} />
+                                    <Heart className={`w-4 h-4 md:w-5 md:h-5 ${favorites[item._id] ? 'fill-current' : ''}`} />
                                 </button>
 
                                 {/* Media Slider if available, else Image */}
@@ -321,32 +326,32 @@ const Menu = () => {
                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                 )}
 
-                                {/* Available Tag */}
-                                <div className={`absolute bottom-4 left-4 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
+                                {/* Available Tag - Mobile: Hidden or Small dot, Desktop: Full tag */}
+                                <div className={`absolute bottom-2 left-2 md:bottom-4 md:left-4 text-white text-[10px] font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-lg flex items-center gap-1 ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
                                     <span className={`w-1.5 h-1.5 bg-white rounded-full ${item.isAvailable ? 'animate-pulse' : ''}`}></span>
-                                    {item.isAvailable ? 'Available' : 'Unavailable'}
+                                    <span className="hidden md:inline">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
                                 </div>
                             </div>
 
                             {/* Content */}
-                            <div className="px-2 pb-2">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-black text-gray-800 leading-tight mb-2 pr-2">{item.name}</h3>
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-bold text-gray-500">
-                                            <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-md">
-                                                <Star className="w-3 h-3 fill-current" /> {item.rating || '4.5'}
+                            <div className="flex-1 flex flex-col md:block justify-between md:px-2 md:pb-2 overflow-hidden">
+                                <div className="flex justify-between items-start mb-1 md:mb-2">
+                                    <div className="flex-1 min-w-0 pr-2">
+                                        <h3 className="text-base md:text-xl font-black text-gray-800 leading-tight mb-1 md:mb-2 truncate md:whitespace-normal">{item.name}</h3>
+                                        <div className="flex flex-wrap items-center gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 text-[10px] md:text-xs font-bold text-gray-500">
+                                            <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-md">
+                                                <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> {item.rating || '4.5'}
                                             </span>
-                                            <span className="flex items-center gap-1">
+                                            <span className="hidden md:flex items-center gap-1">
                                                 <Clock className="w-3 h-3" /> {item.time}
                                             </span>
                                             <span className="flex items-center gap-1">
-                                                <Flame className="w-3 h-3 text-[#FD6941]" /> {item.calories}
+                                                <Flame className="w-2.5 h-2.5 md:w-3 md:h-3 text-[#FD6941]" /> {item.calories}
                                             </span>
 
-                                            {/* Dietary Labels in Description */}
+                                            {/* Dietary Labels */}
                                             {item.labels && item.labels.length > 0 && (
-                                                <div className="flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
+                                                <div className="hidden md:flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
                                                     {item.labels.map(label => dietaryIcons[label] && (
                                                         <img
                                                             key={label}
@@ -361,47 +366,59 @@ const Menu = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="text-right shrink-0">
+                                    <div className="text-right shrink-0 hidden md:block">
                                         <span className="block text-2xl font-black text-gray-800">₹{item.price}</span>
                                     </div>
                                 </div>
 
-                                <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-2 mb-6 text-balance">
+                                <p className="text-xs md:text-sm text-gray-500 font-medium leading-relaxed line-clamp-2 md:mb-6 text-balance hidden md:block">
+                                    {item.description}
+                                </p>
+                                {/* Mobile-only description (shorter) */}
+                                <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-2 md:hidden">
                                     {item.description}
                                 </p>
 
-                                {/* Add Button / Qty Control */}
-                                <div className="flex items-center justify-center">
-                                    {item.isAvailable ? (
-                                        cart[item._id] ? (
-                                            <div className="flex items-center gap-4 bg-black text-white px-2 py-2 rounded-full shadow-lg w-full max-w-[140px] justify-between">
-                                                <button
-                                                    onClick={() => removeFromCart(item._id)}
-                                                    className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </button>
-                                                <span className="font-bold text-lg w-6 text-center">{cart[item._id].qty}</span>
+                                {/* Add Button / Qty Control / Price (Mobile) */}
+                                <div className="flex items-end md:items-center justify-between md:justify-center mt-auto">
+                                    {/* Mobile Price Display */}
+                                    <div className="md:hidden">
+                                        <span className="block text-lg font-black text-gray-800">₹{item.price}</span>
+                                    </div>
+
+                                    <div className="md:w-full md:flex md:justify-center">
+                                        {item.isAvailable ? (
+                                            cart[item._id] ? (
+                                                <div className="flex items-center gap-2 md:gap-4 bg-black text-white px-2 py-1.5 md:py-2 rounded-full shadow-lg w-auto md:w-full md:max-w-[140px] justify-between">
+                                                    <button
+                                                        onClick={() => removeFromCart(item._id)}
+                                                        className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
+                                                    >
+                                                        <Minus className="w-3 h-3 md:w-4 md:h-4" />
+                                                    </button>
+                                                    <span className="font-bold text-sm md:text-lg w-4 md:w-6 text-center">{cart[item._id].qty}</span>
+                                                    <button
+                                                        onClick={() => addToCart(item)}
+                                                        className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
+                                                    >
+                                                        <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
                                                 <button
                                                     onClick={() => addToCart(item)}
-                                                    className="w-8 h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
+                                                    className="w-8 h-8 md:w-16 md:h-16 bg-[#FD6941] text-white rounded-full shadow-lg shadow-orange-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
                                                 >
-                                                    <Plus className="w-4 h-4" />
+                                                    <Plus className="w-5 h-5 md:w-8 md:h-8" />
                                                 </button>
-                                            </div>
+                                            )
                                         ) : (
-                                            <button
-                                                onClick={() => addToCart(item)}
-                                                className="w-16 h-16 bg-[#FD6941] text-white rounded-full shadow-lg shadow-orange-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
-                                            >
-                                                <Plus className="w-8 h-8" />
-                                            </button>
-                                        )
-                                    ) : (
-                                        <div className="w-full text-center py-3 bg-gray-100 text-gray-400 font-bold rounded-xl text-sm">
-                                            Currently Unavailable
-                                        </div>
-                                    )}
+                                            <div className="text-center py-1 md:py-3 bg-gray-100 text-gray-400 font-bold rounded-lg md:rounded-xl text-[10px] md:text-sm px-2 md:w-full">
+                                                <span className="md:hidden">N/A</span>
+                                                <span className="hidden md:inline">Currently Unavailable</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -430,7 +447,7 @@ const Menu = () => {
                         </div>
 
                         <button
-                            onClick={() => setShowBill(true)}
+                            onClick={() => isPreviewMode ? toast('Preview Mode: Checkout disabled') : setShowBill(true)}
                             className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-bold text-sm hover:bg-gray-200 transition-colors relative z-10"
                         >
                             View Cart <ChevronRight className="w-4 h-4" />

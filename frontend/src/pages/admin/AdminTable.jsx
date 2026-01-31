@@ -6,9 +6,12 @@ import { restaurantAPI } from '../../utils/api';
 const AdminTable = () => {
     const [tables, setTables] = useState(() => {
         const saved = localStorage.getItem('admin_tables');
-        return saved ? JSON.parse(saved) : [1, 2, 3, 4, 5];
+        let initialTables = saved ? JSON.parse(saved) : [1, 2, 3, 4, 5];
+        // Ensure unique and sorted
+        initialTables = [...new Set(initialTables.map(Number))].sort((a, b) => a - b);
+        return initialTables;
     });
-    const [newTableNo, setNewTableNo] = useState('');
+
     const [restaurantName, setRestaurantName] = useState('');
 
     useEffect(() => {
@@ -27,15 +30,14 @@ const AdminTable = () => {
         }
     };
 
-    const addTable = (e) => {
-        e.preventDefault();
-        if (newTableNo && !tables.includes(newTableNo)) {
-            setTables([...tables, newTableNo].sort((a, b) => a - b));
-            setNewTableNo('');
-            toast.success(`Table ${newTableNo} added`);
-        } else if (tables.includes(newTableNo)) {
-            toast.error('Table already exists');
-        }
+    const addTable = () => {
+        const numericTables = tables.map(Number);
+        const nextTableNo = numericTables.length > 0 ? Math.max(...numericTables) + 1 : 1;
+
+        // Ensure unique and sorted
+        const newTables = [...new Set([...numericTables, nextTableNo])].sort((a, b) => a - b);
+        setTables(newTables);
+        toast.success(`Table ${nextTableNo} added`);
     };
 
     const removeTable = (table) => {
@@ -61,18 +63,12 @@ const AdminTable = () => {
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800">Table Management</h1>
 
-                <form onSubmit={addTable} className="flex gap-2">
-                    <input
-                        type="number"
-                        placeholder="Table No."
-                        value={newTableNo}
-                        onChange={(e) => setNewTableNo(e.target.value)}
-                        className="px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
-                    />
-                    <button type="submit" className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold shadow-sm hover:bg-orange-600 transition-colors flex items-center gap-2">
-                        <Plus className="w-4 h-4" /> Add
-                    </button>
-                </form>
+                <button
+                    onClick={addTable}
+                    className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold shadow-sm hover:bg-orange-600 transition-colors flex items-center gap-2"
+                >
+                    <Plus className="w-4 h-4" /> Add Table
+                </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

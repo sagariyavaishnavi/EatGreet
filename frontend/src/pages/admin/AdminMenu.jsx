@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
-import { menuAPI, categoryAPI, uploadAPI } from '../../utils/api';
+import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 // Dietary Icons
@@ -42,8 +42,8 @@ const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(
 
 const AdminMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [restaurantName, setRestaurantName] = useState('');
     const filterRef = useRef(null);
 
     // Close filter when clicking outside
@@ -108,7 +108,13 @@ const AdminMenu = () => {
             const catData = catRes.data || [];
 
             setMenuItems(Array.isArray(menuData) ? menuData : []);
+            setMenuItems(Array.isArray(menuData) ? menuData : []);
             setCategories(Array.isArray(catData) ? catData : []);
+
+            // Fetch Restaurant Details for Preview Link
+            const { data: restData } = await restaurantAPI.getDetails();
+            setRestaurantName(restData.name || 'restaurant');
+
         } catch (error) {
             console.error('Fetch error:', error);
             toast.error('Failed to load data');
@@ -194,7 +200,7 @@ const AdminMenu = () => {
         }
 
         const newItems = [];
-        
+
         for (const file of files) {
             try {
                 // Check file size (100MB limit)
@@ -224,7 +230,7 @@ const AdminMenu = () => {
 
                 // Create Preview URL
                 const previewUrl = URL.createObjectURL(file);
-                
+
                 newItems.push({
                     name: file.name,
                     url: previewUrl, // Temporary blob URL for preview
@@ -330,12 +336,12 @@ const AdminMenu = () => {
         uploadedPublicIdsRef.current = []; // Reset tracking for this batch
 
         const loadToast = toast.loading('Initiating upload...', { duration: Infinity });
-        
+
         try {
             // Count items that need uploading
             const filesToUploadIndices = mediaItems.map((item, idx) => item.file ? idx : -1).filter(idx => idx !== -1);
             const totalUploads = filesToUploadIndices.length;
-            
+
             let uploadedCount = 0;
             const progressMap = {}; // idx -> percent
 
@@ -348,18 +354,18 @@ const AdminMenu = () => {
                     try {
                         const res = await uploadAPI.uploadDirect(item.file, (percent) => {
                             progressMap[index] = percent;
-                            
+
                             // Calculate Average
                             const currentTotal = Object.values(progressMap).reduce((a, b) => a + b, 0);
                             const avgAsync = Math.round(currentTotal / totalUploads);
                             const doneAsync = Object.values(progressMap).filter(p => p === 100).length;
-                            
+
                             toast.loading(`Uploading ${doneAsync}/${totalUploads} (${avgAsync}%)...`, { id: loadToast });
 
                         }, { signal });
-                        
+
                         uploadedCount++;
-                        
+
                         // Track ID for potential cleanup
                         if (res.data.public_id) {
                             uploadedPublicIdsRef.current.push(res.data.public_id);
@@ -373,7 +379,7 @@ const AdminMenu = () => {
                         };
                     } catch (err) {
                         if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
-                             throw err; 
+                            throw err;
                         }
                         throw new Error(`Failed to upload ${item.name}`);
                     }
@@ -386,7 +392,7 @@ const AdminMenu = () => {
 
             // 2. Save Item Data
             toast.loading('Saving item details...', { id: loadToast });
-            
+
             const itemData = {
                 name: newItemName,
                 category: newItemCategory,
@@ -415,7 +421,7 @@ const AdminMenu = () => {
             fetchData();
             setIsModalOpen(false);
             resetForm();
-            
+
         } catch (error) {
             if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
                 toast.dismiss(loadToast);
@@ -431,26 +437,26 @@ const AdminMenu = () => {
                 // resetForm (called by Cancel) already triggered cleanup of whatever was in ref.
                 // But what if we just cancelled via some other way? Safe to call explicit cleanup here?
                 // Yes, duplicate cleanup is harmless (idempotent-ish).
-                
+
                 if (uploadedPublicIdsRef.current.length > 0) {
-                     const ids = [...uploadedPublicIdsRef.current];
-                     uploadAPI.cleanupFiles(ids);
-                     uploadedPublicIdsRef.current = [];
+                    const ids = [...uploadedPublicIdsRef.current];
+                    uploadAPI.cleanupFiles(ids);
+                    uploadedPublicIdsRef.current = [];
                 }
 
             } else {
                 console.error("Save Error", error);
                 toast.error('Failed: ' + (error.message || 'Unknown error'), { id: loadToast });
-                
+
                 // On error (e.g. backend failed), we SHOULD cleanup the images we just uploaded.
                 if (uploadedPublicIdsRef.current.length > 0) {
-                     const ids = [...uploadedPublicIdsRef.current];
-                     uploadAPI.cleanupFiles(ids); // Fire and forget
-                     uploadedPublicIdsRef.current = [];
+                    const ids = [...uploadedPublicIdsRef.current];
+                    uploadAPI.cleanupFiles(ids); // Fire and forget
+                    uploadedPublicIdsRef.current = [];
                 }
             }
         } finally {
-             abortControllerRef.current = null;
+            abortControllerRef.current = null;
         }
     };
 
@@ -472,7 +478,14 @@ const AdminMenu = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Menu Management</h1>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => setIsPreviewOpen(true)}
+                        onClick={() => {
+                            if (restaurantName) {
+                                const url = `${window.location.origin}/${encodeURIComponent(restaurantName)}/table/preview/menu`;
+                                window.open(url, '_blank');
+                            } else {
+                                toast.error("Restaurant details not loaded yet");
+                            }
+                        }}
                         className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
                     >
                         <Eye className="w-4 h-4" />
@@ -924,101 +937,7 @@ const AdminMenu = () => {
                 </div>
             )}
 
-            {/* Preview Modal */}
-            {isPreviewOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-                    <div className="relative w-full max-w-[380px] h-[80vh] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-8 border-gray-900 flex flex-col">
-                        {/* Phone Notch/Header */}
-                        <div className="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 z-10">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#FD6941] font-bold text-xs">EG</div>
-                                <span className="font-bold text-gray-800 text-sm">EatGreet</span>
-                            </div>
-                            <button
-                                onClick={() => setIsPreviewOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
 
-                        {/* Phone Content */}
-                        <div className="flex-1 overflow-y-auto no-scrollbar bg-gray-50">
-                            {/* Hero/Banner Area */}
-                            <div className="h-40 bg-[#FD6941] relative overflow-hidden">
-                                <div className="absolute inset-0 bg-black/20"></div>
-                                <div className="absolute bottom-4 left-4 text-white">
-                                    <h2 className="font-bold text-xl">Delicious Menu</h2>
-                                    <p className="text-xs opacity-90">Fresh & Hot</p>
-                                </div>
-                            </div>
-
-                            {/* Menu List */}
-                            <div className="p-4 space-y-6">
-                                {categories.map(cat => {
-                                    const catItems = menuItems.filter(item => {
-                                        const cId = item.category?._id || item.category;
-                                        return cId === cat._id && item.isAvailable;
-                                    });
-
-                                    if (catItems.length === 0) return null;
-
-                                    return (
-                                        <div key={cat._id} className="space-y-3">
-                                            <h3 className="font-bold text-gray-800 text-lg sticky top-0 bg-gray-50 py-2 z-0">{cat.name}</h3>
-                                            <div className="space-y-4">
-                                                {catItems.map(item => (
-                                                    <div key={item._id} className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex gap-3">
-                                                        <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                                                            <img
-                                                                src={item.image || (item.media && item.media[0]?.url) || 'https://via.placeholder.com/150'}
-                                                                alt={item.name}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-start justify-between">
-                                                                <h4 className="font-bold text-gray-800 text-sm truncate pr-2">{item.name}</h4>
-                                                                <div className={`w-3 h-3 border border-gray-300 rounded-[2px] flex items-center justify-center flex-shrink-0 mt-0.5 ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                                                                </div>
-                                                            </div>
-                                                            <p className="text-[10px] text-gray-400 line-clamp-2 mt-1 mb-2">{item.description}</p>
-                                                            <div className="flex justify-between items-end">
-                                                                <span className="font-bold text-gray-800 text-sm">₹{item.price}</span>
-                                                                <button className="px-3 py-1 bg-orange-50 text-[#FD6941] text-[10px] font-bold rounded-full uppercase">Add</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Phone Footer/Nav */}
-                        <div className="bg-white px-6 py-3 border-t border-gray-100 flex justify-around text-gray-400">
-                            <div className="flex flex-col items-center gap-1 text-[#FD6941]">
-                                <div className="w-5 h-5 rounded-full bg-orange-100"></div>
-                                <span className="text-[9px] font-bold">Home</span>
-                            </div>
-                            <div className="flex flex-col items-center gap-1">
-                                <div className="w-5 h-5 rounded-full bg-gray-100"></div>
-                                <span className="text-[9px]">Cart</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => setIsPreviewOpen(false)}
-                        className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-                    >
-                        <X className="w-8 h-8" />
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

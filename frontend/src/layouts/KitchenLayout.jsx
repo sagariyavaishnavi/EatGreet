@@ -1,47 +1,32 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { ChefHat, Settings, User } from 'lucide-react';
+import { Link, Outlet, useParams } from 'react-router-dom';
+import { ChefHat } from 'lucide-react';
 
 const KitchenLayout = () => {
-    const location = useLocation();
+    const { restaurantName } = useParams();
+    const displayName = restaurantName ? restaurantName.replace(/_/g, ' ').toUpperCase() : 'KITCHEN';
 
     return (
-        <div className="min-h-screen bg-orange-50 flex flex-col">
+        <div className="min-h-screen bg-[#F5F5F5] font-sans text-gray-900">
             {/* Navbar */}
-            <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center z-10 sticky top-0">
-                <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
-                        <ChefHat className="w-6 h-6" />
-                    </div>
-                    <span className="text-xl font-bold text-gray-800">Kitchen Display</span>
+            <nav className="bg-[#F5F5F5] px-8 py-6 flex justify-between items-center sticky top-0 z-50">
+                {/* Logo */}
+                <div className="flex items-center gap-4">
+                    <img src="/nav-logo.svg" alt="EatGreet" className="h-8 w-auto" />
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <Link
-                        to="/kitchen"
-                        className={`font-medium text-sm transition-colors ${location.pathname === '/kitchen' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-800'
-                            }`}
-                    >
-                        Orders
-                    </Link>
-                    <Link
-                        to="/kitchen/profile"
-                        className={`font-medium text-sm transition-colors flex items-center gap-1 ${location.pathname === '/kitchen/profile' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-800'
-                            }`}
-                    >
-                        <User className="w-4 h-4" /> Profile
-                    </Link>
-                    <Link
-                        to="/kitchen/settings"
-                        className={`font-medium text-sm transition-colors flex items-center gap-1 ${location.pathname === '/kitchen/settings' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-800'
-                            }`}
-                    >
-                        <Settings className="w-4 h-4" /> Settings
-                    </Link>
+                {/* Right Actions - Simple Badge */}
+                <div className="flex items-center gap-6">
+                    <div className="bg-white rounded-full px-5 py-2 flex items-center gap-2 shadow-sm border border-gray-100">
+                        <div className="w-8 h-8 rounded-full bg-red-50 overflow-hidden border border-red-100 flex items-center justify-center text-red-500">
+                             <ChefHat className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">{displayName}</span>
+                    </div>
                 </div>
             </nav>
 
             {/* Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
+            <main className="px-8 pb-8 flex-1 overflow-y-auto">
                 <Outlet />
             </main>
         </div>

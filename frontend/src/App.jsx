@@ -156,14 +156,7 @@ function App() {
             <Route path="settings" element={<KitchenSettings />} />
           </Route>
 
-          {/* Customer Routes */}
-          <Route path="/customer" element={<CustomerLayout />}>
-            <Route index element={<Navigate to="menu" replace />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="profile" element={<CustomerProfile />} />
-            <Route path="favorites" element={<CustomerFavorites />} />
-            <Route path="settings" element={<CustomerSettings />} />
-          </Route>
+
 
           {/* Dynamic Restaurant Routes */}
           <Route path="/r/:restaurantId" element={<CustomerLayout />}>
@@ -171,6 +164,11 @@ function App() {
             <Route path="menu" element={<Menu />} />
             <Route path="profile" element={<CustomerProfile />} />
             <Route path="favorites" element={<CustomerFavorites />} />
+          </Route>
+
+          {/* New Public Kitchen Route */}
+          <Route path="/:restaurantName/kitchen" element={<KitchenLayout />}>
+            <Route index element={<KitchenDashboard />} />
           </Route>
 
           {/* New Table Specific Route */}
@@ -181,8 +179,7 @@ function App() {
             <Route path="favorites" element={<CustomerFavorites />} />
           </Route>
 
-          {/* Legacy/Shortcut Routes */}
-          <Route path="/menu" element={<Navigate to="/customer/menu" replace />} />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

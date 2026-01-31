@@ -2,8 +2,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function AdminLogin() {
+    const { updateSettings } = useSettings();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -22,6 +24,7 @@ export default function AdminLogin() {
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('userRole', userData.role);
+            updateSettings(userData);
 
             if (userData.role === 'superadmin') {
                 // Enforce separation: Super Admins must use their own login portal

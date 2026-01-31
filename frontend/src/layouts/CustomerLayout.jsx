@@ -20,7 +20,9 @@ const CustomerLayout = () => {
     });
     const [showBill, setShowBill] = useState(false);
     const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantId);
-    const [tenantName, setTenantName] = useState(restaurantName);
+    const [tenantName, setTenantName] = useState(restaurantName || '');
+    const [businessName, setBusinessName] = useState('');
+    const [currency, setCurrency] = useState('INR');
 
     const [isResolving, setIsResolving] = useState(!!(restaurantName || restaurantId));
     const [resolveError, setResolveError] = useState(null);
@@ -28,22 +30,44 @@ const CustomerLayout = () => {
     // Resolve Restaurant Name to ID if needed
     useEffect(() => {
         const fetchRestaurant = async () => {
-            if (restaurantName || restaurantId) {
+            if (restaurantName) {
+                // Immediate State Sync
+                setTenantName(restaurantName);
                 setIsResolving(true);
-                try {
-                    const { data } = restaurantName
-                        ? await restaurantAPI.getBySlug(restaurantName)
-                        : await restaurantAPI.getPublicDetails(restaurantId);
+                setResolveError(null);
+                setResolvedRestaurantId(null); // Clear ID to prevent stale item fetches
+                setBusinessName('');
 
+                try {
+                    const { data } = await restaurantAPI.getBySlug(restaurantName);
                     if (data) {
                         setResolvedRestaurantId(data._id);
-                        setTenantName(data.name); // This is the business name
+                        setBusinessName(data.name || '');
+                        if (data.currency) setCurrency(data.currency);
                     } else {
                         setResolveError("Restaurant not found");
                     }
                 } catch (error) {
                     console.error("Failed to find restaurant", error);
                     setResolveError("Invalid Restaurant Link");
+                } finally {
+                    setIsResolving(false);
+                }
+            } else if (restaurantId) {
+                setIsResolving(true);
+                setResolveError(null);
+                try {
+                    const { data } = await restaurantAPI.getPublicDetails(restaurantId);
+                    if (data) {
+                        setResolvedRestaurantId(data._id);
+                        setTenantName(data.restaurantName || '');
+                        setBusinessName(data.name || '');
+                        if (data.currency) setCurrency(data.currency);
+                    } else {
+                        setResolveError("Restaurant not found");
+                    }
+                } catch (error) {
+                    setResolveError("Invalid link");
                 } finally {
                     setIsResolving(false);
                 }
@@ -160,15 +184,17 @@ const CustomerLayout = () => {
                         </div>
                     </header>
 
-                    {/* Content */}
-                    <main className="max-w-7xl mx-auto px-4 py-6">
+                    {/* Content - key={tenantName} forces a clean remount when switching restaurants */}
+                    <main key={tenantName} className="max-w-7xl mx-auto px-4 py-6">
                         <Outlet context={{
                             cart, addToCart, removeFromCart, clearCart,
                             favorites, toggleFavorite,
                             showBill, setShowBill,
                             tableNo, setTableNo,
                             restaurantId: resolvedRestaurantId,
-                            tenantName: tenantName
+                            tenantName: tenantName,
+                            businessName: businessName,
+                            currency: currency
                         }} />
                     </main>
 

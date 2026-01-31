@@ -1,4 +1,5 @@
-import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
+import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer, FileText, User, Calendar, Hash } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 import PropTypes from 'prop-types';
 import clockIcon from '../../assets/clock.svg';
 import chefHatIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
@@ -6,7 +7,6 @@ import bellIcon from '../../assets/Bell--Streamline-Flex.svg';
 import diningIcon from '../../assets/Dining-Room--Streamline-Atlas.svg';
 import userIcon from '../../assets/User--Streamline-Font-Awesome.svg';
 import groupIcon from '../../assets/Group--Streamline-Sharp-Material.svg';
-// receipt icon removed from order history per request
 import { useState, useEffect } from 'react';
 import { orderAPI, statsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -41,9 +41,25 @@ const AdminOrders = () => {
         completed: 0
     });
     const [loading, setLoading] = useState(true);
+    const { currencySymbol } = useSettings();
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
     const [timers, setTimers] = useState({});
+    const [restaurant, setRestaurant] = useState(null);
+
+    const fetchRestaurantDetails = async () => {
+        try {
+            const { restaurantAPI } = await import('../../utils/api');
+            const { data } = await restaurantAPI.getDetails();
+            setRestaurant(data);
+        } catch (error) {
+            console.error('Failed to fetch restaurant details', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchRestaurantDetails();
+    }, []);
 
     const fetchOrders = async () => {
         try {
@@ -173,17 +189,109 @@ const AdminOrders = () => {
         try {
             const printWindow = window.open('', '_blank');
             if (!printWindow) return;
-            const itemsRows = (order.items || []).map(it => `<tr><td>${it.name}</td><td style="text-align:center">${it.qty || 1}</td><td style="text-align:right">₹${(it.price||0).toFixed(2)}</td></tr>`).join('');
-            const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice</title><style>body{font-family:Urbanist,Arial,sans-serif;color:#111;padding:20px}h1{font-size:18px;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{padding:8px;border-bottom:1px solid #eee}</style></head><body>` +
-                `<h1>Invoice - Order #${order._id.slice(-4)}</h1>` +
-                `<p>Table: ${order.tableNumber || 'N/A'}</p>` +
-                `<table><thead><tr><th style="text-align:left">Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${itemsRows}</tbody></table>` +
-                `<p style="text-align:right;font-weight:600;margin-top:12px">Total: ₹${(order.totalAmount||0).toFixed(2)}</p>` +
-                `</body></html>`;
+
+            const subtotal = order.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0;
+            const cgst = subtotal * 0.025;
+            const sgst = subtotal * 0.025;
+            const grandTotal = subtotal + cgst + sgst;
+
+            const itemsRows = (order.items || []).map(it => `
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <div style="flex: 1;">${it.name}</div>
+                    <div style="width: 30px; text-align: center;">${it.quantity || 1}</div>
+                    <div style="width: 60px; text-align: right;">${currencySymbol}${(it.price || 0).toFixed(2)}</div>
+                    <div style="width: 70px; text-align: right;">${currencySymbol}${(it.price * (it.quantity || 1)).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            const html = `
+                <!doctype html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Invoice</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+                        body { 
+                            font-family: 'Courier Prime', monospace; 
+                            color: #000; 
+                            width: 300px; 
+                            margin: 0 auto; 
+                            padding: 20px;
+                        }
+                        .header { text-align: center; margin-bottom: 20px; }
+                        .restaurant-name { font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+                        .restaurant-info { font-size: 12px; margin-bottom: 2px; }
+                        .divider { border-top: 1px dashed #000; margin: 10px 0; }
+                        .info-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px; }
+                        .table-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+                        .footer { text-align: center; margin-top: 20px; font-size: 14px; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="restaurant-name">${restaurant?.name || 'EatGreet Restaurant'}</div>
+                        <div class="restaurant-info">${restaurant?.restaurantDetails?.address || 'Restaurant Address'}</div>
+                        ${restaurant?.restaurantDetails?.contactNumber ? `<div class="restaurant-info">Tel: ${restaurant.restaurantDetails.contactNumber}</div>` : ''}
+                        <div class="restaurant-info">GST - 24AAYFT4562G1ZO</div>
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="info-row"><span>Name:</span> <span>${order.customerInfo?.name || 'Guest'}</span></div>
+                    <div class="divider"></div>
+                    
+                    <div class="info-row">
+                        <span>Date: ${new Date(order.createdAt).toLocaleDateString()}</span>
+                        <span>Dine In: ${order.tableNumber || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Time: ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Cashier: Admin</span>
+                        <span>Bill No: ${order._id.slice(-4)}</span>
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="table-header">
+                        <div style="flex: 1;">No.Item</div>
+                        <div style="width: 30px; text-align: center;">Qty</div>
+                        <div style="width: 60px; text-align: right;">Price</div>
+                        <div style="width: 70px; text-align: right;">Amt</div>
+                    </div>
+                    <div class="divider"></div>
+                    
+                    ${itemsRows}
+                    
+                    <div class="divider"></div>
+                    <div class="info-row" style="font-weight: bold;">
+                        <span>Total Qty: ${order.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
+                        <span>Sub Total: ${currencySymbol}${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>CGST@2.5%</span>
+                        <span>${currencySymbol}${cgst.toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>SGST@2.5%</span>
+                        <span>${currencySymbol}${sgst.toFixed(2)}</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="info-row" style="font-size: 16px; font-weight: bold;">
+                        <span>Grand Total</span>
+                        <span>${currencySymbol}${grandTotal.toFixed(2)}</span>
+                    </div>
+                    <div class="divider"></div>
+                    
+                    <div class="footer">Thank You Visit Again</div>
+                </body>
+                <script>
+                    window.onload = () => { window.print(); window.close(); }
+                </script>
+                </html>
+            `;
             printWindow.document.write(html);
             printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
         } catch (e) {
             console.error('Print failed', e);
         }
@@ -270,11 +378,11 @@ const AdminOrders = () => {
                                 className="h-full rounded-full transition-all duration-1000 ease-out"
                                 style={{
                                     width: `${completionPercentage}%`,
-                                    background: completionPercentage < 33 
+                                    background: completionPercentage < 33
                                         ? `linear-gradient(90deg, #FBBF24, #FCD34D)`
                                         : completionPercentage < 60
-                                        ? `linear-gradient(90deg, #FCD34D, #84CC16)`
-                                        : `linear-gradient(90deg, #84CC16, #22C55E)`
+                                            ? `linear-gradient(90deg, #FCD34D, #84CC16)`
+                                            : `linear-gradient(90deg, #84CC16, #22C55E)`
                                 }}
                             ></div>
                             <div className="absolute top-0 left-[33%] w-0.5 h-full bg-white/80"></div>
@@ -312,28 +420,17 @@ const AdminOrders = () => {
                             const statusTextColor = order.status === 'pending'
                                 ? 'text-red-600'
                                 : order.status === 'preparing'
-                                ? 'text-yellow-600'
-                                : 'text-green-600';
+                                    ? 'text-yellow-600'
+                                    : 'text-green-600';
 
                             const statusBgColor = order.status === 'pending'
                                 ? 'bg-red-100'
                                 : order.status === 'preparing'
-                                ? 'bg-yellow-100'
-                                : 'bg-green-100';
+                                    ? 'bg-yellow-100'
+                                    : 'bg-green-100';
 
                             return (
                                 <div key={order._id} className="relative flex items-center justify-between p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
-                                    {/* Card corner actions */}
-                                    <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-                                        <button
-                                            onClick={() => handlePrint(order)}
-                                            className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-100 hover:shadow-sm transition"
-                                            title="Print Invoice"
-                                        >
-                                            <Printer className="w-4 h-4 text-gray-600" />
-                                        </button>
-                                        
-                                    </div>
 
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100">
@@ -345,7 +442,7 @@ const AdminOrders = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedOrder(order)}
                                             className="px-5 py-2 bg-[#FD6941] text-white rounded-full text-sm hover:bg-orange-600 transition-colors"
                                         >
@@ -389,6 +486,13 @@ const AdminOrders = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={() => setSelectedOrder(order)}
+                                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-100 hover:shadow-sm transition-all hover:bg-gray-50 text-gray-400 hover:text-[#FD6941]"
+                                            title="View Invoice"
+                                        >
+                                            <FileText className="w-5 h-5" />
+                                        </button>
                                         <span className="px-4 py-1.5 rounded-full text-xs uppercase font-medium text-green-600 bg-green-100">Completed</span>
                                     </div>
                                 </div>
@@ -426,118 +530,209 @@ const AdminOrders = () => {
                             <X className="w-5 h-5" />
                         </button>
 
-                        {/* Card Content */}
                         <div className="p-8">
-                            {/* Header Section */}
-                            <div className="flex items-start justify-between mb-6">
-                                <div>
-                                    <h2 className="text-3xl text-gray-900 mb-2">Order #{selectedOrder._id.slice(-3)}</h2>
-                                    <p className="text-gray-500">Order details and items</p>
-                                </div>
-                                <span className={`px-4 py-2 rounded-full text-sm uppercase ${getStatusColor(selectedOrder.status)}`}>
-                                    {selectedOrder.status}
-                                </span>
-                            </div>
+                            {selectedOrder.status === 'completed' ? (
+                                /* Receipt Preview Card */
+                                <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative mb-8" style={{ width: '380px' }}>
+                                    {/* Print Button inside receipt */}
+                                    <button
+                                        onClick={() => handlePrint(selectedOrder)}
+                                        className="absolute top-4 right-4 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors no-print"
+                                        title="Print Thermal Receipt"
+                                    >
+                                        <Printer className="w-5 h-5" />
+                                    </button>
 
-                            {/* Info Grid */}
-                            <div className="grid grid-cols-4 gap-4 mb-8 pb-8 border-b border-gray-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <img src={diningIcon} alt="Table" className="w-6 h-6 opacity-40" />
+                                    <div className="text-center mb-6">
+                                        <h2 className="text-xl font-bold uppercase mb-1 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
+                                        <p className="text-[12px] leading-tight mb-0.5">{restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
+                                        {restaurant?.restaurantDetails?.contactNumber && (
+                                            <p className="text-[12px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">Tel: {restaurant.restaurantDetails.contactNumber}</p>
+                                        )}
+                                        <p className="text-[12px]">GST - 24AAYFT4562G1ZO</p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase">Table no.</p>
-                                        <p className="text-lg text-gray-900">{selectedOrder.tableNumber || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <img src={userIcon} alt="Customer" className="w-6 h-6 opacity-40" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase">Customer</p>
-                                        <p className="text-lg text-gray-900">{(selectedOrder.customerInfo?.name || 'Guest').split(' ')[0]}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <img src={clockIcon} alt="Time" className="w-6 h-6 opacity-40" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase">Time</p>
-                                        <p className="text-lg text-gray-900">{getOrderTime(selectedOrder.createdAt)}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <img src={groupIcon} alt="Guests" className="w-6 h-6 opacity-40" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase">Guests</p>
-                                        <p className="text-lg text-gray-900">{selectedOrder.items?.length || 0}</p>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Timer Section */}
-                            <div className="flex justify-center mb-8">
-                                <div className="relative w-32 h-32 flex items-center justify-center">
-                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-                                        <circle
-                                            cx="50"
-                                            cy="50"
-                                            r="45"
-                                            fill="none"
-                                            stroke={selectedOrder.status === 'pending' ? '#ef4444' : selectedOrder.status === 'preparing' ? '#eab308' : '#22c55e'}
-                                            strokeWidth="3"
-                                            strokeDasharray={`${(timers[selectedOrder._id] / 900) * 282.7} 282.7`}
-                                            className="transition-all duration-1000"
-                                        />
-                                    </svg>
-                                    <div className="text-center">
-                                        <div className="text-3xl text-gray-900">{formatTime(timers[selectedOrder._id] || 0)}</div>
-                                        <p className="text-xs text-gray-400 mt-1">Minutes</p>
+                                    <div className="border-t border-dashed border-black my-4"></div>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>Name:</span>
+                                        <span className="font-bold">{selectedOrder.customerInfo?.name || 'Guest'}</span>
                                     </div>
-                                </div>
-                            </div>
+                                    <div className="border-t border-dashed border-black my-4"></div>
 
-                            {/* Order Items Section */}
-                            <div className="mb-8 pb-8 border-b border-gray-200">
-                                <h3 className="text-sm text-gray-400 uppercase mb-4">Order Item</h3>
-                                <div className="space-y-4">
-                                    {selectedOrder.items && selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center">
-                                            <div>
-                                                <p className="text-gray-900">{item.name}</p>
-                                                <p className="text-sm text-gray-500">Qty {item.quantity}</p>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>Date: {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
+                                        <span>Dine In: {selectedOrder.tableNumber || 'N/A'}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>Time: {new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>Cashier: Admin</span>
+                                        <span>Bill No: {selectedOrder._id.slice(-4)}</span>
+                                    </div>
+
+                                    <div className="border-t border-dashed border-black my-4"></div>
+                                    <div className="flex justify-between font-bold text-[13px] mb-2 uppercase">
+                                        <span style={{ flex: 1 }}>No.Item</span>
+                                        <span style={{ width: '30px', textAlign: 'center' }}>Qty</span>
+                                        <span style={{ width: '60px', textAlign: 'right' }}>Price</span>
+                                        <span style={{ width: '70px', textAlign: 'right' }}>Amt</span>
+                                    </div>
+                                    <div className="border-t border-dashed border-black my-4"></div>
+
+                                    <div className="space-y-2 mb-4">
+                                        {(selectedOrder.items || []).map((it, i) => (
+                                            <div key={i} className="flex justify-between text-[13px]">
+                                                <span style={{ flex: 1 }}>{i + 1}.{it.name}</span>
+                                                <span style={{ width: '30px', textAlign: 'center' }}>{it.quantity || 1}</span>
+                                                <span style={{ width: '60px', textAlign: 'right' }}>{(it.price || 0).toFixed(2)}</span>
+                                                <span style={{ width: '70px', textAlign: 'right' }}>{(it.price * (it.quantity || 1)).toFixed(2)}</span>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                                        ))}
+                                    </div>
+
+                                    <div className="border-t border-dashed border-black my-4"></div>
+                                    <div className="flex justify-between font-bold text-[13px] mb-1">
+                                        <span>Total Qty: {selectedOrder.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
+                                        <span>Sub Total: {currencySymbol}{(selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>CGST@2.5%</span>
+                                        <span>{currencySymbol}{((selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0) * 0.025).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[13px] mb-1">
+                                        <span>SGST@2.5%</span>
+                                        <span>{currencySymbol}{((selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0) * 0.025).toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-dashed border-black my-4"></div>
+                                    <div className="flex justify-between font-bold text-lg mb-4">
+                                        <span>Grand Total</span>
+                                        <span>{currencySymbol}{(selectedOrder.totalAmount || (selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05)).toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-dashed border-black my-4"></div>
+
+                                    <div className="text-center font-bold text-[16px] uppercase tracking-widest mt-6">
+                                        Thank You Visit Again
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Order Details Card (Original Aesthetic) */
+                                <>
+                                    <div className="flex items-start justify-between mb-8">
+                                        <div>
+                                            <h2 className="text-3xl text-gray-900 mb-2 font-boldtracking-tight tracking-tight">Order #{selectedOrder._id.slice(-4)}</h2>
+                                            <p className="text-gray-500 font-medium">Order details and active items</p>
+                                        </div>
+                                        <span className={`px-5 py-2 rounded-full text-xs uppercase font-bold tracking-wider ${getStatusColor(selectedOrder.status)}`}>
+                                            {selectedOrder.status}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-4 gap-4 mb-8 pb-8 border-b border-gray-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={diningIcon} alt="Table" className="w-6 h-6 opacity-60" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Table</p>
+                                                <p className="text-lg text-gray-900 font-bold">{selectedOrder.tableNumber || 'Self'}</p>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={userIcon} alt="Customer" className="w-6 h-6 opacity-60" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Guest</p>
+                                                <p className="text-lg text-gray-900 font-bold">{(selectedOrder.customerInfo?.name || 'User').split(' ')[0]}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={clockIcon} alt="Time" className="w-6 h-6 opacity-60" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Time</p>
+                                                <p className="text-lg text-gray-900 font-bold">{getOrderTime(selectedOrder.createdAt)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={groupIcon} alt="Items" className="w-6 h-6 opacity-60" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Items</p>
+                                                <p className="text-lg text-gray-900 font-bold">{selectedOrder.items?.length || 0}</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Total Amount Section */}
-                            <div className="flex justify-between items-center mb-8 pb-8 border-b border-gray-200">
-                                <h3 className="text-lg text-gray-900">Total Amount</h3>
-                                <p className="text-3xl text-gray-900">₹{selectedOrder.totalAmount?.toFixed(2)}</p>
-                            </div>
+                                    {/* Timer Section for Active Orders */}
+                                    <div className="flex justify-center mb-10">
+                                        <div className="relative w-36 h-36 flex items-center justify-center bg-white rounded-full shadow-inner border-4 border-gray-50">
+                                            <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="46" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                                                <circle
+                                                    cx="50" cy="50" r="46" fill="none"
+                                                    stroke={selectedOrder.status === 'pending' ? '#FD6941' : selectedOrder.status === 'preparing' ? '#EAB308' : '#22C55E'}
+                                                    strokeWidth="4"
+                                                    strokeDasharray={`${(timers[selectedOrder._id] / 900) * 289} 289`}
+                                                    strokeLinecap="round"
+                                                    className="transition-all duration-1000"
+                                                />
+                                            </svg>
+                                            <div className="text-center z-10">
+                                                <div className="text-4xl font-bold text-gray-900 leading-none">{formatTime(timers[selectedOrder._id] || 0)}</div>
+                                                <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Remaining</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => {
-                                        updateOrderStatus(selectedOrder._id, getNextStatus(selectedOrder.status));
-                                        setSelectedOrder(null);
-                                    }}
-                                    className={`flex-1 ${getStatusButtonColor(selectedOrder.status)} text-white py-4 rounded-2xl transition-colors text-lg`}
-                                >
-                                    {getNextStatusLabel(selectedOrder.status)}
-                                </button>
-                            </div>
+                                    <div className="mb-8 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+                                        <h3 className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4">Order Items</h3>
+                                        <div className="space-y-4">
+                                            {(selectedOrder.items || []).map((item, idx) => (
+                                                <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-gray-400 border border-gray-100 shadow-sm">
+                                                            {item.quantity}x
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-900 font-bold">{item.name}</p>
+                                                            <p className="text-xs text-gray-400 font-medium">{currencySymbol}{item.price.toFixed(2)} / unit</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-gray-900 font-bold">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-6 bg-gray-900 rounded-[2rem] text-white mb-8 shadow-xl">
+                                        <div>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5 opacity-60">Grand Total Amount</p>
+                                            <p className="text-4xl font-bold leading-none">{currencySymbol}{(selectedOrder.totalAmount || 0).toFixed(2)}</p>
+                                        </div>
+                                        <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md">
+                                            <Hash className="w-6 h-6 text-white opacity-40" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => {
+                                                updateOrderStatus(selectedOrder._id, getNextStatus(selectedOrder.status));
+                                                setSelectedOrder(null);
+                                            }}
+                                            className={`flex-1 ${getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
+                                        >
+                                            {getNextStatusLabel(selectedOrder.status)}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function SuperAdminLogin() {
+    const { updateSettings } = useSettings();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -27,6 +29,7 @@ export default function SuperAdminLogin() {
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('userRole', userData.role);
+            updateSettings(userData);
 
             toast.success('Welcome back, Super Admin');
             navigate('/super-admin');

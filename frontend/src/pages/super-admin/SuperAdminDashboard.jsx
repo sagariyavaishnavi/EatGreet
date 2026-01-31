@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { statsAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 
 // Static data removed. Data is now fetched dynamically.
@@ -48,8 +49,8 @@ const StatCard = ({ title, value, change, icon: Icon, gradient, colorClass }) =>
         </div>
     </motion.div>
 );
-
 export default function SuperAdminDashboard() {
+    const { currencySymbol } = useSettings();
     const [statsData, setStatsData] = useState({
         totalRestaurants: 0,
         activeSubscriptions: 0,
@@ -105,7 +106,7 @@ export default function SuperAdminDashboard() {
                     />
                     <StatCard
                         title="Monthly Revenue"
-                        value={`₹${(statsData.monthlyRevenue || 0).toLocaleString()}`}
+                        value={`${currencySymbol}${(statsData.monthlyRevenue || 0).toLocaleString()}`}
                         change="Live"
                         icon={BarChart3}
                         gradient="bg-gradient-to-br from-[#E9F5E9] to-[#DFF0DF]"
@@ -148,7 +149,7 @@ export default function SuperAdminDashboard() {
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: '#9ca3af', fontSize: 10 }}
-                                        tickFormatter={(value) => `₹${value / 1000}k`}
+                                        tickFormatter={(value) => `${currencySymbol}${value / 1000}k`}
                                     />
                                     <Tooltip
                                         contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

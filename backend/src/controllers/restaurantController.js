@@ -100,7 +100,8 @@ const getRestaurantPublic = async (req, res) => {
             address: user.restaurantDetails?.address,
             contactNumber: user.restaurantDetails?.contactNumber,
             logo: user.restaurantDetails?.logo,
-            isActive: user.restaurantDetails?.isActive ?? true
+            isActive: user.restaurantDetails?.isActive ?? true,
+            currency: user.currency || 'INR'
         };
 
         res.json(restaurantData);
@@ -133,7 +134,8 @@ const getRestaurantByName = async (req, res) => {
             address: user.restaurantDetails?.address,
             contactNumber: user.restaurantDetails?.contactNumber,
             logo: user.restaurantDetails?.logo,
-            isActive: user.restaurantDetails?.isActive ?? true
+            isActive: user.restaurantDetails?.isActive ?? true,
+            currency: user.currency || 'INR'
         };
 
         res.json(restaurantData);

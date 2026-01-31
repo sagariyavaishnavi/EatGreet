@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     phone: { type: String },
     city: { type: String },
     restaurantName: { type: String }, // Added to derive tenant database name
+    currency: { type: String, default: 'INR' },
 
     // Embed Restaurant Details (Merged 'resto_names' into Users)
     restaurantDetails: {

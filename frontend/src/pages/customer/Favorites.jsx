@@ -1,12 +1,49 @@
 import React from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { Heart, Star, Clock, Flame, ChevronRight, Plus, Minus, ArrowLeft } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 
 const CustomerFavorites = () => {
     const {
         favorites, toggleFavorite,
-        cart, addToCart, removeFromCart
+        cart, addToCart, removeFromCart,
+        tenantName
     } = useOutletContext();
+
+    const { user, currencySymbol: contextSymbol } = useSettings();
+    const [fetchedSymbol, setFetchedSymbol] = React.useState('₹');
+
+    // Use context symbol as primary for live preview if current user is the admin owner
+    const activeSymbol = (user && user.role === 'admin' && user.restaurantName?.toLowerCase() === tenantName?.toLowerCase())
+        ? contextSymbol
+        : (fetchedSymbol || '₹');
+
+    const currencyMap = {
+        'USD': '$',
+        'EUR': '€',
+        'INR': '₹',
+        'GBP': '£',
+        'JPY': '¥',
+        'AUD': 'A$',
+        'CAD': 'C$'
+    };
+
+    React.useEffect(() => {
+        const fetchCurrency = async () => {
+            if (tenantName) {
+                try {
+                    const { restaurantAPI } = await import('../../utils/api');
+                    const { data } = await restaurantAPI.getDetailsByTenant(tenantName);
+                    if (data?.currency) {
+                        setFetchedSymbol(currencyMap[data.currency] || '₹');
+                    }
+                } catch (error) {
+                    console.error('Error fetching currency:', error);
+                }
+            }
+        };
+        fetchCurrency();
+    }, [tenantName]);
 
     // Convert favorites object to array
     const favoriteItems = Object.values(favorites);
@@ -66,7 +103,7 @@ const CustomerFavorites = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="block text-xl font-black text-gray-800">₹{item.price}</span>
+                                        <span className="block text-xl font-black text-gray-800">{activeSymbol}{item.price}</span>
                                     </div>
                                 </div>
 

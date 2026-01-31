@@ -17,10 +17,14 @@ api.interceptors.request.use(
         if (user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
         }
-        // Add restaurantName for tenant resolution
+        // Add restaurantName for tenant resolution, but don't override if already set
         if (user.restaurantName) {
-          config.headers['x-restaurant-name'] = user.restaurantName;
-          config.params = { ...config.params, restaurantName: user.restaurantName };
+          if (!config.headers['x-restaurant-name']) {
+            config.headers['x-restaurant-name'] = user.restaurantName;
+          }
+          if (!config.params?.restaurantName) {
+            config.params = { ...config.params, restaurantName: user.restaurantName };
+          }
         }
       } catch (e) {
         console.error("Error parsing user from localStorage", e);

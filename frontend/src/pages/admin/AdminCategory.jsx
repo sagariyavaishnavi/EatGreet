@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet, Image as ImageIcon } from 'lucide-react';
 
@@ -320,9 +321,10 @@ const AdminCategory = () => {
                 </div>
             </div>
 
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] px-4">
+                    <div className="fixed inset-0" onClick={closeModal} />
+                    <div className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 relative z-10 max-h-[90vh] overflow-y-auto no-scrollbar">
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{editingCategory ? 'Edit Category' : 'Add New Category'}</h2>
                             <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -420,7 +422,8 @@ const AdminCategory = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -83,28 +83,44 @@ const mockMenuData = [
 
 const offers = [
     { id: 1, title: "50% OFF", subtitle: "On your first order", code: "WELCOME50", bg: "bg-black", text: "text-white" },
-    { id: 2, title: "FREE FRIES", subtitle: "Orders above ₹299", code: "FREEMEAL", bg: "bg-[#FD6941]", text: "text-white" }, // Orange
-    { id: 3, title: "FLAT ₹100", subtitle: "On gourmet pizzas", code: "PIZZAPARTY", bg: "bg-green-600", text: "text-white" },
+    { id: 2, title: "FREE FRIES", subtitle: "Orders above 299", code: "FREEMEAL", bg: "bg-[#FD6941]", text: "text-white" }, // Orange
+    { id: 3, title: "FLAT 100 OFF", subtitle: "On gourmet pizzas", code: "PIZZAPARTY", bg: "bg-green-600", text: "text-white" },
 ];
 
 // Initial like counts are no longer needed since we are not showing counts
+const currencyMap = {
+    'USD': '$',
+    'EUR': '€',
+    'INR': '₹',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$'
+};
 
 import { menuAPI, categoryAPI, orderAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
+import { useSettings } from '../../context/SettingsContext';
+
 const Menu = () => {
+    const { user, currencySymbol: contextSymbol } = useSettings();
     const {
         cart, addToCart, removeFromCart, clearCart,
         favorites, toggleFavorite,
         showBill, setShowBill,
         tableNo, setTableNo,
         restaurantId,
-        tenantName
+        tenantName,
+        currency
     } = useOutletContext();
 
-    const isPreviewMode = tableNo === 'preview';
+    // Use context symbol as primary for live preview if current user is the admin owner
+    const activeSymbol = (user && user.role === 'admin' && user.restaurantName?.toLowerCase() === tenantName?.toLowerCase())
+        ? contextSymbol
+        : (currencyMap[currency] || '₹');
 
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const isPreviewMode = tableNo === 'preview';
 
     const [searchParams] = useSearchParams();
     const initialCategory = searchParams.get('category') || "All";
@@ -134,7 +150,6 @@ const Menu = () => {
 
     const fetchData = async () => {
         try {
-            // Include restaurantName for tenant resolution, restaurantId for filtering (if backend supports it)
             const params = {
                 restaurantName: tenantName,
                 restaurantId
@@ -216,8 +231,8 @@ const Menu = () => {
     const tax = Math.round(subTotal * 0.05); // 5% Tax
     const grandTotal = subTotal + tax;
 
-    // Use fetched items if available, else fallback to mock for demo
-    const itemsToDisplay = menuItems.length > 0 ? menuItems : mockMenuData;
+    // Use fetched items
+    const itemsToDisplay = menuItems;
 
     const filteredItems = itemsToDisplay.filter(item => {
         const itemCategory = typeof item.category === 'object' ? item.category?.name : item.category;
@@ -367,7 +382,7 @@ const Menu = () => {
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0 hidden md:block">
-                                        <span className="block text-2xl text-gray-800">₹{item.price}</span>
+                                        <span className="block text-2xl text-gray-800">{activeSymbol}{item.price}</span>
                                     </div>
                                 </div>
 
@@ -383,7 +398,7 @@ const Menu = () => {
                                 <div className="flex items-end md:items-center justify-between md:justify-center mt-auto">
                                     {/* Mobile Price Display */}
                                     <div className="md:hidden">
-                                        <span className="block text-lg text-gray-800">₹{item.price}</span>
+                                        <span className="block text-lg text-gray-800">{activeSymbol}{item.price}</span>
                                     </div>
 
                                     <div className="md:w-full md:flex md:justify-center">
@@ -442,7 +457,7 @@ const Menu = () => {
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 uppercase tracking-wider">Total Bill</p>
-                                <p className="text-xl">₹{grandTotal}</p>
+                                <p className="text-xl">{activeSymbol}{grandTotal}</p>
                             </div>
                         </div>
 
@@ -496,7 +511,7 @@ const Menu = () => {
                                                 <div className="flex-1">
                                                     <div className="flex justify-between items-start mb-1">
                                                         <h4 className="text-gray-800 text-sm">{item.name}</h4>
-                                                        <span className="text-gray-800">₹{item.price * item.qty}</span>
+                                                        <span className="text-gray-800">{activeSymbol}{item.price * item.qty}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-3 bg-gray-50 rounded-full px-2 py-1 h-7">
@@ -564,15 +579,15 @@ const Menu = () => {
                                     <div className="space-y-2 pt-4 border-t border-gray-100">
                                         <div className="flex justify-between text-sm text-gray-500">
                                             <span>Subtotal</span>
-                                            <span>₹{subTotal}</span>
+                                            <span>{activeSymbol}{subTotal}</span>
                                         </div>
                                         <div className="flex justify-between text-sm text-gray-500">
                                             <span>Tax (5%)</span>
-                                            <span>₹{tax}</span>
+                                            <span>{activeSymbol}{tax}</span>
                                         </div>
                                         <div className="flex justify-between text-lg text-gray-900 pt-2 border-t border-dashed border-gray-200 mt-2">
                                             <span>Grand Total</span>
-                                            <span>₹{grandTotal}</span>
+                                            <span>{activeSymbol}{grandTotal}</span>
                                         </div>
                                     </div>
                                 </>
@@ -586,7 +601,7 @@ const Menu = () => {
                                     onClick={handlePlaceOrder}
                                     className="w-full bg-[#FD6941] text-white py-4 rounded-xl text-lg shadow-lg hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                 >
-                                    Place Order <span className="text-white/60">•</span> ₹{grandTotal}
+                                    Place Order <span className="text-white/60">•</span> {activeSymbol}{grandTotal}
                                 </button>
                             </div>
                         )}

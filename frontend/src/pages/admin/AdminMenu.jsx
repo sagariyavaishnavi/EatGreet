@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
 import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 // Dietary Icons
 import sugarFreeIcon from '../../assets/suger-free.svg';
@@ -41,6 +43,7 @@ const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(
 // Default mock data removed per live data requirement
 
 const AdminMenu = () => {
+    const { currencySymbol } = useSettings();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [restaurantName, setRestaurantName] = useState('');
@@ -107,7 +110,6 @@ const AdminMenu = () => {
             const menuData = menuRes.data || [];
             const catData = catRes.data || [];
 
-            setMenuItems(Array.isArray(menuData) ? menuData : []);
             setMenuItems(Array.isArray(menuData) ? menuData : []);
             setCategories(Array.isArray(catData) ? catData : []);
 
@@ -623,7 +625,7 @@ const AdminMenu = () => {
 
                                     <div className="flex justify-between items-start">
                                         <h3 className="font-bold text-gray-800 text-lg leading-tight w-2/3">{item.name || 'Unnamed'}</h3>
-                                        <span className="font-bold text-xl text-gray-800">₹{item.price || 0}</span>
+                                        <span className="font-bold text-xl text-gray-800">{currencySymbol}{item.price || 0}</span>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold text-gray-400">
@@ -702,10 +704,11 @@ const AdminMenu = () => {
                 </div>
             </div>
 
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[95vh] lg:max-h-none overflow-y-auto lg:overflow-visible no-scrollbar">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] px-4">
+                    <div className="fixed inset-0" onClick={handleCloseModal} />
+                    <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[90vh] overflow-y-auto no-scrollbar">
 
                             {/* Left Column: Media Upload */}
                             <div className="lg:col-span-4 bg-gray-50 p-4 sm:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
@@ -810,7 +813,7 @@ const AdminMenu = () => {
                                     <div>
                                         <label className="block text-xs font-bold text-gray-700 mb-1.5">Price</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currencySymbol}</span>
                                             <input
                                                 type="number"
                                                 placeholder="0.00"
@@ -934,7 +937,8 @@ const AdminMenu = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
 

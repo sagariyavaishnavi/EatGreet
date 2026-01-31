@@ -8,26 +8,30 @@ import tableIcon from '../../assets/Table-Bar--Streamline-Sharp-Material.svg';
 import revenueIcon from '../../assets/trending-up.svg';
 import kitchenIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
 import { statsAPI, orderAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 // --- COMPONENTS ---
 
-const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => (
-    <div className="bg-white rounded-[2rem] px-6 py-4 flex items-center h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
-        <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
-                <img src={icon} alt="icon" className="w-6 h-6 opacity-80" />
-            </div>
-            <div className="flex flex-col">
-                <h3 className="text-[32px] font-medium text-black leading-none flex items-baseline">
-                    {isCurrency && <span className="text-[24px] mr-1 font-medium">₹</span>}
-                    {value}
-                    {subValue && <span className="text-[24px] text-gray-300 font-medium ml-1">/{subValue}</span>}
-                </h3>
-                <p className="text-[14px] text-gray-400 mt-2 font-medium tracking-tight">{label}</p>
+const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => {
+    const { currencySymbol } = useSettings();
+    return (
+        <div className="bg-white rounded-[2rem] px-6 py-4 flex items-center h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
+                    <img src={icon} alt="icon" className="w-6 h-6 opacity-80" />
+                </div>
+                <div className="flex flex-col">
+                    <h3 className="text-[32px] font-medium text-black leading-none flex items-baseline">
+                        {isCurrency && <span className="text-[24px] mr-1 font-medium">{currencySymbol}</span>}
+                        {value}
+                        {subValue && <span className="text-[24px] text-gray-300 font-medium ml-1">/{subValue}</span>}
+                    </h3>
+                    <p className="text-[14px] text-gray-400 mt-2 font-medium tracking-tight">{label}</p>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const TimeStatusGauge = () => (
     <div className="bg-white rounded-[2rem] p-8 h-[320px] shadow-sm flex flex-col relative overflow-hidden transition-all border border-transparent">

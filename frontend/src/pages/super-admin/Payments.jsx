@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, DollarSign, Download, Calendar } from 'lucide-react';
 import { paymentAPI, statsAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function Payments() {
+    const { currencySymbol } = useSettings();
     const [transactions, setTransactions] = useState([]);
     const [stats, setStats] = useState({
         totalRevenue: 0,
@@ -66,7 +68,7 @@ export default function Payments() {
                             <span className="text-gray-500 text-sm font-medium">Total Revenue</span>
                             <div className="p-2 bg-green-50 text-green-600 rounded-full"><DollarSign className="w-5 h-5" /></div>
                         </div>
-                        <h3 className="text-3xl font-medium text-gray-900">₹{stats.totalRevenue.toLocaleString()}</h3>
+                        <h3 className="text-3xl font-medium text-gray-900">{currencySymbol}{stats.totalRevenue.toLocaleString()}</h3>
                         <p className="text-green-600 text-xs font-medium mt-2 flex items-center gap-1">↑ 12.5% <span className="text-gray-400 font-normal">vs last month</span></p>
                     </div>
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
@@ -74,7 +76,7 @@ export default function Payments() {
                             <span className="text-gray-500 text-sm font-medium">Pending</span>
                             <div className="p-2 bg-orange-50 text-orange-600 rounded-full"><Calendar className="w-5 h-5" /></div>
                         </div>
-                        <h3 className="text-3xl font-medium text-gray-900">₹{stats.pendingAmount.toLocaleString()}</h3>
+                        <h3 className="text-3xl font-medium text-gray-900">{currencySymbol}{stats.pendingAmount.toLocaleString()}</h3>
                         <p className="text-orange-600 text-xs font-medium mt-2">Due this week</p>
                     </div>
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
@@ -138,7 +140,7 @@ export default function Payments() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <span className="font-medium text-gray-900">₹{txn.amount.toLocaleString()}</span>
+                                                <span className="font-medium text-gray-900">{currencySymbol}{txn.amount.toLocaleString()}</span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${txn.status === 'Completed' ? 'bg-green-50 text-green-600 border-green-100' :

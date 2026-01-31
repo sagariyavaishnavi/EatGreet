@@ -6,17 +6,18 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 const AdminSettings = () => {
+    const { user, updateSettings } = useSettings();
     const [activeTab, setActiveTab] = useState('profile');
-    const user = JSON.parse(localStorage.getItem('user')) || {};
 
     const [profile, setProfile] = useState({
-        name: user.name || '',
-        phone: user.phone || '',
-        restaurantName: user.restaurantName || '',
-        city: user.city || '',
-        currency: user.currency || 'USD'
+        name: user?.name || '',
+        phone: user?.phone || '',
+        restaurantName: user?.restaurantName || '',
+        city: user?.city || '',
+        currency: user?.currency || 'INR'
     });
 
     const [passwords, setPasswords] = useState({
@@ -25,7 +26,13 @@ const AdminSettings = () => {
     });
 
     const handleProfileChange = (e) => {
-        setProfile({ ...profile, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setProfile(prev => ({ ...prev, [name]: value }));
+
+        // Live change: Update context immediately for currency selection
+        if (name === 'currency') {
+            updateSettings({ currency: value });
+        }
     };
 
     const handlePasswordChange = (e) => {
@@ -61,7 +68,7 @@ const AdminSettings = () => {
                 });
             }
 
-            localStorage.setItem('user', JSON.stringify(profileResponse.data));
+            updateSettings(profileResponse.data);
             toast.success('Settings updated successfully!', { id: loadToast });
             setPasswords({ newPassword: '', confirmPassword: '' });
         } catch (error) {

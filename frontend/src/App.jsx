@@ -98,93 +98,97 @@ const TitleUpdater = () => {
   return null;
 };
 
+import { SettingsProvider } from './context/SettingsContext';
+
 function App() {
   return (
-    <Router>
-      <TitleUpdater />
-      <Toaster position="top-right" />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+    <SettingsProvider>
+      <Router>
+        <TitleUpdater />
+        <Toaster position="top-right" />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-        {/* Admin Auth */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Admin Auth */}
+          <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* Super Admin Auth */}
-        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+          {/* Super Admin Auth */}
+          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
 
-        {/* Protected Admin Routes */}
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<AdminDashboard />} />
-          <Route path="menu" element={<AdminMenu />} />
-          <Route path="category" element={<AdminCategory />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="table" element={<AdminTable />} />
-          <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
-          <Route path="profile" element={<AdminProfile />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="menu" element={<AdminMenu />} />
+            <Route path="category" element={<AdminCategory />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="table" element={<AdminTable />} />
+            <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
 
-        {/* Super Admin Routes */}
-        <Route path="/super-admin" element={
-          <SuperAdminRoute>
-            <SuperAdminLayout />
-          </SuperAdminRoute>
-        }>
-          <Route index element={<SuperAdminDashboard />} />
-          <Route path="restaurants" element={<Restaurants />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="users" element={<Users />} />
-          <Route path="profile" element={<SuperAdminProfile />} />
-          <Route path="settings" element={<SuperAdminSettings />} />
-        </Route>
+          {/* Super Admin Routes */}
+          <Route path="/super-admin" element={
+            <SuperAdminRoute>
+              <SuperAdminLayout />
+            </SuperAdminRoute>
+          }>
+            <Route index element={<SuperAdminDashboard />} />
+            <Route path="restaurants" element={<Restaurants />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="users" element={<Users />} />
+            <Route path="profile" element={<SuperAdminProfile />} />
+            <Route path="settings" element={<SuperAdminSettings />} />
+          </Route>
 
-        {/* Kitchen Routes */}
-        <Route path="/kitchen" element={<KitchenLayout />}>
-          <Route index element={<KitchenDashboard />} />
-          <Route path="profile" element={<KitchenProfile />} />
-          <Route path="settings" element={<KitchenSettings />} />
-        </Route>
+          {/* Kitchen Routes */}
+          <Route path="/kitchen" element={<KitchenLayout />}>
+            <Route index element={<KitchenDashboard />} />
+            <Route path="profile" element={<KitchenProfile />} />
+            <Route path="settings" element={<KitchenSettings />} />
+          </Route>
 
-        {/* Customer Routes */}
-        <Route path="/customer" element={<CustomerLayout />}>
-          <Route index element={<Navigate to="menu" replace />} />
-          <Route path="menu" element={<Menu />} />
-          <Route path="profile" element={<CustomerProfile />} />
-          <Route path="favorites" element={<CustomerFavorites />} />
-          <Route path="settings" element={<CustomerSettings />} />
-        </Route>
+          {/* Customer Routes */}
+          <Route path="/customer" element={<CustomerLayout />}>
+            <Route index element={<Navigate to="menu" replace />} />
+            <Route path="menu" element={<Menu />} />
+            <Route path="profile" element={<CustomerProfile />} />
+            <Route path="favorites" element={<CustomerFavorites />} />
+            <Route path="settings" element={<CustomerSettings />} />
+          </Route>
 
-        {/* Dynamic Restaurant Routes */}
-        <Route path="/r/:restaurantId" element={<CustomerLayout />}>
-          <Route index element={<Menu />} />
-          <Route path="menu" element={<Menu />} />
-          <Route path="profile" element={<CustomerProfile />} />
-          <Route path="favorites" element={<CustomerFavorites />} />
-        </Route>
+          {/* Dynamic Restaurant Routes */}
+          <Route path="/r/:restaurantId" element={<CustomerLayout />}>
+            <Route index element={<Menu />} />
+            <Route path="menu" element={<Menu />} />
+            <Route path="profile" element={<CustomerProfile />} />
+            <Route path="favorites" element={<CustomerFavorites />} />
+          </Route>
 
-        {/* New Table Specific Route */}
-        <Route path="/:restaurantName/table/:tableNo" element={<CustomerLayout />}>
-          <Route index element={<Menu />} />
-          <Route path="menu" element={<Menu />} />
-          <Route path="profile" element={<CustomerProfile />} />
-          <Route path="favorites" element={<CustomerFavorites />} />
-        </Route>
+          {/* New Table Specific Route */}
+          <Route path="/:restaurantName/table/:tableNo" element={<CustomerLayout />}>
+            <Route index element={<Menu />} />
+            <Route path="menu" element={<Menu />} />
+            <Route path="profile" element={<CustomerProfile />} />
+            <Route path="favorites" element={<CustomerFavorites />} />
+          </Route>
 
-        {/* Legacy/Shortcut Routes */}
-        <Route path="/menu" element={<Navigate to="/customer/menu" replace />} />
+          {/* Legacy/Shortcut Routes */}
+          <Route path="/menu" element={<Navigate to="/customer/menu" replace />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </SettingsProvider>
   );
 }
 

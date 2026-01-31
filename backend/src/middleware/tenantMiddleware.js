@@ -14,17 +14,22 @@ const resolveTenant = async (req, res, next) => {
     try {
         let restaurantName = null;
 
-        // 1. Get from Authenticated User (Admin/Staff)
-        if (req.user && req.user.restaurantName) {
-            restaurantName = req.user.restaurantName;
+        // 1. Get from Query Params (Public/Customer URLs - Highest Priority)
+        if (req.query.restaurantName) {
+            restaurantName = req.query.restaurantName;
         }
 
-        // 2. Get from Custom Header
+        // 2. Get from Custom Header (Explicit overrides)
         if (!restaurantName && req.headers['x-restaurant-name']) {
             restaurantName = req.headers['x-restaurant-name'];
         }
 
-        // 3. Fallback: If no req.user, check for Token manually
+        // 3. Get from Authenticated User (Admin/Staff Session)
+        if (!restaurantName && req.user && req.user.restaurantName) {
+            restaurantName = req.user.restaurantName;
+        }
+
+        // 4. Fallback: If no req.user, check for Token manually
         if (!restaurantName && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             try {
                 const token = req.headers.authorization.split(' ')[1];
@@ -38,12 +43,7 @@ const resolveTenant = async (req, res, next) => {
             }
         }
 
-        // 3. Get from Query Params (Public/Customer)
-        if (!restaurantName && req.query.restaurantName) {
-            restaurantName = req.query.restaurantName;
-        }
-
-        // 4. Fallback to Body (sometimes useful for certain POSTs)
+        // 5. Fallback to Body
         if (!restaurantName && req.body && req.body.restaurantName) {
             restaurantName = req.body.restaurantName;
         }

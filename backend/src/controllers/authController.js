@@ -9,7 +9,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password, role, phone, city, restaurantName } = req.body;
+    const { name, email, password, role, phone, city, restaurantName, currency } = req.body;
 
     try {
         const userExists = await User.findOne({ email });
@@ -25,7 +25,8 @@ const registerUser = async (req, res) => {
             role: role || 'customer',
             phone,
             city,
-            restaurantName
+            restaurantName,
+            currency: currency || 'INR'
         });
 
         if (user) {
@@ -35,6 +36,7 @@ const registerUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 restaurantName: user.restaurantName,
+                currency: user.currency,
                 token: generateToken(user._id),
             });
         } else {
@@ -61,6 +63,7 @@ const authUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 restaurantName: user.restaurantName,
+                currency: user.currency,
                 token: generateToken(user._id),
             });
         } else {
@@ -86,7 +89,8 @@ const getUserProfile = async (req, res) => {
                 role: user.role,
                 phone: user.phone,
                 city: user.city,
-                restaurantName: user.restaurantName
+                restaurantName: user.restaurantName,
+                currency: user.currency
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -109,6 +113,7 @@ const updateUserProfile = async (req, res) => {
             user.phone = req.body.phone || user.phone;
             user.city = req.body.city || user.city;
             user.restaurantName = req.body.restaurantName || user.restaurantName;
+            user.currency = req.body.currency || user.currency;
 
             if (req.body.password) {
                 user.password = req.body.password;
@@ -124,6 +129,7 @@ const updateUserProfile = async (req, res) => {
                 phone: updatedUser.phone,
                 city: updatedUser.city,
                 restaurantName: updatedUser.restaurantName,
+                currency: updatedUser.currency,
                 token: generateToken(updatedUser._id),
             });
         } else {

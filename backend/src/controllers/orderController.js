@@ -21,6 +21,53 @@ const createOrder = async (req, res) => {
             };
         }
 
+        // --- RUNNING ORDERS SUPPORT ---
+        // Check if there is already an active order for this table
+        let existingOrder = null;
+        if (tableNumber) {
+            existingOrder = await Order.findOne({
+                tableNumber: tableNumber,
+                status: { $in: ['pending', 'preparing', 'ready'] }
+            });
+        }
+
+        if (existingOrder) {
+            // Merge new items into existing order
+            items.forEach(newItem => {
+                const existingItem = existingOrder.items.find(it =>
+                    it.menuItem.toString() === newItem.menuItem.toString() &&
+                    it.price === newItem.price
+                );
+
+                if (existingItem) {
+                    existingItem.quantity += (newItem.quantity || 1);
+                } else {
+                    existingOrder.items.push(newItem);
+                }
+            });
+
+            // Recalculate total amount correctly
+            existingOrder.totalAmount = existingOrder.items.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
+
+            // Append instruction if provided
+            if (instruction) {
+                existingOrder.instruction = existingOrder.instruction
+                    ? `${existingOrder.instruction} | ${instruction}`
+                    : instruction;
+            }
+
+            // Mark items as modified for safe save
+            existingOrder.markModified('items');
+            const updatedOrder = await existingOrder.save();
+
+            // Emit update event
+            const io = req.app.get('io');
+            if (io) io.emit('orderUpdated', { action: 'update', data: updatedOrder });
+
+            return res.status(200).json(updatedOrder);
+        }
+        // ------------------------------
+
         const order = new Order({
             customerInfo: resolvedCustomerInfo,
             tableNumber,

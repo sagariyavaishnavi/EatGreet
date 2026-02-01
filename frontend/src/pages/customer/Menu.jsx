@@ -137,6 +137,23 @@ const Menu = () => {
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState(["All"]);
 
+    const [customerDetails, setCustomerDetails] = useState(() => {
+        const saved = localStorage.getItem(`customer_details_${tenantName}`);
+        if (saved) {
+            const { data, timestamp } = JSON.parse(saved);
+            const oneHour = 60 * 60 * 1000;
+            if (Date.now() - timestamp < oneHour) {
+                return { ...data, tableNo: tableNo, notes: "" };
+            }
+        }
+        return {
+            name: user?.name || "",
+            phone: user?.phone || "",
+            tableNo: tableNo,
+            notes: ""
+        };
+    });
+
     useEffect(() => {
         if (tenantName) {
             fetchData();
@@ -165,16 +182,20 @@ const Menu = () => {
         }
     };
 
-    const [customerDetails, setCustomerDetails] = useState({
-        name: user?.name || "",
-        phone: user?.phone || "",
-        tableNo: tableNo,
-        notes: ""
-    });
-
     useEffect(() => {
         setCustomerDetails(prev => ({ ...prev, tableNo }));
     }, [tableNo]);
+
+    // Update persistence when name/phone changes
+    useEffect(() => {
+        if (customerDetails.name || customerDetails.phone) {
+            const persistData = {
+                data: { name: customerDetails.name, phone: customerDetails.phone },
+                timestamp: Date.now()
+            };
+            localStorage.setItem(`customer_details_${tenantName}`, JSON.stringify(persistData));
+        }
+    }, [customerDetails.name, customerDetails.phone, tenantName]);
 
     const handlePlaceOrder = async (e) => {
         e.preventDefault();

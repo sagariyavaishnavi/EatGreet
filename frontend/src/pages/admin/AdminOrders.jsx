@@ -44,6 +44,8 @@ const AdminOrders = () => {
     const { currencySymbol } = useSettings();
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
+    const [searchQuery, setSearchQuery] = useState('');
+    const [historyFilter, setHistoryFilter] = useState('today'); // 'today', 'yesterday', 'lastWeek'
     const [timers, setTimers] = useState({});
     const [restaurant, setRestaurant] = useState(null);
 
@@ -108,7 +110,7 @@ const AdminOrders = () => {
 
     // Initialize timers for orders
     useEffect(() => {
-        activeOrders.forEach(order => {
+        orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status)).forEach(order => {
             if (!timers[order._id]) {
                 // Calculate time elapsed
                 const createdAt = new Date(order.createdAt);
@@ -121,7 +123,39 @@ const AdminOrders = () => {
         });
     }, [orders]);
 
-    const activeOrders = orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status));
+    const filteredActiveOrders = orders.filter(o => {
+        const isActive = ['pending', 'preparing', 'ready'].includes(o.status);
+        if (!isActive) return false;
+        if (!searchQuery) return true;
+
+        const q = searchQuery.toLowerCase();
+        return (
+            o._id.toLowerCase().includes(q) ||
+            (o.tableNumber && String(o.tableNumber).includes(q)) ||
+            (o.customerInfo?.name && o.customerInfo.name.toLowerCase().includes(q))
+        );
+    });
+
+    const filteredHistoryOrders = orders.filter(o => {
+        if (o.status !== 'completed') return false;
+
+        const orderDate = new Date(o.createdAt);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (historyFilter === 'today') {
+            return orderDate >= today;
+        } else if (historyFilter === 'yesterday') {
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return orderDate >= yesterday && orderDate < today;
+        } else if (historyFilter === 'lastWeek') {
+            const lastWeek = new Date(today);
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            return orderDate >= lastWeek;
+        }
+        return true;
+    });
 
     // Calculate completion percentage
     const completionPercentage = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -160,7 +194,6 @@ const AdminOrders = () => {
         switch (status) {
             case 'pending': return 'Mark Preparing';
             case 'preparing': return 'Mark Ready';
-            case 'ready': return 'Mark Complete';
             default: return 'Update';
         }
     };
@@ -169,7 +202,6 @@ const AdminOrders = () => {
         switch (status) {
             case 'pending': return 'preparing';
             case 'preparing': return 'ready';
-            case 'ready': return 'completed';
             default: return status;
         }
     };
@@ -400,7 +432,9 @@ const AdminOrders = () => {
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder="Search by Table, ID..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 pr-4 py-3 bg-gray-50 rounded-full text-sm w-80 focus:outline-none focus:ring-1 focus:ring-primary placeholder-gray-400"
                             />
                             <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -414,9 +448,9 @@ const AdminOrders = () => {
                     </div>
                 </div>
 
-                {activeOrders.length > 0 ? (
+                {filteredActiveOrders.length > 0 ? (
                     <div className="space-y-4">
-                        {activeOrders.map(order => {
+                        {filteredActiveOrders.map(order => {
                             const statusTextColor = order.status === 'pending'
                                 ? 'text-red-600'
                                 : order.status === 'preparing'
@@ -470,11 +504,20 @@ const AdminOrders = () => {
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl text-gray-800">Order History</h2>
+                        <select
+                            value={historyFilter}
+                            onChange={(e) => setHistoryFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-100 text-gray-600 text-sm rounded-full focus:ring-primary focus:border-primary block p-2.5 px-6 outline-none appearance-none cursor-pointer hover:bg-gray-100 transition-colors"
+                        >
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="lastWeek">Last Week</option>
+                        </select>
                     </div>
 
-                    {orders.filter(o => o.status === 'completed').length > 0 ? (
+                    {filteredHistoryOrders.length > 0 ? (
                         <div className="space-y-4">
-                            {orders.filter(o => o.status === 'completed').map(order => (
+                            {filteredHistoryOrders.map(order => (
                                 <div key={order._id} className="flex items-center justify-between p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100">
@@ -512,7 +555,7 @@ const AdminOrders = () => {
 
             {/* Order Details Modal - Card View */}
             {selectedOrder && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
                         {/* Print Button */}
                         <button
@@ -722,11 +765,12 @@ const AdminOrders = () => {
 
                                     <div className="flex gap-4">
                                         <button
+                                            disabled={selectedOrder.status === 'ready'}
                                             onClick={() => {
                                                 updateOrderStatus(selectedOrder._id, getNextStatus(selectedOrder.status));
                                                 setSelectedOrder(null);
                                             }}
-                                            className={`flex-1 ${getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
+                                            className={`flex-1 ${getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none ${selectedOrder.status === 'ready' ? 'opacity-50 cursor-not-allowed hidden' : ''}`}
                                         >
                                             {getNextStatusLabel(selectedOrder.status)}
                                         </button>

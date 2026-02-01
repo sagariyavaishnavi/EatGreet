@@ -17,13 +17,16 @@ const resolveTenant = async (req, res, next) => {
         let restaurantName = null;
 
         // --- AUTHENTICATED USER (Admin/Staff/Customer with account) ---
-        // If user is logged in, their authorized restaurantName MUST take precedence for security.
-        // This prevents an admin of Resto A from seeing/writing data of Resto B via query params.
+        // If user is logged in, their authorized restaurantName takes precedence for non-GET requests.
+        // For GET requests (public menu viewing), we allow the header/query/body to override
+        // so that admins can view other restaurants' menus.
         if (req.user && req.user.restaurantName && req.user.role !== 'superadmin') {
-            restaurantName = req.user.restaurantName;
+            if (req.method !== 'GET') {
+                restaurantName = req.user.restaurantName;
+            }
         }
 
-        // --- PUBLIC / OVERRIDE CASES ---
+        // --- RESOLVE FROM REQUEST (Public or GET requests) ---
         if (!restaurantName) {
             // 1. Get from Custom Header (Explicit overrides used by frontend for specific flows)
             if (req.headers['x-restaurant-name']) {
@@ -37,7 +40,11 @@ const resolveTenant = async (req, res, next) => {
             else if (req.body && req.body.restaurantName) {
                 restaurantName = req.body.restaurantName;
             }
-            // 4. Token Fallback (If protect middleware wasn't used but token is present)
+            // 4. Authenticated Fallback (If not already set by header/query for GET, or for other methods)
+            else if (req.user && req.user.restaurantName && req.user.role !== 'superadmin') {
+                restaurantName = req.user.restaurantName;
+            }
+            // 5. Token Fallback (If protect middleware wasn't used but token is present)
             else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
                 try {
                     const token = req.headers.authorization.split(' ')[1];

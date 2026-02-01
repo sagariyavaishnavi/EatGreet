@@ -27,6 +27,14 @@ const CustomerLayout = () => {
     const [isResolving, setIsResolving] = useState(!!(restaurantName || restaurantId));
     const [resolveError, setResolveError] = useState(null);
 
+    // Clear state when restaurant changes to prevent "Resto B menu in Resto A" issues
+    useEffect(() => {
+        setCart({});
+        setResolvedRestaurantId(restaurantId);
+        setTenantName(restaurantName || '');
+        setResolveError(null);
+    }, [restaurantName, restaurantId]);
+
     // Resolve Restaurant Name to ID if needed
     useEffect(() => {
         const fetchRestaurant = async () => {

@@ -6,6 +6,8 @@ const { getTenantConnection, getTenantModel } = require('../utils/tenantHelper')
 const CategorySchema = require('../models/Category');
 const MenuItemSchema = require('../models/MenuItem');
 const OrderSchema = require('../models/Order');
+const CustomerSchema = require('../models/Customer');
+
 
 /**
  * Middleware to resolve tenant DB based on user data or request params.
@@ -54,6 +56,7 @@ const resolveTenant = async (req, res, next) => {
             });
         }
 
+        req.restaurantName = restaurantName;
         // Sanitize name for DB use
         const sanitized = restaurantName.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const dbName = `resto_details_${sanitized}`;
@@ -66,8 +69,10 @@ const resolveTenant = async (req, res, next) => {
         req.tenantModels = {
             Category: getTenantModel(conn, 'Category', CategorySchema),
             MenuItem: getTenantModel(conn, 'MenuItem', MenuItemSchema),
-            Order: getTenantModel(conn, 'Order', OrderSchema)
+            Order: getTenantModel(conn, 'Order', OrderSchema),
+            Customer: getTenantModel(getTenantConnection('eatgreet_customer'), 'Customer', CustomerSchema)
         };
+
 
         next();
     } catch (error) {

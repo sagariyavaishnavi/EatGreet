@@ -1,14 +1,20 @@
 import React from 'react';
-import { Bell, Settings, Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Bell, Settings, Menu, X, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import logo from '../../assets/logo-full.png';
 
 const AdminHeader = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
   const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/admin/login');
+  };
 
   const isActive = (path) => {
     // Exact match or matches if it ignores the dynamic slug part
@@ -64,6 +70,14 @@ const AdminHeader = () => {
         <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black relative">
           <Bell className="w-5 h-5" />
           <span className="absolute top-3 right-3.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="w-11 h-11 bg-white hover:bg-red-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-400 hover:text-red-500"
+          title="Logout"
+        >
+          <LogOut className="w-5 h-5" />
         </button>
 
         {/* Profile Capsule */}

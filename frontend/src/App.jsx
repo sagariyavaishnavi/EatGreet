@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/landing/LandingPage';
@@ -65,6 +65,23 @@ const SuperAdminRoute = ({ children }) => {
   return children;
 };
 
+// Helper component for redirecting /admin/subpath
+const AdminSubpathRedirect = () => {
+  const { "*": splat } = useParams();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+  return <Navigate to={`/${restaurantSlug}/admin/${splat}`} replace />;
+};
+
+const SessionClearRedirect = () => {
+  useEffect(() => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
+  }, []);
+  return <Navigate to="/" replace />;
+};
+
 const TitleUpdater = () => {
   const { pathname } = useLocation();
 
@@ -120,6 +137,7 @@ function App() {
 
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin`} replace />} />
+          <Route path="/admin/*" element={<AdminSubpathRedirect />} />
 
           <Route path="/:restaurantName/admin" element={
             <ProtectedRoute>
@@ -186,7 +204,7 @@ function App() {
 
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<SessionClearRedirect />} />
         </Routes>
       </Router>
     </SettingsProvider>

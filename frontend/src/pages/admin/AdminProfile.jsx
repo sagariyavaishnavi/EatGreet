@@ -52,7 +52,7 @@ const AdminProfile = () => {
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
                 <Link
-                    to="/admin/settings"
+                    to={`/${user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin/settings`}
                     className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm"
                 >
                     <Settings className="w-4 h-4" />
@@ -142,7 +142,7 @@ const AdminProfile = () => {
 
                     <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                         <p className="text-xs text-gray-400">
-                            Need to update these details? <Link to="/admin/settings" className="text-[#FD6941] font-bold hover:underline">Go to Settings</Link>
+                            Need to update these details? <Link to={`/${user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin/settings`} className="text-[#FD6941] font-bold hover:underline">Go to Settings</Link>
                         </p>
                     </div>
                 </div>

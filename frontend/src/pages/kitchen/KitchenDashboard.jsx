@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../../context/SocketContext';
 import { orderAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
-import { Check, Clock } from 'lucide-react';
+import { Check, Clock, Utensils } from 'lucide-react';
 
 export default function KitchenDashboard() {
     const { restaurantName } = useParams();
@@ -12,14 +12,13 @@ export default function KitchenDashboard() {
     const [loading, setLoading] = useState(true);
     const socket = useSocket();
 
-    // Fetch initial orders using Public API
+    // Fetch initial orders
     useEffect(() => {
         if (!restaurantName) return;
 
         const fetchOrders = async () => {
             try {
                 const response = await orderAPI.getKitchenOrders(restaurantName);
-                // Filter active: pending, preparing.
                 const active = response.data.filter(o => ['pending', 'preparing'].includes(o.status));
                 setOrders(active);
             } catch (error) {
@@ -36,65 +35,65 @@ export default function KitchenDashboard() {
     // Socket Listener
     useEffect(() => {
         if (!socket || !restaurantName) return;
-        
-        // Join the specific restaurant room from URL param
         socket.emit('joinRestaurant', restaurantName);
 
         const handleOrderUpdate = (payload) => {
             const { action, data } = payload;
             if (!data) return;
 
-            // Handle new orders
             if (action === 'create') {
                 if (['pending', 'preparing'].includes(data.status)) {
                     setOrders(prev => {
                         if (prev.find(o => o._id === data._id)) return prev;
                         return [data, ...prev];
                     });
-                    toast.success(`New Order #${data._id.slice(-4)}`);
+                    toast.success(`Order #${data._id.slice(-3).toUpperCase()} received!`);
                 }
-            } 
-            // Handle updates
+            }
             else if (action === 'update') {
                 setOrders(prev => {
-                    // If status changed to non-active, remove it
                     if (!['pending', 'preparing'].includes(data.status)) {
                         return prev.filter(o => o._id !== data._id);
                     }
-                    // Otherwise update 
                     return prev.map(o => o._id === data._id ? data : o);
                 });
             }
         };
 
         socket.on('orderUpdated', handleOrderUpdate);
-
-        return () => {
-            socket.off('orderUpdated', handleOrderUpdate);
-            // Optionally leave room? Socket usually handles disconnect.
-        };
+        return () => socket.off('orderUpdated', handleOrderUpdate);
     }, [socket, restaurantName]);
 
     const handleStatusUpdate = async (orderId, currentStatus) => {
         try {
             const newStatus = currentStatus === 'pending' ? 'preparing' : 'ready';
             await orderAPI.updateKitchenOrderStatus(restaurantName, orderId, newStatus);
+            toast.success(`Order updated to ${newStatus}`);
         } catch (error) {
-            toast.error("Failed to update status");
+            toast.error("Status update failed");
         }
     };
 
-    if (loading) return <div className="p-8 text-gray-500">Loading orders...</div>;
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+            <Clock className="w-10 h-10 text-gray-200 animate-spin mb-4" />
+            <p className="text-gray-400 font-medium">Getting kitchen ready...</p>
+        </div>
+    );
 
     return (
-        <div className="w-full">
-            <h1 className="text-3xl font-normal text-gray-800 mb-8 tracking-tight">Kitchen Dashboard</h1>
-            
-            <section>
-                <h2 className="text-xl font-normal text-gray-800 mb-6">Active Order</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <AnimatePresence>
+        <div className="max-w-[1600px] mx-auto pb-6 sm:pb-12">
+            <header className="mb-6 sm:mb-10 pl-2">
+                <h1 className="text-[32px] sm:text-[44px] font-bold text-gray-900 tracking-tight leading-tight mb-1 sm:mb-2">Kitchen Dashboard</h1>
+            </header>
+
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[3rem] p-5 sm:p-12 shadow-sm border border-gray-100 min-h-[70vh] sm:min-h-[80vh]">
+                <div className="mb-6 sm:mb-10 pl-1 sm:pl-2">
+                    <h2 className="text-[22px] sm:text-[28px] font-bold text-gray-900 tracking-tight">Active Order</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                    <AnimatePresence mode="popLayout">
                         {orders.map((order) => (
                             <motion.div
                                 key={order._id}
@@ -102,63 +101,64 @@ export default function KitchenDashboard() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                                className="bg-white rounded-3xl p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] min-h-[320px] flex flex-col relative group transition-shadow"
+                                className="bg-[#F8F8F8] rounded-[1.8rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col relative group overflow-hidden border border-transparent hover:border-gray-200 transition-all duration-300 min-h-[380px] sm:min-h-[420px]"
                             >
-                                <div className="flex justify-between items-start mb-6">
-                                    <h3 className="font-bold text-lg text-gray-900 tracking-tight">Order #{order._id.slice(-3).toUpperCase()}</h3>
-                                    {order.status === 'preparing' && (
-                                        <span className="bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 animate-pulse">
-                                            <Clock size={12} strokeWidth={3} /> Cooking
-                                        </span>
-                                    )}
+                                {/* Order ID Header */}
+                                <div className="mb-4 sm:mb-6">
+                                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">Order #{order._id.slice(-3).toUpperCase()}</h3>
+                                    <div className="h-[1px] bg-gray-200 mt-3 sm:mt-4 w-full opacity-60"></div>
                                 </div>
 
-                                <div className="flex-1 w-full relative z-10">
-                                    <div className="flex justify-between items-center text-xs text-gray-400 border-b border-gray-100 pb-3 mb-4 font-medium uppercase tracking-wider">
-                                        <span>Order item</span>
-                                        <span>Qty</span>
+                                {/* Items Table Area */}
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center mb-5 px-1">
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Order item</span>
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Qty</span>
                                     </div>
-                                    
-                                    <ul className="space-y-4">
+
+                                    <ul className="space-y-5">
                                         {order.items.map((item, idx) => (
-                                            <li key={idx} className="flex justify-between items-start text-[15px] text-gray-700 font-medium leading-relaxed">
-                                                <span className="pr-4">{item.name || 'Unknown Item'}</span>
-                                                <span className="font-bold text-gray-900">{item.quantity}</span>
+                                            <li key={idx} className="flex justify-between items-start group/item px-1">
+                                                <span className="text-[16px] font-bold text-gray-800 line-clamp-2 pr-4">{item.name}</span>
+                                                <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-right">{item.quantity}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
 
-                                {/* Interaction Area */}
-                                <div className="mt-6 pt-2">
-                                    <button 
-                                        onClick={() => handleStatusUpdate(order._id, order.status)}
-                                        className="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-medium text-sm transition-all duration-200 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 flex justify-center items-center gap-2 shadow-lg shadow-gray-200"
-                                    >
-                                        {order.status === 'pending' ? 'Start Cooking' : 'Mark Ready'}
-                                        <Check size={16} />
-                                    </button>
+                                {/* Cooking Instructions Divider & Section */}
+                                <div className="mt-6 sm:mt-8">
+                                    <div className="h-[1px] bg-gray-200 w-full opacity-60 mb-4 sm:mb-6"></div>
+                                    <div className="px-1">
+                                        <h4 className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-2 sm:mb-3">Cooking Instruction</h4>
+                                        <p className="text-[12px] sm:text-[13px] text-gray-500 leading-relaxed font-medium">
+                                            {order.instruction || "No specific instructions provided."}
+                                        </p>
+                                    </div>
                                 </div>
+
+                                {/* Status Pulse Badge (Always Visible when preparing) */}
+                                {order.status === 'preparing' && (
+                                    <div className="absolute top-8 right-8 flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                                        <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Cooking</span>
+                                    </div>
+                                )}
                             </motion.div>
                         ))}
                     </AnimatePresence>
 
-
                     {orders.length === 0 && (
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }}
-                            className="col-span-full py-20 text-center"
-                        >
-                            <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-gray-300">
-                                <Check size={24} />
+                        <div className="col-span-full flex flex-col items-center justify-center py-32">
+                            <div className="w-24 h-24 bg-[#F8F8F8] rounded-full flex items-center justify-center mb-6 text-gray-300 shadow-inner">
+                                <Check size={40} />
                             </div>
-                            <p className="text-gray-400 font-medium">All caught up! No active orders.</p>
-                        </motion.div>
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">No active orders</h3>
+                            <p className="text-gray-400 font-medium">The kitchen is all caught up!</p>
+                        </div>
                     )}
                 </div>
-            </section>
+            </div>
         </div>
     );
 }

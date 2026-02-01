@@ -347,7 +347,37 @@ const AdminTable = () => {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                                                <p className="text-xs text-gray-400">Ready to serve</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className={`text-[10px] font-bold uppercase ${item.status === 'ready' ? 'text-green-500' :
+                                                        item.status === 'preparing' ? 'text-yellow-500' :
+                                                            item.status === 'served' ? 'text-blue-500' :
+                                                                item.status === 'completed' ? 'text-gray-400' :
+                                                                    'text-red-400'
+                                                        }`}>
+                                                        {item.status || 'pending'}
+                                                    </p>
+                                                    {item.status === 'ready' && (
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    await orderAPI.updateItemStatus(selectedTableOrder._id, idx, 'served');
+                                                                    fetchActiveOrders();
+                                                                    // Update the selected order in local state too
+                                                                    const updatedItems = [...selectedTableOrder.items];
+                                                                    updatedItems[idx].status = 'served';
+                                                                    setSelectedTableOrder({ ...selectedTableOrder, items: updatedItems });
+                                                                    toast.success(`${item.name} served!`);
+                                                                } catch (err) {
+                                                                    toast.error("Failed to serve item");
+                                                                }
+                                                            }}
+                                                            className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-md font-bold hover:bg-green-600 transition-colors"
+                                                        >
+                                                            Mark Served
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -365,17 +395,28 @@ const AdminTable = () => {
                             </div>
 
                             <button
+                                disabled={!selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) && selectedTableOrder.status !== 'ready'}
                                 onClick={() => handleCompleteOrder(selectedTableOrder)}
-                                className="w-full bg-[#FD6941] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 active:scale-[0.98]"
+                                className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
+                                    ? 'bg-[#FD6941] text-white hover:bg-orange-600 hover:shadow-orange-200'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                    }`}
                             >
-                                <div className="p-1.5 bg-white/20 rounded-lg">
-                                    <UtensilsCrossed className="w-5 h-5 text-white" />
+                                <div className={`p-1.5 rounded-lg ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready') ? 'bg-white/20' : 'bg-gray-300'}`}>
+                                    <UtensilsCrossed className={`w-5 h-5 ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready') ? 'text-white' : 'text-gray-400'}`} />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-bold">Complete Order</p>
-                                    <p className="text-[10px] text-white/70 font-medium uppercase tracking-wider">Settles table & frees up space</p>
+                                    <p className="text-sm font-bold">
+                                        {selectedTableOrder.items?.some(it => ['pending', 'preparing'].includes(it.status)) ? 'Complete Ready Items' : 'Complete Order'}
+                                    </p>
+                                    <p className="text-[10px] uppercase tracking-wider">
+                                        {selectedTableOrder.items?.some(it => ['pending', 'preparing'].includes(it.status))
+                                            ? 'Settles ready items & keeps pending live'
+                                            : 'Settles table & frees up space'}
+                                    </p>
                                 </div>
                             </button>
+
                         </div>
                     </div>
                 </div>,

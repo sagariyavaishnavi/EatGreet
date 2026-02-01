@@ -12,6 +12,9 @@ router.route('/')
 router.route('/:id/status')
     .put(protect, admin, resolveTenant, updateOrderStatus);
 
+router.route('/:id/items/:itemIdx/status')
+    .put(protect, admin, resolveTenant, updateOrderStatus); // Reusing controller for simplicity, but I should probably add a dedicated one or update the existing one
+
 // --- Public Kitchen Routes (No Auth, scoped by Restaurant Name) ---
 // Middleware to inject tenant from URL param
 const injectTenantParam = (req, res, next) => {

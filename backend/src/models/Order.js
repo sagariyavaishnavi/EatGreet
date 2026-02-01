@@ -13,9 +13,10 @@ const orderSchema = new mongoose.Schema({
     tableNumber: { type: String }, // For dine-in
     items: [{
         menuItem: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
-        name: String, // Snapshot name in case it changes
+        name: String,
         quantity: { type: Number, required: true, default: 1 },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
+        status: { type: String, enum: ['pending', 'preparing', 'ready', 'served', 'completed'], default: 'pending' }
     }],
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'preparing', 'ready', 'completed', 'cancelled'], default: 'pending' },

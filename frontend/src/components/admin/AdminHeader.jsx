@@ -8,24 +8,26 @@ import logo from '../../assets/logo-full.png';
 const AdminHeader = () => {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user'));
+  const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
 
   const isActive = (path) => {
-    return location.pathname === path ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:text-black hover:bg-gray-50';
+    // Exact match or matches if it ignores the dynamic slug part
+    return location.pathname === path || (path !== '/' && location.pathname.endsWith(path)) ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:text-black hover:bg-gray-50';
   };
 
   const navItems = [
-    { label: 'Dashboard', path: '/admin' },
-    { label: 'Menu', path: '/admin/menu' },
-    { label: 'Category', path: '/admin/category' },
-    { label: 'Order', path: '/admin/orders' },
-    { label: 'Table', path: '/admin/table' },
-    { label: 'Sales', path: '/admin/sales' },
+    { label: 'Dashboard', path: `/${restaurantSlug}/admin` },
+    { label: 'Menu', path: `/${restaurantSlug}/admin/menu` },
+    { label: 'Category', path: `/${restaurantSlug}/admin/category` },
+    { label: 'Order', path: `/${restaurantSlug}/admin/orders` },
+    { label: 'Table', path: `/${restaurantSlug}/admin/table` },
+    { label: 'Sales', path: `/${restaurantSlug}/admin/sales` },
   ];
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   return (
-    <header className="px-[30px] py-3 flex items-center justify-between sticky top-0 z-50 bg-transparent transition-all">
+    <header className="px-[30px] py-3 flex items-center justify-between sticky top-0 z-0 bg-transparent transition-all">
       {/* Logo Section */}
       <div className="flex items-center gap-4">
         {/* Mobile Menu Toggle */}
@@ -36,7 +38,7 @@ const AdminHeader = () => {
           {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
-        <Link to="/admin" className="block">
+        <Link to={`/${restaurantSlug}/admin`} className="block">
           <img src={logo} alt="EatGreet" className="h-10 w-auto object-contain" />
         </Link>
       </div>
@@ -56,7 +58,7 @@ const AdminHeader = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-3">
-        <Link to="/admin/settings" className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
+        <Link to={`/${restaurantSlug}/admin/settings`} className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black">
           <Settings className="w-5 h-5" />
         </Link>
         <button className="w-11 h-11 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center transition-all shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-gray-600 hover:text-black relative">
@@ -65,7 +67,7 @@ const AdminHeader = () => {
         </button>
 
         {/* Profile Capsule */}
-        <Link to="/admin/profile" className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+        <Link to={`/${restaurantSlug}/admin/profile`} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
           <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
             <img src={`https://ui-avatars.com/api/?name=${user?.name || 'Admin'}&background=FD6941&color=fff`} alt={user?.name || 'Admin'} className="w-full h-full object-cover" />
           </div>

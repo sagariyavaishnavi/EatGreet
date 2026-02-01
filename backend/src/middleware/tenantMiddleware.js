@@ -14,38 +14,38 @@ const resolveTenant = async (req, res, next) => {
     try {
         let restaurantName = null;
 
-        // 1. Get from Query Params (Public/Customer URLs - Highest Priority)
-        if (req.query.restaurantName) {
-            restaurantName = req.query.restaurantName;
-        }
-
-        // 2. Get from Custom Header (Explicit overrides)
-        if (!restaurantName && req.headers['x-restaurant-name']) {
-            restaurantName = req.headers['x-restaurant-name'];
-        }
-
-        // 3. Get from Authenticated User (Admin/Staff Session)
-        if (!restaurantName && req.user && req.user.restaurantName) {
+        // --- AUTHENTICATED USER (Admin/Staff/Customer with account) ---
+        // If user is logged in, their authorized restaurantName MUST take precedence for security.
+        // This prevents an admin of Resto A from seeing/writing data of Resto B via query params.
+        if (req.user && req.user.restaurantName && req.user.role !== 'superadmin') {
             restaurantName = req.user.restaurantName;
         }
 
-        // 4. Fallback: If no req.user, check for Token manually
-        if (!restaurantName && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            try {
-                const token = req.headers.authorization.split(' ')[1];
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const user = await User.findById(decoded.id).select('restaurantName');
-                if (user) {
-                    restaurantName = user.restaurantName;
-                }
-            } catch (err) {
-                // Ignore token errors here, might be a public request
+        // --- PUBLIC / OVERRIDE CASES ---
+        if (!restaurantName) {
+            // 1. Get from Custom Header (Explicit overrides used by frontend for specific flows)
+            if (req.headers['x-restaurant-name']) {
+                restaurantName = req.headers['x-restaurant-name'];
             }
-        }
-
-        // 5. Fallback to Body
-        if (!restaurantName && req.body && req.body.restaurantName) {
-            restaurantName = req.body.restaurantName;
+            // 2. Get from Query Params (Public/Customer URLs)
+            else if (req.query.restaurantName) {
+                restaurantName = req.query.restaurantName;
+            }
+            // 3. Get from Body
+            else if (req.body && req.body.restaurantName) {
+                restaurantName = req.body.restaurantName;
+            }
+            // 4. Token Fallback (If protect middleware wasn't used but token is present)
+            else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+                try {
+                    const token = req.headers.authorization.split(' ')[1];
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                    const user = await User.findById(decoded.id).select('restaurantName');
+                    if (user) {
+                        restaurantName = user.restaurantName;
+                    }
+                } catch (err) { }
+            }
         }
 
         if (!restaurantName) {
@@ -57,6 +57,7 @@ const resolveTenant = async (req, res, next) => {
         // Sanitize name for DB use
         const sanitized = restaurantName.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const dbName = `resto_details_${sanitized}`;
+        req.tenantDbName = sanitized; // Store for socket rooms
 
         const conn = getTenantConnection(dbName);
         req.tenantConnection = conn;

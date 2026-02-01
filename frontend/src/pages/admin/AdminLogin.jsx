@@ -31,9 +31,11 @@ export default function AdminLogin() {
                 navigate('/super-admin/login');
                 return;
             } else if (userData.role === 'admin') {
-                navigate('/admin');
+                const restaurantSlug = userData.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+                navigate(`/${restaurantSlug}/admin`);
             } else {
-                navigate('/admin');
+                const restaurantSlug = userData.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+                navigate(`/${restaurantSlug}/admin`);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');

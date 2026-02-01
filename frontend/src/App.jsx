@@ -119,7 +119,9 @@ function App() {
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
 
           {/* Protected Admin Routes */}
-          <Route path="/admin" element={
+          <Route path="/admin" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin`} replace />} />
+
+          <Route path="/:restaurantName/admin" element={
             <ProtectedRoute>
               <AdminLayout />
             </ProtectedRoute>
@@ -150,7 +152,9 @@ function App() {
           </Route>
 
           {/* Kitchen Routes */}
-          <Route path="/kitchen" element={<KitchenLayout />}>
+          <Route path="/kitchen" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/kitchen`} replace />} />
+
+          <Route path="/:restaurantName/kitchen" element={<KitchenLayout />}>
             <Route index element={<KitchenDashboard />} />
             <Route path="profile" element={<KitchenProfile />} />
             <Route path="settings" element={<KitchenSettings />} />

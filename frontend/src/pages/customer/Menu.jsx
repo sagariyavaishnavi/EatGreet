@@ -147,8 +147,8 @@ const Menu = () => {
             }
         }
         return {
-            name: user?.name || "",
-            phone: user?.phone || "",
+            name: "",
+            phone: "",
             tableNo: tableNo,
             notes: ""
         };

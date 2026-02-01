@@ -49,8 +49,11 @@ app.set('io', io);
 
 io.on('connection', (socket) => {
     // Join a specific restaurant room for updates
-    socket.on('joinRestaurant', (restaurantId) => {
-        socket.join(restaurantId);
+    socket.on('joinRestaurant', (nameOrId) => {
+        // Sanitize for commonality with tenantDbName logic
+        const room = String(nameOrId).toLowerCase().replace(/[^a-z0-9]/g, '_');
+        socket.join(room);
+        console.log(`Socket ${socket.id} joined room: ${room}`);
     });
 });
 

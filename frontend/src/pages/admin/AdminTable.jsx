@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, Activity, Eye, User, Clock, UtensilsCrossed, X, Loader2, QrCode, Download, Printer, FileText } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
@@ -299,8 +300,8 @@ const AdminTable = () => {
             </div>
 
             {/* Live Order Preview Modal */}
-            {isPreviewOpen && selectedTableOrder && (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            {isPreviewOpen && selectedTableOrder && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <div>
@@ -377,12 +378,13 @@ const AdminTable = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* QR Code Modal */}
-            {qrModal.isOpen && (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            {qrModal.isOpen && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h2 className="text-xl font-bold text-gray-800">Table {qrModal.tableNo} QR Code</h2>
@@ -430,7 +432,8 @@ const AdminTable = () => {
                             </p>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {tables.length === 0 && (

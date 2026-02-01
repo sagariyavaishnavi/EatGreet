@@ -36,7 +36,9 @@ const createCategory = async (req, res) => {
 
         // Auto live update
         const io = req.app.get('io');
-        if (io) io.emit('categoryUpdated', { action: 'create', data: category });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('categoryUpdated', { action: 'create', data: category });
+        }
 
         res.status(201).json(category);
     } catch (error) {
@@ -64,7 +66,9 @@ const updateCategory = async (req, res) => {
         const updatedCategory = await foundCategory.save();
 
         const io = req.app.get('io');
-        if (io) io.emit('categoryUpdated', { action: 'update', data: updatedCategory });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('categoryUpdated', { action: 'update', data: updatedCategory });
+        }
 
         res.json(updatedCategory);
     } catch (error) {
@@ -84,7 +88,9 @@ const deleteCategory = async (req, res) => {
         await category.deleteOne();
 
         const io = req.app.get('io');
-        if (io) io.emit('categoryUpdated', { action: 'delete', id: req.params.id });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('categoryUpdated', { action: 'delete', id: req.params.id });
+        }
 
         res.json({ message: 'Category removed' });
     } catch (error) {

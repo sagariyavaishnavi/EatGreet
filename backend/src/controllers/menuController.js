@@ -45,7 +45,9 @@ const createMenuItem = async (req, res) => {
         const menuItem = await MenuItem.create(req.body);
 
         const io = req.app.get('io');
-        if (io) io.emit('menuUpdated', { action: 'create', data: menuItem });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('menuUpdated', { action: 'create', data: menuItem });
+        }
 
         res.status(201).json(menuItem);
     } catch (error) {
@@ -66,7 +68,9 @@ const updateMenuItem = async (req, res) => {
         const updatedItem = await menuItem.save();
 
         const io = req.app.get('io');
-        if (io) io.emit('menuUpdated', { action: 'update', data: updatedItem });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('menuUpdated', { action: 'update', data: updatedItem });
+        }
 
         res.json(updatedItem);
     } catch (error) {
@@ -103,7 +107,9 @@ const deleteMenuItem = async (req, res) => {
         await menuItem.deleteOne();
 
         const io = req.app.get('io');
-        if (io) io.emit('menuUpdated', { action: 'delete', id: req.params.id });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('menuUpdated', { action: 'delete', id: req.params.id });
+        }
 
         res.json({ message: 'Item removed' });
     } catch (error) {

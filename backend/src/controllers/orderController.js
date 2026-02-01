@@ -80,7 +80,9 @@ const createOrder = async (req, res) => {
 
         // Emit detailed event for Kitchen/Admin Dashboards
         const io = req.app.get('io');
-        if (io) io.emit('orderUpdated', { action: 'create', data: createdOrder });
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('orderUpdated', { action: 'create', data: createdOrder });
+        }
 
         res.status(201).json(createdOrder);
     } catch (error) {
@@ -125,7 +127,9 @@ const updateOrderStatus = async (req, res) => {
             const updatedOrder = await order.save();
 
             const io = req.app.get('io');
-            if (io) io.emit('orderUpdated', { action: 'update', data: updatedOrder });
+            if (io && req.tenantDbName) {
+                io.to(req.tenantDbName).emit('orderUpdated', { action: 'update', data: updatedOrder });
+            }
 
             res.json(updatedOrder);
         } else {

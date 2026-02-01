@@ -8,8 +8,10 @@ import diningIcon from '../../assets/Dining-Room--Streamline-Atlas.svg';
 import userIcon from '../../assets/User--Streamline-Font-Awesome.svg';
 import groupIcon from '../../assets/Group--Streamline-Sharp-Material.svg';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { orderAPI, statsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useSocket } from '../../context/SocketContext';
 
 const StatCard = ({ icon: Icon, value, title }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
@@ -48,6 +50,29 @@ const AdminOrders = () => {
     const [historyFilter, setHistoryFilter] = useState('today'); // 'today', 'yesterday', 'lastWeek'
     const [timers, setTimers] = useState({});
     const [restaurant, setRestaurant] = useState(null);
+    const socket = useSocket();
+    const { user } = useSettings();
+
+    // Socket Listener for real-time updates
+    useEffect(() => {
+        if (!socket || !user?.restaurantName) return;
+
+        // Join restaurant room
+        socket.emit('joinRestaurant', user.restaurantName);
+
+        const handleUpdate = (payload) => {
+            console.log("Order Update Received:", payload.action);
+            fetchOrders(); // Refresh everything for simplicity and consistency
+            if (payload.action === 'create') {
+                toast.success('New order received!', { duration: 5000, icon: '🔔' });
+            }
+        };
+
+        socket.on('orderUpdated', handleUpdate);
+        return () => {
+            socket.off('orderUpdated', handleUpdate);
+        };
+    }, [socket, user?.restaurantName]);
 
     const fetchRestaurantDetails = async () => {
         try {
@@ -329,9 +354,6 @@ const AdminOrders = () => {
         }
     };
 
-    // calculator removed per request
-
-    // show full-page loader while initial data is being fetched
     if (loading && (!orders || orders.length === 0)) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -345,15 +367,12 @@ const AdminOrders = () => {
 
     return (
         <div className="space-y-8">
-            {/* Dashboard Main Title */}
             <div className="mb-8">
                 <h1 className="text-3xl text-gray-800">Orders</h1>
                 <p className="text-gray-500">Manage your restaurant active orders</p>
             </div>
 
-            {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                {/* Pending Orders */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
                     <div className="flex items-center gap-4 mb-3">
                         <div className="w-10 h-10 flex items-center justify-center">
@@ -364,7 +383,6 @@ const AdminOrders = () => {
                     <p className="text-gray-400 text-sm pl-1">Total Pending Orders</p>
                 </div>
 
-                {/* Preparing Orders */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
                     <div className="flex items-center gap-4 mb-3">
                         <div className="w-10 h-10 flex items-center justify-center">
@@ -375,7 +393,6 @@ const AdminOrders = () => {
                     <p className="text-gray-400 text-sm pl-1">Preparing Orders</p>
                 </div>
 
-                {/* Ready Orders */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
                     <div className="flex items-center gap-4 mb-3">
                         <div className="w-10 h-10 flex items-center justify-center">
@@ -386,7 +403,6 @@ const AdminOrders = () => {
                     <p className="text-gray-400 text-sm pl-1">Ready to serve</p>
                 </div>
 
-                {/* Today Orders Complete Card */}
                 <div className={`p-6 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden bg-gradient-to-b from-white to-[#F9FAFB] flex flex-col justify-between h-40 lg:col-span-2`}>
                     <div className="flex justify-between items-start mb-2">
                         <p className="text-gray-800 text-lg font-medium leading-tight max-w-[50%]">Today Orders Complete</p>
@@ -396,7 +412,6 @@ const AdminOrders = () => {
                         </div>
                     </div>
 
-                    {/* Custom Process Bar */}
                     <div className="w-full relative mt-auto">
                         <div className="flex justify-between text-[10px] text-gray-400 font-medium mb-1 px-0.5">
                             <span>0%</span>
@@ -424,7 +439,6 @@ const AdminOrders = () => {
                 </div>
             </div>
 
-            {/* Active Orders Section */}
             <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-2xl text-gray-800">Active Order</h2>
@@ -451,21 +465,11 @@ const AdminOrders = () => {
                 {filteredActiveOrders.length > 0 ? (
                     <div className="space-y-4">
                         {filteredActiveOrders.map(order => {
-                            const statusTextColor = order.status === 'pending'
-                                ? 'text-red-600'
-                                : order.status === 'preparing'
-                                    ? 'text-yellow-600'
-                                    : 'text-green-600';
-
-                            const statusBgColor = order.status === 'pending'
-                                ? 'bg-red-100'
-                                : order.status === 'preparing'
-                                    ? 'bg-yellow-100'
-                                    : 'bg-green-100';
+                            const statusTextColor = order.status === 'pending' ? 'text-red-600' : order.status === 'preparing' ? 'text-yellow-600' : 'text-green-600';
+                            const statusBgColor = order.status === 'pending' ? 'bg-red-100' : order.status === 'preparing' ? 'bg-yellow-100' : 'bg-green-100';
 
                             return (
                                 <div key={order._id} className="relative flex items-center justify-between p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
-
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100">
                                             <UtensilsCrossed className={`w-5 h-5 ${statusTextColor}`} />
@@ -499,7 +503,6 @@ const AdminOrders = () => {
                 )}
             </div>
 
-            {/* Order History Section */}
             {stats.completed > 0 && (
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between mb-8">
@@ -553,19 +556,9 @@ const AdminOrders = () => {
                 </div>
             )}
 
-            {/* Order Details Modal - Card View */}
-            {selectedOrder && (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            {selectedOrder && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-                        {/* Print Button */}
-                        <button
-                            onClick={() => handlePrint(selectedOrder)}
-                            className="absolute top-6 right-16 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors z-10"
-                        >
-                            <Printer className="w-4 h-4" />
-                        </button>
-
-                        {/* Close Button */}
                         <button
                             onClick={() => setSelectedOrder(null)}
                             className="absolute top-6 right-6 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors z-10"
@@ -575,9 +568,7 @@ const AdminOrders = () => {
 
                         <div className="p-8">
                             {selectedOrder.status === 'completed' ? (
-                                /* Receipt Preview Card */
                                 <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative mb-8" style={{ width: '380px' }}>
-                                    {/* Print Button inside receipt */}
                                     <button
                                         onClick={() => handlePrint(selectedOrder)}
                                         className="absolute top-4 right-4 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors no-print"
@@ -653,17 +644,13 @@ const AdminOrders = () => {
                                         <span>{currencySymbol}{(selectedOrder.totalAmount || (selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05)).toFixed(2)}</span>
                                     </div>
                                     <div className="border-t border-dashed border-black my-4"></div>
-
-                                    <div className="text-center font-bold text-[16px] uppercase tracking-widest mt-6">
-                                        Thank You Visit Again
-                                    </div>
+                                    <div className="text-center font-bold text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>
                                 </div>
                             ) : (
-                                /* Order Details Card (Original Aesthetic) */
                                 <>
                                     <div className="flex items-start justify-between mb-8">
                                         <div>
-                                            <h2 className="text-3xl text-gray-900 mb-2 font-boldtracking-tight tracking-tight">Order #{selectedOrder._id.slice(-4)}</h2>
+                                            <h2 className="text-3xl text-gray-900 mb-2 font-bold tracking-tight">Order #{selectedOrder._id.slice(-4)}</h2>
                                             <p className="text-gray-500 font-medium">Order details and active items</p>
                                         </div>
                                         <span className={`px-5 py-2 rounded-full text-xs uppercase font-bold tracking-wider ${getStatusColor(selectedOrder.status)}`}>
@@ -710,7 +697,6 @@ const AdminOrders = () => {
                                         </div>
                                     </div>
 
-                                    {/* Timer Section for Active Orders */}
                                     <div className="flex justify-center mb-10">
                                         <div className="relative w-36 h-36 flex items-center justify-center bg-white rounded-full shadow-inner border-4 border-gray-50">
                                             <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -779,7 +765,8 @@ const AdminOrders = () => {
                             )}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

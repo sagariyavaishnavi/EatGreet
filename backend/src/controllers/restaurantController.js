@@ -114,12 +114,14 @@ const getRestaurantPublic = async (req, res) => {
 const getRestaurantByName = async (req, res) => {
     try {
         const name = req.params.name;
-        // Case insensitive search for restaurantName OR name (as fallback)
+        // Create a regex that allows hyphens in the input to match spaces or hyphens in the DB
+        const searchPattern = name.replace(/-/g, '[\\s-]');
+        const regex = new RegExp(`^${searchPattern}$`, 'i');
+
         const user = await User.findOne({
             $or: [
-                { restaurantName: { $regex: new RegExp(`^${name}$`, 'i') } },
-                // Fallback to name if restaurantName not set
-                { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+                { restaurantName: { $regex: regex } },
+                { name: { $regex: regex } }
             ]
         }).select('-password');
 

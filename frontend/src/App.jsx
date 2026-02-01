@@ -169,10 +169,13 @@ function App() {
             <Route path="settings" element={<SuperAdminSettings />} />
           </Route>
 
-          {/* Kitchen Routes */}
           <Route path="/kitchen" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/kitchen`} replace />} />
 
-          <Route path="/:restaurantName/kitchen" element={<KitchenLayout />}>
+          <Route path="/:restaurantName/kitchen" element={
+            <ProtectedRoute>
+              <KitchenLayout />
+            </ProtectedRoute>
+          }>
             <Route index element={<KitchenDashboard />} />
             <Route path="profile" element={<KitchenProfile />} />
             <Route path="settings" element={<KitchenSettings />} />
@@ -186,11 +189,6 @@ function App() {
             <Route path="menu" element={<Menu />} />
             <Route path="profile" element={<CustomerProfile />} />
             <Route path="favorites" element={<CustomerFavorites />} />
-          </Route>
-
-          {/* New Public Kitchen Route */}
-          <Route path="/:restaurantName/kitchen" element={<KitchenLayout />}>
-            <Route index element={<KitchenDashboard />} />
           </Route>
 
           {/* New Table Specific Route */}

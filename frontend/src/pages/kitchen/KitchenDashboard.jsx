@@ -64,15 +64,55 @@ export default function KitchenDashboard() {
         return () => socket.off('orderUpdated', handleOrderUpdate);
     }, [socket, restaurantName]);
 
-    const handleStatusUpdate = async (orderId, currentStatus) => {
+    const handleStatusUpdate = async (orderId, itemIndices, currentStatus) => {
         try {
             const newStatus = currentStatus === 'pending' ? 'preparing' : 'ready';
-            await orderAPI.updateKitchenOrderStatus(restaurantName, orderId, newStatus);
-            toast.success(`Order updated to ${newStatus}`);
+            const loadToast = toast.loading(`Updating ${itemIndices.length} items to ${newStatus}...`);
+
+            // If itemIndices is provided, we update specific items in that round
+            if (itemIndices && itemIndices.length > 0) {
+                await Promise.all(itemIndices.map(idx =>
+                    orderAPI.updateItemStatus(orderId, idx, newStatus)
+                ));
+            } else {
+                await orderAPI.updateKitchenOrderStatus(restaurantName, orderId, newStatus);
+            }
+
+            toast.success(`Items updated to ${newStatus}`, { id: loadToast });
         } catch (error) {
             toast.error("Status update failed");
         }
     };
+
+    // Group items by their addedAt timestamp into separate cards
+    const groupedRounds = orders.flatMap(order => {
+        const rounds = {};
+
+        order.items.forEach((item, idx) => {
+            if (['ready', 'served', 'completed'].includes(item.status)) return;
+
+            // Group by item's addedAt, fall back to order's createdAt
+            const timeKey = item.addedAt ? new Date(item.addedAt).getTime() : new Date(order.createdAt).getTime();
+
+            // Allow a small 10s window for items added in the same "burst"
+            const matchedKey = Object.keys(rounds).find(k => Math.abs(k - timeKey) < 10000);
+            const finalKey = matchedKey || timeKey;
+
+            if (!rounds[finalKey]) rounds[finalKey] = [];
+            rounds[finalKey].push({ ...item, originalIndex: idx });
+        });
+
+        return Object.entries(rounds).map(([time, items], index) => ({
+            ...order,
+            items,
+            roundKey: `${order._id}_${time}`,
+            roundSequence: index + 1,
+            timeLabel: new Date(parseInt(time)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            allPending: items.every(it => it.status === 'pending'),
+            allPreparing: items.every(it => it.status === 'preparing'),
+            status: items.every(it => it.status === 'preparing') ? 'preparing' : 'pending'
+        }));
+    }).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt) || a.roundSequence - b.roundSequence);
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[50vh]">
@@ -94,33 +134,47 @@ export default function KitchenDashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
                     <AnimatePresence mode="popLayout">
-                        {orders.map((order) => (
+                        {groupedRounds.map((round) => (
                             <motion.div
-                                key={order._id}
+                                key={round.roundKey}
                                 layout
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-[#F8F8F8] rounded-[1.8rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col relative group overflow-hidden border border-transparent hover:border-gray-200 transition-all duration-300 min-h-[380px] sm:min-h-[420px]"
+                                onClick={() => handleStatusUpdate(round._id, round.items.map(it => it.originalIndex), round.status)}
+                                className={`bg-[#F8F8F8] rounded-[1.8rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col relative group cursor-pointer overflow-hidden border-2 transition-all duration-300 min-h-[380px] sm:min-h-[420px] ${round.status === 'preparing' ? 'border-[#FD6941]/20 ring-1 ring-[#FD6941]/10 bg-white' : 'border-transparent hover:border-gray-200'
+                                    }`}
                             >
                                 {/* Order ID Header */}
                                 <div className="mb-4 sm:mb-6">
-                                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">Order #{order._id.slice(-3).toUpperCase()}</h3>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Table {round.tableNumber}</h3>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Order #{round._id.slice(-4).toUpperCase()}</p>
+                                        </div>
+                                        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${round.roundSequence > 1 ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'
+                                            }`}>
+                                            {round.roundSequence > 1 ? `Round ${round.roundSequence}` : 'New Order'}
+                                        </div>
+                                    </div>
                                     <div className="h-[1px] bg-gray-200 mt-3 sm:mt-4 w-full opacity-60"></div>
                                 </div>
 
                                 {/* Items Table Area */}
                                 <div className="flex-1">
                                     <div className="flex justify-between items-center mb-5 px-1">
-                                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Order item</span>
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Items</span>
                                         <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Qty</span>
                                     </div>
 
-                                    <ul className="space-y-5">
-                                        {order.items.map((item, idx) => (
+                                    <ul className="space-y-4">
+                                        {round.items.map((item, idx) => (
                                             <li key={idx} className="flex justify-between items-start group/item px-1">
-                                                <span className="text-[16px] font-bold text-gray-800 line-clamp-2 pr-4">{item.name}</span>
-                                                <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-right">{item.quantity}</span>
+                                                <div className="flex flex-col">
+                                                    <span className={`text-[17px] font-bold ${round.status === 'preparing' ? 'text-gray-900' : 'text-gray-700'}`}>{item.name}</span>
+                                                    {item.status === 'ready' && <span className="text-[10px] text-green-500 font-bold uppercase tracking-tighter">Ready to Serve</span>}
+                                                </div>
+                                                <span className="text-[17px] font-bold text-gray-900 min-w-[24px] text-right bg-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm border border-gray-100">{item.quantity}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -129,19 +183,24 @@ export default function KitchenDashboard() {
                                 {/* Cooking Instructions Divider & Section */}
                                 <div className="mt-6 sm:mt-8">
                                     <div className="h-[1px] bg-gray-200 w-full opacity-60 mb-4 sm:mb-6"></div>
-                                    <div className="px-1">
-                                        <h4 className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-2 sm:mb-3">Cooking Instruction</h4>
-                                        <p className="text-[12px] sm:text-[13px] text-gray-500 leading-relaxed font-medium">
-                                            {order.instruction || "No specific instructions provided."}
-                                        </p>
+                                    <div className="px-1 flex justify-between items-end">
+                                        <div className="max-w-[70%]">
+                                            <h4 className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-2 sm:mb-3">Notes</h4>
+                                            <p className="text-[12px] sm:text-[13px] text-gray-500 leading-relaxed font-medium line-clamp-2 italic">
+                                                {round.instruction || "Standard preparation"}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{round.timeLabel}</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Status Pulse Badge (Always Visible when preparing) */}
-                                {order.status === 'preparing' && (
-                                    <div className="absolute top-8 right-8 flex items-center gap-2">
-                                        <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                                        <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Cooking</span>
+                                {round.status === 'preparing' && (
+                                    <div className="absolute bottom-10 right-10 flex items-center gap-2 bg-orange-500 px-4 py-2 rounded-full shadow-lg shadow-orange-200">
+                                        <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Cooking</span>
                                     </div>
                                 )}
                             </motion.div>

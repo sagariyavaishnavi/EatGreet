@@ -5,7 +5,7 @@ import {
     MapPin, Clock, Calendar, FileText, CheckCircle, XCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { authAPI } from '../../utils/api';
+import { authAPI, restaurantAPI, uploadAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
 
 const AdminSettings = () => {
@@ -17,7 +17,8 @@ const AdminSettings = () => {
         phone: user?.phone || '',
         restaurantName: user?.restaurantName || '',
         city: user?.city || '',
-        currency: user?.currency || 'INR'
+        currency: user?.currency || 'INR',
+        profilePicture: user?.profilePicture || ''
     });
 
     const [passwords, setPasswords] = useState({
@@ -25,9 +26,86 @@ const AdminSettings = () => {
         confirmPassword: ''
     });
 
+    const [restoDetails, setRestoDetails] = useState({
+        name: user?.restaurantName || '',
+        description: '',
+        address: user?.restaurantDetails?.address || user?.city || '',
+        contactNumber: user?.restaurantDetails?.contactNumber || user?.phone || '',
+        gstNumber: user?.restaurantDetails?.gstNumber || '',
+        logo: user?.restaurantDetails?.logo || '',
+        cuisineType: user?.restaurantDetails?.cuisineType || '',
+        businessEmail: user?.restaurantDetails?.businessEmail || user?.email || '',
+        location: { lat: 23.0225, lng: 72.5714 },
+        operatingHours: { open: '09:00', close: '23:00' }
+    });
+
+    const [orderPreferences, setOrderPreferences] = useState({
+        acceptOrders: true,
+        autoAccept: false,
+        cancelEnabled: true,
+        avgPrepTime: 25
+    });
+
+    const [bankDetails, setBankDetails] = useState({
+        accountHolder: '',
+        accountNumber: '',
+        bankName: '',
+        ifscCode: '',
+        settlementCycle: 'Daily (T+1)'
+    });
+
+    const [notificationPreferences, setNotificationPreferences] = useState({
+        newOrder: true,
+        statusUpdates: true,
+        lowStock: true,
+        paymentReceived: true
+    });
+
+    const [staff, setStaff] = useState([]);
+    const [newStaff, setNewStaff] = useState({ name: '', role: 'Chef', email: '' });
+
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+
+    React.useEffect(() => {
+        const fetchResto = async () => {
+            try {
+                const { data } = await restaurantAPI.getDetails();
+                if (data) {
+                    setRestoDetails({
+                        name: data.name || user?.restaurantName || '',
+                        description: data.description || '',
+                        address: data.address || user?.city || '',
+                        contactNumber: data.contactNumber || user?.phone || '',
+                        gstNumber: data.gstNumber || '',
+                        logo: data.logo || '',
+                        cuisineType: data.cuisineType || '',
+                        businessEmail: data.businessEmail || user?.email || '',
+                        location: data.location || { lat: 23.0225, lng: 72.5714 },
+                        operatingHours: data.operatingHours || { open: '09:00', close: '23:00' }
+                    });
+                    if (data.orderPreferences) setOrderPreferences(data.orderPreferences);
+                    if (data.bankDetails) setBankDetails(data.bankDetails);
+                    if (data.notificationPreferences) setNotificationPreferences(data.notificationPreferences);
+                    if (data.staff) setStaff(data.staff);
+                }
+            } catch (err) {
+                console.error("Failed to fetch resto details", err);
+            }
+        };
+        fetchResto();
+    }, []); // Only fetch once on mount to avoid overwriting edits
+
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
         setProfile(prev => ({ ...prev, [name]: value }));
+
+        // Sync with restoDetails if it's the restaurant name or phone
+        if (name === 'restaurantName') {
+            setRestoDetails(prev => ({ ...prev, name: value }));
+        }
+        if (name === 'phone') {
+            setRestoDetails(prev => ({ ...prev, contactNumber: value }));
+        }
 
         // Live change: Update context immediately for currency selection
         if (name === 'currency') {
@@ -39,11 +117,96 @@ const AdminSettings = () => {
         setPasswords({ ...passwords, [e.target.name]: e.target.value });
     };
 
+    const handleRestoChange = (e) => {
+        const { name, value } = e.target;
+        setRestoDetails(prev => ({ ...prev, [name]: value }));
+
+        // Sync with profile if it's the restaurant name or contact number
+        if (name === 'name') {
+            setProfile(prev => ({ ...prev, restaurantName: value }));
+        }
+        if (name === 'contactNumber') {
+            setProfile(prev => ({ ...prev, phone: value }));
+        }
+    };
+
+    const handleNestedChange = (category, field, value) => {
+        if (category === 'location') {
+            setRestoDetails(prev => ({ ...prev, location: { ...prev.location, [field]: value } }));
+        } else if (category === 'hours') {
+            setRestoDetails(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, [field]: value } }));
+        } else if (category === 'orders') {
+            setOrderPreferences(prev => ({ ...prev, [field]: value }));
+        } else if (category === 'bank') {
+            setBankDetails(prev => ({ ...prev, [field]: value }));
+        } else if (category === 'notifications') {
+            setNotificationPreferences(prev => ({ ...prev, [field]: value }));
+        }
+    };
+
+    const handleAddStaff = () => {
+        if (!newStaff.name) return toast.error("Staff name is required");
+        setStaff(prev => [...prev, { ...newStaff, _id: Date.now().toString(), isActive: true }]);
+        setNewStaff({ name: '', role: 'Chef', email: '' });
+        toast.success("Staff added locally. Click 'Save Changes' to persist.");
+    };
+
+    const handleRemoveStaff = (id) => {
+        setStaff(prev => prev.filter(s => s._id !== id));
+        toast.success("Staff removed. Click 'Save Changes' to persist.");
+    };
+
+    const handleLogoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingLogo(true);
+        const loadToast = toast.loading('Uploading logo...');
+        try {
+            const res = await uploadAPI.uploadDirect(file);
+            const logoUrl = res.data.secure_url;
+            setRestoDetails(prev => ({ ...prev, logo: logoUrl }));
+            toast.success('Logo uploaded!', { id: loadToast });
+        } catch (error) {
+            toast.error('Logo upload failed', { id: loadToast });
+        } finally {
+            setUploadingLogo(false);
+        }
+    };
+
+    const handleProfilePicUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingProfilePic(true);
+        const loadToast = toast.loading('Uploading profile picture...');
+        try {
+            const res = await uploadAPI.uploadDirect(file);
+            const picUrl = res.data.secure_url;
+            setProfile(prev => ({ ...prev, profilePicture: picUrl }));
+            toast.success('Profile picture updated!', { id: loadToast });
+        } catch (error) {
+            toast.error('Upload failed', { id: loadToast });
+        } finally {
+            setUploadingProfilePic(false);
+        }
+    };
+
     const handleSaveProfile = async () => {
         const loadToast = toast.loading('Saving changes...');
         try {
             // Update Profile Info
             const profileResponse = await authAPI.updateProfile(profile);
+
+            // Update Restaurant Details + New Settings
+            const updatePayload = {
+                ...restoDetails,
+                orderPreferences,
+                bankDetails,
+                notificationPreferences,
+                staff
+            };
+            const restoResponse = await restaurantAPI.updateDetails(updatePayload);
 
             // Password update if filled
             if (passwords.newPassword) {
@@ -52,10 +215,6 @@ const AdminSettings = () => {
                     return;
                 }
 
-                // For a real app, we need current password. 
-                // Since we don't have a field for it here yet, let's warn if we can't do it.
-                // But let's assume we allow super admin or we added the field.
-                // Let's add a prompt for current password if they try to change it.
                 const currentPassword = window.prompt("Please enter your current password to confirm changes:");
                 if (!currentPassword) {
                     toast.error('Current password is required to change password', { id: loadToast });
@@ -68,7 +227,13 @@ const AdminSettings = () => {
                 });
             }
 
-            updateSettings(profileResponse.data);
+            // Merge updated data for context
+            const updatedUserData = {
+                ...profileResponse.data,
+                restaurantDetails: restoResponse.data.restaurantDetails || restoResponse.data // Backend might return it nested or spread
+            };
+
+            updateSettings(updatedUserData);
             toast.success('Settings updated successfully!', { id: loadToast });
             setPasswords({ newPassword: '', confirmPassword: '' });
         } catch (error) {
@@ -176,13 +341,35 @@ const AdminSettings = () => {
                             <SectionCard title="Personal Information" icon={User}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="md:col-span-2 flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-gray-100 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
-                                            <Upload className="w-6 h-6 text-gray-400" />
+                                        <div className="w-20 h-20 bg-gray-100 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center relative">
+                                            {profile.profilePicture ? (
+                                                <img src={profile.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className="w-6 h-6 text-gray-400" />
+                                            )}
+                                            {uploadingProfilePic && (
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                    <Activity className="w-4 h-4 text-white animate-spin" />
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-gray-800">Profile Picture</h4>
                                             <p className="text-xs text-gray-500 mb-2">Upload a clear photo of yourself</p>
-                                            <button className="text-xs font-bold text-[#FD6941]">Upload New</button>
+                                            <input
+                                                type="file"
+                                                id="profile-pic-upload"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleProfilePicUpload}
+                                            />
+                                            <button
+                                                onClick={() => document.getElementById('profile-pic-upload').click()}
+                                                disabled={uploadingProfilePic}
+                                                className="text-xs font-bold text-[#FD6941] hover:underline"
+                                            >
+                                                {uploadingProfilePic ? 'Uploading...' : 'Upload New'}
+                                            </button>
                                         </div>
                                     </div>
                                     <InputGroup label="Full Name" name="name" value={profile.name} onChange={handleProfileChange} />
@@ -210,11 +397,44 @@ const AdminSettings = () => {
                         <div className="space-y-6">
                             <SectionCard title="General Information" icon={Store}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputGroup label="Restaurant Name" name="restaurantName" value={profile.restaurantName} onChange={handleProfileChange} />
-                                    <InputGroup label="Cuisine Type" defaultValue="Multi-Cuisine" />
-                                    <InputGroup label="Contact Number" name="phone" value={profile.phone} onChange={handleProfileChange} />
-                                    <InputGroup label="Business Email" defaultValue={user.email || ""} />
-                                    <InputGroup label="GST Number" defaultValue="" />
+                                    <div className="md:col-span-2 flex items-center gap-6 mb-2">
+                                        <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center relative shadow-inner">
+                                            {restoDetails.logo ? (
+                                                <img src={restoDetails.logo} alt="Logo" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Store className="w-8 h-8 text-gray-400" />
+                                            )}
+                                            {uploadingLogo && (
+                                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+                                                    <Activity className="w-6 h-6 text-white animate-spin" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-lg">Restaurant Logo</h4>
+                                            <p className="text-sm text-gray-500 mb-3">Your logo will appear on menu and invoices</p>
+                                            <input
+                                                type="file"
+                                                id="logo-upload-resto"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleLogoUpload}
+                                            />
+                                            <button
+                                                onClick={() => document.getElementById('logo-upload-resto').click()}
+                                                disabled={uploadingLogo}
+                                                className="bg-orange-50 text-[#FD6941] px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-100 transition-colors flex items-center gap-2"
+                                            >
+                                                <Upload className="w-3 h-3" />
+                                                {uploadingLogo ? 'Uploading...' : 'Update Logo'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <InputGroup label="Restaurant Name" name="name" value={restoDetails.name} onChange={handleRestoChange} />
+                                    <InputGroup label="Cuisine Type" name="cuisineType" value={restoDetails.cuisineType} onChange={handleRestoChange} placeholder="e.g. Italian, Fast Food" />
+                                    <InputGroup label="Contact Number" name="contactNumber" value={restoDetails.contactNumber} onChange={handleRestoChange} />
+                                    <InputGroup label="Business Email" name="businessEmail" value={restoDetails.businessEmail} onChange={handleRestoChange} placeholder="business@example.com" />
+                                    <InputGroup label="GST Number" name="gstNumber" value={restoDetails.gstNumber} onChange={handleRestoChange} />
                                     <div>
                                         <label className="block text-xs font-bold text-gray-400 mb-2">Currency</label>
                                         <div className="relative">
@@ -238,7 +458,7 @@ const AdminSettings = () => {
                                         </div>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputGroup label="Address" name="city" value={profile.city} onChange={handleProfileChange} />
+                                        <InputGroup label="Address" name="address" value={restoDetails.address} onChange={handleRestoChange} />
                                     </div>
                                 </div>
                             </SectionCard>
@@ -247,8 +467,8 @@ const AdminSettings = () => {
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <InputGroup label="Latitude" defaultValue="23.0225" />
-                                            <InputGroup label="Longitude" defaultValue="72.5714" />
+                                            <InputGroup label="Latitude" name="lat" value={restoDetails.location.lat} onChange={(e) => handleNestedChange('location', 'lat', e.target.value)} />
+                                            <InputGroup label="Longitude" name="lng" value={restoDetails.location.lng} onChange={(e) => handleNestedChange('location', 'lng', e.target.value)} />
                                         </div>
                                         <p className="text-xs text-gray-500">
                                             Enter the precise coordinates of your restaurant to help customers seeking directions and for delivery optimization.
@@ -277,8 +497,8 @@ const AdminSettings = () => {
 
                             <SectionCard title="Operating Hours" icon={Clock}>
                                 <div className="grid grid-cols-2 gap-6">
-                                    <InputGroup label="Opening Time" type="time" defaultValue="09:00" />
-                                    <InputGroup label="Closing Time" type="time" defaultValue="23:00" />
+                                    <InputGroup label="Opening Time" type="time" name="open" value={restoDetails.operatingHours.open} onChange={(e) => handleNestedChange('hours', 'open', e.target.value)} />
+                                    <InputGroup label="Closing Time" type="time" name="close" value={restoDetails.operatingHours.close} onChange={(e) => handleNestedChange('hours', 'close', e.target.value)} />
                                 </div>
                             </SectionCard>
                         </div>
@@ -289,12 +509,32 @@ const AdminSettings = () => {
                         <div className="space-y-6">
                             <SectionCard title="Order Management" icon={ClipboardList}>
                                 <div className="space-y-4">
-                                    <ToggleItem title="Accept Orders" description="Enable receiving new orders from customers" />
-                                    <ToggleItem title="Auto-Accept Orders" description="Automatically confirm incoming orders" />
-                                    <ToggleItem title="Enable Order Cancellation" description="Allow customers to cancel orders within a window" />
+                                    <ToggleItem
+                                        title="Accept Orders"
+                                        description="Enable receiving new orders from customers"
+                                        enabled={orderPreferences.acceptOrders}
+                                        onClick={() => handleNestedChange('orders', 'acceptOrders', !orderPreferences.acceptOrders)}
+                                    />
+                                    <ToggleItem
+                                        title="Auto-Accept Orders"
+                                        description="Automatically confirm incoming orders"
+                                        enabled={orderPreferences.autoAccept}
+                                        onClick={() => handleNestedChange('orders', 'autoAccept', !orderPreferences.autoAccept)}
+                                    />
+                                    <ToggleItem
+                                        title="Enable Order Cancellation"
+                                        description="Allow customers to cancel orders within a window"
+                                        enabled={orderPreferences.cancelEnabled}
+                                        onClick={() => handleNestedChange('orders', 'cancelEnabled', !orderPreferences.cancelEnabled)}
+                                    />
                                 </div>
                                 <div className="mt-6 pt-6 border-t border-gray-100">
-                                    <InputGroup label="Average Preparation Time (Minutes)" defaultValue="25" />
+                                    <InputGroup
+                                        label="Average Preparation Time (Minutes)"
+                                        type="number"
+                                        value={orderPreferences.avgPrepTime}
+                                        onChange={(e) => handleNestedChange('orders', 'avgPrepTime', parseInt(e.target.value))}
+                                    />
                                 </div>
                             </SectionCard>
                         </div>
@@ -352,10 +592,10 @@ const AdminSettings = () => {
                         <div className="space-y-6">
                             <SectionCard title="Bank Account Details" icon={CreditCard}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputGroup label="Account Holder Name" defaultValue="EatGreet Pvt Ltd" />
-                                    <InputGroup label="Account Number" defaultValue="•••• •••• •••• 8899" />
-                                    <InputGroup label="Bank Name" defaultValue="HDFC Bank" />
-                                    <InputGroup label="IFSC / Swift Code" defaultValue="HDFC0001234" />
+                                    <InputGroup label="Account Holder Name" value={bankDetails.accountHolder} onChange={(e) => handleNestedChange('bank', 'accountHolder', e.target.value)} />
+                                    <InputGroup label="Account Number" value={bankDetails.accountNumber} onChange={(e) => handleNestedChange('bank', 'accountNumber', e.target.value)} />
+                                    <InputGroup label="Bank Name" value={bankDetails.bankName} onChange={(e) => handleNestedChange('bank', 'bankName', e.target.value)} />
+                                    <InputGroup label="IFSC / Swift Code" value={bankDetails.ifscCode} onChange={(e) => handleNestedChange('bank', 'ifscCode', e.target.value)} />
                                 </div>
                             </SectionCard>
 
@@ -365,7 +605,11 @@ const AdminSettings = () => {
                                         <h4 className="font-bold text-gray-800">Settlement Cycle</h4>
                                         <p className="text-xs text-gray-500">How often payouts are processed</p>
                                     </div>
-                                    <select className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-sm font-bold text-gray-700">
+                                    <select
+                                        value={bankDetails.settlementCycle}
+                                        onChange={(e) => handleNestedChange('bank', 'settlementCycle', e.target.value)}
+                                        className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-sm font-bold text-gray-700 outline-none"
+                                    >
                                         <option>Daily (T+1)</option>
                                         <option>Weekly (Monday)</option>
                                         <option>Monthly (1st)</option>
@@ -378,50 +622,106 @@ const AdminSettings = () => {
                     {/* Staff Management */}
                     {activeTab === 'staff' && (
                         <div className="space-y-6">
-                            <div className="flex justify-end">
-                                <button className="bg-[#FD6941] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 text-sm">
-                                    <Plus className="w-4 h-4" /> Add New Staff
-                                </button>
+                            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 mb-6">
+                                <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Plus className="w-4 h-4 text-[#FD6941]" /> Add New Staff
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <InputGroup placeholder="Name" value={newStaff.name} onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })} />
+                                    <InputGroup placeholder="Email" value={newStaff.email} onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })} />
+                                    <div className="relative">
+                                        <select
+                                            value={newStaff.role}
+                                            onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-gray-800 text-sm font-bold outline-none appearance-none"
+                                        >
+                                            <option>Chef</option>
+                                            <option>Captain</option>
+                                            <option>Waiter</option>
+                                            <option>Manager</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={handleAddStaff}
+                                        className="bg-[#FD6941] text-white rounded-xl font-bold py-3 hover:bg-orange-600 transition-colors"
+                                    >
+                                        Add Staff
+                                    </button>
+                                </div>
                             </div>
+
                             <div className="space-y-4">
-                                {[1, 2, 3].map((staff) => (
-                                    <div key={staff} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                                {staff.length > 0 ? staff.map((member) => (
+                                    <div key={member._id || member.name} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between group hover:border-orange-100 transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500">KS</div>
+                                            <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center font-bold text-[#FD6941]">
+                                                {member.name.charAt(0).toUpperCase()}
+                                            </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-800">Kitchen Staff {staff}</h4>
-                                                <p className="text-xs text-gray-500">Chef • Active</p>
+                                                <h4 className="font-bold text-gray-800">{member.name}</h4>
+                                                <p className="text-xs text-gray-500">{member.role} • {member.email || 'No email'} • {member.isActive ? 'Active' : 'Inactive'}</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button className="text-xs font-bold text-gray-400 hover:text-gray-600">Edit</button>
-                                            <button className="text-xs font-bold text-red-400 hover:text-red-500">Remove</button>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => handleRemoveStaff(member._id)}
+                                                className="text-xs font-bold text-red-400 hover:text-red-500 px-3 py-1 rounded-lg hover:bg-red-50"
+                                            >
+                                                Remove
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="text-center py-10 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                                        <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-gray-400 text-sm font-medium">No staff members added yet.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {/* Notification Preferences */}
-                    {activeTab === 'notifications' && (
-                        <div className="space-y-6">
-                            <SectionCard title="Alert Configuration" icon={Bell}>
-                                <div className="space-y-4">
-                                    <ToggleItem title="New Order Alerts" description="Sound and popup for incoming orders" />
-                                    <ToggleItem title="Order Status Updates" description="Notify when order status changes" />
-                                    <ToggleItem title="Low Stock Alerts" description="Warn when inventory is running low" />
-                                    <ToggleItem title="Payment Received" description="Notify on successful payment" />
-                                </div>
-                            </SectionCard>
-                        </div>
-                    )}
+                    {
+                        activeTab === 'notifications' && (
+                            <div className="space-y-6">
+                                <SectionCard title="Alert Configuration" icon={Bell}>
+                                    <div className="space-y-4">
+                                        <ToggleItem
+                                            title="New Order Alerts"
+                                            description="Sound and popup for incoming orders"
+                                            enabled={notificationPreferences.newOrder}
+                                            onClick={() => handleNestedChange('notifications', 'newOrder', !notificationPreferences.newOrder)}
+                                        />
+                                        <ToggleItem
+                                            title="Order Status Updates"
+                                            description="Notify when order status changes"
+                                            enabled={notificationPreferences.statusUpdates}
+                                            onClick={() => handleNestedChange('notifications', 'statusUpdates', !notificationPreferences.statusUpdates)}
+                                        />
+                                        <ToggleItem
+                                            title="Low Stock Alerts"
+                                            description="Warn when inventory is running low"
+                                            enabled={notificationPreferences.lowStock}
+                                            onClick={() => handleNestedChange('notifications', 'lowStock', !notificationPreferences.lowStock)}
+                                        />
+                                        <ToggleItem
+                                            title="Payment Received"
+                                            description="Notify on successful payment"
+                                            enabled={notificationPreferences.paymentReceived}
+                                            onClick={() => handleNestedChange('notifications', 'paymentReceived', !notificationPreferences.paymentReceived)}
+                                        />
+                                    </div>
+                                </SectionCard>
+                            </div>
+                        )
+                    }
 
 
 
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };
 
@@ -465,14 +765,17 @@ const InputGroup = ({ label, value, onChange, name, type = "text", placeholder }
     </div>
 );
 
-const ToggleItem = ({ title, description }) => (
+const ToggleItem = ({ title, description, enabled, onClick }) => (
     <div className="flex items-center justify-between py-2">
         <div>
             <h4 className="font-bold text-gray-800 text-sm">{title}</h4>
             <p className="text-xs text-gray-500">{description}</p>
         </div>
-        <div className="w-12 h-6 bg-[#FD6941] rounded-full relative cursor-pointer">
-            <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 shadow-sm"></div>
+        <div
+            onClick={onClick}
+            className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ${enabled ? 'bg-[#FD6941]' : 'bg-gray-200'}`}
+        >
+            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-200 ${enabled ? 'right-1' : 'left-1'}`}></div>
         </div>
     </div>
 );

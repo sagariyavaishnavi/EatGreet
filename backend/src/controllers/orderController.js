@@ -79,7 +79,7 @@ const createOrder = async (req, res) => {
                     // Reset item status to pending if more are ordered
                     existingItem.status = 'pending';
                 } else {
-                    existingOrder.items.push(newItem);
+                    existingOrder.items.push({ ...newItem, addedAt: new Date() });
                 }
             });
 
@@ -108,26 +108,25 @@ const createOrder = async (req, res) => {
         }
 
         // 4. CREATE NEW ORDER
-        const order = new Order({
-            customerInfo: resolvedCustomerInfo,
+        customerInfo: resolvedCustomerInfo,
             tableNumber,
-            items,
-            totalAmount,
-            instruction
-        });
+            items: items.map(item => ({ ...item, addedAt: new Date() })),
+                totalAmount,
+                instruction
+    });
 
-        const createdOrder = await order.save();
+    const createdOrder = await order.save();
 
-        const io = req.app.get('io');
-        if (io && req.tenantDbName) {
-            io.to(req.tenantDbName).emit('orderUpdated', { action: 'create', data: createdOrder });
-        }
-
-        res.status(201).json(createdOrder);
-    } catch (error) {
-        console.error("Order Creation Error:", error);
-        res.status(500).json({ message: `Server Error: ${error.message}` });
+    const io = req.app.get('io');
+    if (io && req.tenantDbName) {
+        io.to(req.tenantDbName).emit('orderUpdated', { action: 'create', data: createdOrder });
     }
+
+    res.status(201).json(createdOrder);
+} catch (error) {
+    console.error("Order Creation Error:", error);
+    res.status(500).json({ message: `Server Error: ${error.message}` });
+}
 };
 
 
@@ -144,7 +143,9 @@ const getOrders = async (req, res) => {
             filter['customerInfo.id'] = req.user._id.toString();
         }
 
-        const orders = await Order.find(filter).sort({ createdAt: -1 });
+        const orders = await Order.find(filter)
+            .populate('items.menuItem')
+            .sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });

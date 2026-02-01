@@ -136,6 +136,7 @@ const Menu = () => {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState(["All"]);
+    const [showFullForm, setShowFullForm] = useState(false);
 
     const [customerDetails, setCustomerDetails] = useState(() => {
         const saved = localStorage.getItem(`customer_details_${tenantName}`);
@@ -234,12 +235,10 @@ const Menu = () => {
                 setOrderPlaced(false);
                 setShowBill(false);
                 clearCart();
-                setCustomerDetails({
-                    name: user?.name || "",
-                    phone: user?.phone || "",
-                    tableNo: tableNo,
+                setCustomerDetails(prev => ({
+                    ...prev,
                     notes: ""
-                });
+                }));
             }, 3000);
         } catch (error) {
             console.error('Order Error:', error);
@@ -548,52 +547,88 @@ const Menu = () => {
 
                                     {/* Customer Details Form */}
                                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                                        <h3 className="text-sm text-gray-800 uppercase tracking-wider">Required Details</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="col-span-2">
-                                                <label className="block text-xs text-gray-400 mb-1.5">Full Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={customerDetails.name}
-                                                    onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
-                                                    placeholder="Enter your name"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-400 mb-1.5">Phone Number</label>
-                                                <input
-                                                    type="tel"
-                                                    value={customerDetails.phone}
-                                                    onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
-                                                    placeholder="+91..."
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-400 mb-1.5">Table No.</label>
-                                                <input
-                                                    type="text"
-                                                    value={customerDetails.tableNo}
-                                                    onChange={e => {
-                                                        const val = e.target.value;
-                                                        setCustomerDetails({ ...customerDetails, tableNo: val });
-                                                        setTableNo(val);
-                                                    }}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941]"
-                                                />
-                                            </div>
-                                            <div className="col-span-2">
-                                                <label className="block text-xs text-gray-400 mb-1.5">Cooking Instructions (Optional)</label>
-                                                <textarea
-                                                    rows="2"
-                                                    value={customerDetails.notes}
-                                                    onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] resize-none"
-                                                    placeholder="Less spicy, extra cheese..."
-                                                />
-                                            </div>
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-sm text-gray-800 uppercase tracking-wider">Order Details</h3>
+                                            {(customerDetails.name && customerDetails.phone) && (
+                                                <button
+                                                    onClick={() => setShowFullForm(!showFullForm)}
+                                                    className="text-[10px] font-bold text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
+                                                >
+                                                    {showFullForm ? "View Summary" : "Change Info"}
+                                                </button>
+                                            )}
                                         </div>
+
+                                        {!showFullForm && customerDetails.name && customerDetails.phone ? (
+                                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-0.5">Guest Information</p>
+                                                        <p className="font-bold text-gray-800">{customerDetails.name}</p>
+                                                        <p className="text-[10px] text-gray-400">{customerDetails.phone} • Table {customerDetails.tableNo}</p>
+                                                    </div>
+                                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#FD6941] shadow-sm border border-orange-50">
+                                                        <Star className="w-5 h-5 fill-current" />
+                                                    </div>
+                                                </div>
+                                                <div className="pt-3 border-t border-gray-200/50">
+                                                    <label className="block text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Cooking Instructions</label>
+                                                    <textarea
+                                                        rows="2"
+                                                        value={customerDetails.notes}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-white rounded-xl text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-orange-200 resize-none"
+                                                        placeholder="Any special requests? (Optional)"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Full Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerDetails.name}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
+                                                        placeholder="Enter your name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Phone</label>
+                                                    <input
+                                                        type="tel"
+                                                        value={customerDetails.phone}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
+                                                        placeholder="+91..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Table</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerDetails.tableNo}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setCustomerDetails({ ...customerDetails, tableNo: val });
+                                                            setTableNo(val);
+                                                        }}
+                                                        className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
+                                                    />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Special Requests</label>
+                                                    <textarea
+                                                        rows="2"
+                                                        value={customerDetails.notes}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent resize-none"
+                                                        placeholder="Less spicy, extra cheese..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Bill Summary */}

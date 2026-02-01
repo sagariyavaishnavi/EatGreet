@@ -7,11 +7,24 @@ const getRestaurantDetails = async (req, res) => {
     try {
         const user = await User.findById(req.user._id); // req.user is set by auth middleware
         if (user && user.restaurantDetails) {
-            // Transform to expected frontend format if needed, or return user structure
             res.json({
-                ...user.restaurantDetails,
-                name: user.restaurantName || user.name, // Mapping back
-                // Any other mappings
+                _id: user._id,
+                name: user.restaurantName || user.name,
+                description: user.restaurantDetails.description,
+                address: user.restaurantDetails.address,
+                contactNumber: user.restaurantDetails.contactNumber,
+                logo: user.restaurantDetails.logo,
+                gstNumber: user.restaurantDetails.gstNumber,
+                cuisineType: user.restaurantDetails.cuisineType,
+                businessEmail: user.restaurantDetails.businessEmail,
+                isActive: user.restaurantDetails.isActive ?? true,
+                currency: user.currency || 'INR',
+                location: user.restaurantDetails.location,
+                operatingHours: user.restaurantDetails.operatingHours,
+                orderPreferences: user.orderPreferences,
+                bankDetails: user.bankDetails,
+                notificationPreferences: user.notificationPreferences,
+                staff: user.staff
             });
         } else {
             res.status(404).json({ message: 'Restaurant details not set' });
@@ -38,11 +51,57 @@ const updateRestaurantDetails = async (req, res) => {
             user.restaurantDetails.address = req.body.address || user.restaurantDetails.address;
             user.restaurantDetails.contactNumber = req.body.contactNumber || user.restaurantDetails.contactNumber;
             user.restaurantDetails.logo = req.body.logo || user.restaurantDetails.logo;
+            user.restaurantDetails.gstNumber = req.body.gstNumber || user.restaurantDetails.gstNumber;
+            user.restaurantDetails.cuisineType = req.body.cuisineType || user.restaurantDetails.cuisineType;
+            user.restaurantDetails.businessEmail = req.body.businessEmail || user.restaurantDetails.businessEmail;
+
+            // New Fields
+            if (req.body.location) {
+                user.restaurantDetails.location = {
+                    lat: req.body.location.lat ?? user.restaurantDetails.location.lat,
+                    lng: req.body.location.lng ?? user.restaurantDetails.location.lng
+                };
+            }
+            if (req.body.operatingHours) {
+                user.restaurantDetails.operatingHours = {
+                    open: req.body.operatingHours.open || user.restaurantDetails.operatingHours.open,
+                    close: req.body.operatingHours.close || user.restaurantDetails.operatingHours.close
+                };
+            }
+            if (req.body.orderPreferences) {
+                user.orderPreferences = {
+                    acceptOrders: req.body.orderPreferences.acceptOrders ?? user.orderPreferences.acceptOrders,
+                    autoAccept: req.body.orderPreferences.autoAccept ?? user.orderPreferences.autoAccept,
+                    cancelEnabled: req.body.orderPreferences.cancelEnabled ?? user.orderPreferences.cancelEnabled,
+                    avgPrepTime: req.body.orderPreferences.avgPrepTime ?? user.orderPreferences.avgPrepTime
+                };
+            }
+            if (req.body.bankDetails) {
+                user.bankDetails = {
+                    accountHolder: req.body.bankDetails.accountHolder || user.bankDetails.accountHolder,
+                    accountNumber: req.body.bankDetails.accountNumber || user.bankDetails.accountNumber,
+                    bankName: req.body.bankDetails.bankName || user.bankDetails.bankName,
+                    ifscCode: req.body.bankDetails.ifscCode || user.bankDetails.ifscCode,
+                    settlementCycle: req.body.bankDetails.settlementCycle || user.bankDetails.settlementCycle
+                };
+            }
+            if (req.body.notificationPreferences) {
+                user.notificationPreferences = {
+                    newOrder: req.body.notificationPreferences.newOrder ?? user.notificationPreferences.newOrder,
+                    statusUpdates: req.body.notificationPreferences.statusUpdates ?? user.notificationPreferences.statusUpdates,
+                    lowStock: req.body.notificationPreferences.lowStock ?? user.notificationPreferences.lowStock,
+                    paymentReceived: req.body.notificationPreferences.paymentReceived ?? user.notificationPreferences.paymentReceived
+                };
+            }
+            if (req.body.staff) {
+                user.staff = req.body.staff;
+            }
 
             const updatedUser = await user.save();
             res.json({
                 ...updatedUser.restaurantDetails,
-                name: updatedUser.restaurantName
+                name: updatedUser.restaurantName,
+                restaurantDetails: updatedUser.restaurantDetails // Explicitly send nested object too
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -72,6 +131,7 @@ const createRestaurant = async (req, res) => {
             address: req.body.address,
             contactNumber: req.body.contactNumber,
             logo: req.body.logo,
+            gstNumber: req.body.gstNumber,
             isActive: true,
             joinedAt: new Date()
         };
@@ -100,6 +160,9 @@ const getRestaurantPublic = async (req, res) => {
             address: user.restaurantDetails?.address,
             contactNumber: user.restaurantDetails?.contactNumber,
             logo: user.restaurantDetails?.logo,
+            gstNumber: user.restaurantDetails?.gstNumber,
+            cuisineType: user.restaurantDetails?.cuisineType,
+            businessEmail: user.restaurantDetails?.businessEmail,
             isActive: user.restaurantDetails?.isActive ?? true,
             currency: user.currency || 'INR'
         };
@@ -136,6 +199,9 @@ const getRestaurantByName = async (req, res) => {
             address: user.restaurantDetails?.address,
             contactNumber: user.restaurantDetails?.contactNumber,
             logo: user.restaurantDetails?.logo,
+            gstNumber: user.restaurantDetails?.gstNumber,
+            cuisineType: user.restaurantDetails?.cuisineType,
+            businessEmail: user.restaurantDetails?.businessEmail,
             isActive: user.restaurantDetails?.isActive ?? true,
             currency: user.currency || 'INR'
         };

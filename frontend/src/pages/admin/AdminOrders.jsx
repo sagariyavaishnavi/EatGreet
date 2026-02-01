@@ -45,6 +45,7 @@ const AdminOrders = () => {
     const [loading, setLoading] = useState(true);
     const { currencySymbol } = useSettings();
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedItems, setSelectedItems] = useState([]); // Array of indices
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
     const [searchQuery, setSearchQuery] = useState('');
     const [historyFilter, setHistoryFilter] = useState('today'); // 'today', 'yesterday', 'lastWeek'
@@ -139,14 +140,28 @@ const AdminOrders = () => {
         return () => clearInterval(timer);
     }, []);
 
+    const getMinPrepTime = (order) => {
+        if (!order || !order.items || order.items.length === 0) return 15;
+
+        const prepTimes = order.items.map(item => {
+            const timeStr = item.menuItem?.time || "15 min";
+            const numbers = timeStr.match(/\d+/g);
+            if (!numbers || numbers.length === 0) return 15;
+            return Math.min(...numbers.map(Number));
+        });
+
+        const minTime = Math.min(...prepTimes);
+        return minTime > 0 ? minTime : 15;
+    };
+
     useEffect(() => {
         orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status)).forEach(order => {
             const currentItemCount = order.items?.length || 0;
             const prevItemCount = lastItemCounts.current[order._id] || 0;
 
             if (!timers[order._id] || currentItemCount > prevItemCount) {
-                // Always start/reset to exactly 15 minutes (900 seconds) for new orders or when items are added
-                setTimers(prev => ({ ...prev, [order._id]: 900 }));
+                const prepMinutes = getMinPrepTime(order);
+                setTimers(prev => ({ ...prev, [order._id]: prepMinutes * 60 }));
                 lastItemCounts.current[order._id] = currentItemCount;
             }
         });
@@ -199,6 +214,39 @@ const AdminOrders = () => {
         if (!createdAt) return 'N/A';
         const date = new Date(createdAt);
         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+
+    const toggleItemSelection = (idx) => {
+        setSelectedItems(prev =>
+            prev.includes(idx)
+                ? prev.filter(i => i !== idx)
+                : [...prev, idx]
+        );
+    };
+
+    const handleBulkItemStatusUpdate = async (status) => {
+        if (!selectedOrder || selectedItems.length === 0) return;
+
+        const loadToast = toast.loading(`Updating ${selectedItems.length} items to ${status}...`);
+        try {
+            await Promise.all(
+                selectedItems.map(idx => orderAPI.updateItemStatus(selectedOrder._id, idx, status))
+            );
+
+            toast.success(`Items marked as ${status}`, { id: loadToast });
+            setSelectedItems([]);
+            fetchOrders();
+
+            // Update local state for immediate feedback
+            const updatedItems = [...selectedOrder.items];
+            selectedItems.forEach(idx => {
+                updatedItems[idx].status = status;
+            });
+            setSelectedOrder({ ...selectedOrder, items: updatedItems });
+        } catch (error) {
+            console.error('Bulk update failed', error);
+            toast.error('Failed to update some items', { id: loadToast });
+        }
     };
 
     const handleUpdateItemStatus = async (orderId, itemIdx, status) => {
@@ -265,9 +313,10 @@ const AdminOrders = () => {
             await orderAPI.updateStatus(orderId, newStatus);
             toast.success('Order status updated!', { id: loadToast });
 
-            // If marking as preparing, reset the timer to 15 minutes
+            // If marking as preparing, reset the timer to calculated dynamic time
             if (newStatus === 'preparing') {
-                setTimers(prev => ({ ...prev, [orderId]: 900 }));
+                const prepMinutes = getMinPrepTime(orders.find(o => o._id === orderId));
+                setTimers(prev => ({ ...prev, [orderId]: prepMinutes * 60 }));
             }
 
             fetchOrders();
@@ -322,9 +371,10 @@ const AdminOrders = () => {
                 <body>
                     <div class="header">
                         <div class="restaurant-name">${restaurant?.name || 'EatGreet Restaurant'}</div>
-                        <div class="restaurant-info">${restaurant?.restaurantDetails?.address || 'Restaurant Address'}</div>
-                        ${restaurant?.restaurantDetails?.contactNumber ? `<div class="restaurant-info">Tel: ${restaurant.restaurantDetails.contactNumber}</div>` : ''}
-                        <div class="restaurant-info">GST - 24AAYFT4562G1ZO</div>
+                        <div class="restaurant-info font-bold" style="margin-top: 5px;">${restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</div>
+                        ${(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) ? `<div class="restaurant-info">Email: ${restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</div>` : ''}
+                        ${(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) ? `<div class="restaurant-info">GST: ${restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</div>` : ''}
+                        ${(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) ? `<div class="restaurant-info" style="margin-top: 2px;">Tel: ${restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</div>` : ''}
                     </div>
 
                     <div class="divider"></div>
@@ -594,7 +644,10 @@ const AdminOrders = () => {
                 <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
                     <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl relative flex flex-col border border-gray-100 overflow-hidden">
                         <button
-                            onClick={() => setSelectedOrder(null)}
+                            onClick={() => {
+                                setSelectedOrder(null);
+                                setSelectedItems([]);
+                            }}
                             className="absolute top-4 sm:top-6 right-4 sm:right-6 w-8 h-8 sm:w-10 sm:h-10 bg-white/80 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
                         >
                             <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -613,12 +666,17 @@ const AdminOrders = () => {
                                         </button>
 
                                         <div className="text-center mb-6">
-                                            <h2 className="text-xl font-bold uppercase mb-1 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
-                                            <p className="text-[12px] leading-tight mb-0.5">{restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
-                                            {restaurant?.restaurantDetails?.contactNumber && (
-                                                <p className="text-[12px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">Tel: {restaurant.restaurantDetails.contactNumber}</p>
+                                            <h2 className="text-xl font-bold uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
+                                            <p className="text-[12px] leading-tight mb-1 font-bold italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
+                                            {(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) && (
+                                                <p className="text-[11px] mb-0.5 opacity-80">Email: {restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</p>
                                             )}
-                                            <p className="text-[12px]">GST - 24AAYFT4562G1ZO</p>
+                                            {(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) && (
+                                                <p className="text-[11px] font-bold">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
+                                            )}
+                                            {(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) && (
+                                                <p className="text-[11px] text-gray-500 mt-1">Tel: {restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</p>
+                                            )}
                                         </div>
 
                                         <div className="border-t border-dashed border-black my-4"></div>
@@ -755,11 +813,39 @@ const AdminOrders = () => {
                                         </div>
 
                                         <div className="space-y-4">
-                                            <h3 className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4">Order Items</h3>
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="text-[10px] text-gray-400 uppercase font-bold tracking-widest px-1">Order Items</h3>
+                                                {selectedOrder.status !== 'completed' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (selectedItems.length === selectedOrder.items?.length) {
+                                                                setSelectedItems([]);
+                                                            } else {
+                                                                setSelectedItems(selectedOrder.items?.map((_, i) => i) || []);
+                                                            }
+                                                        }}
+                                                        className="text-[10px] font-bold text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
+                                                    >
+                                                        {selectedItems.length === selectedOrder.items?.length ? 'Deselect All' : 'Select All'}
+                                                    </button>
+                                                )}
+                                            </div>
                                             <div className="space-y-4">
                                                 {(selectedOrder.items || []).map((item, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => selectedOrder.status !== 'completed' && toggleItemSelection(idx)}
+                                                        className={`flex justify-between items-center p-4 rounded-2xl border transition-all cursor-pointer ${selectedItems.includes(idx)
+                                                            ? 'bg-orange-50/50 border-orange-200'
+                                                            : 'bg-gray-50 border-transparent hover:border-gray-200'
+                                                            }`}
+                                                    >
                                                         <div className="flex items-center gap-4">
+                                                            {selectedOrder.status !== 'completed' && (
+                                                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${selectedItems.includes(idx) ? 'bg-[#FD6941] border-[#FD6941]' : 'bg-white border-gray-200'}`}>
+                                                                    {selectedItems.includes(idx) && <X className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
+                                                                </div>
+                                                            )}
                                                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-gray-400 border border-gray-100 shadow-sm">
                                                                 {item.quantity}x
                                                             </div>
@@ -801,16 +887,33 @@ const AdminOrders = () => {
                                         </div>
 
                                         <div className="flex gap-4">
-                                            <button
-                                                onClick={() => {
-                                                    const nextStatus = selectedOrder.status === 'ready' ? 'completed' : getNextStatus(selectedOrder.status);
-                                                    updateOrderStatus(selectedOrder._id, nextStatus);
-                                                    setSelectedOrder(null);
-                                                }}
-                                                className={`flex-1 ${selectedOrder.status === 'ready' ? 'bg-[#FD6941]' : getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
-                                            >
-                                                {selectedOrder.status === 'ready' ? 'Complete Order' : getNextStatusLabel(selectedOrder.status)}
-                                            </button>
+                                            {selectedItems.length > 0 ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleBulkItemStatusUpdate('preparing')}
+                                                        className="flex-1 bg-yellow-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                    >
+                                                        Mark Preparing ({selectedItems.length})
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleBulkItemStatusUpdate('ready')}
+                                                        className="flex-1 bg-green-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                    >
+                                                        Mark Ready ({selectedItems.length})
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        const nextStatus = selectedOrder.status === 'ready' ? 'completed' : getNextStatus(selectedOrder.status);
+                                                        updateOrderStatus(selectedOrder._id, nextStatus);
+                                                        setSelectedOrder(null);
+                                                    }}
+                                                    className={`flex-1 ${selectedOrder.status === 'ready' ? 'bg-[#FD6941]' : getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
+                                                >
+                                                    {selectedOrder.status === 'ready' ? 'Complete Order' : getNextStatusLabel(selectedOrder.status)}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

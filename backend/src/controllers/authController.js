@@ -114,6 +114,7 @@ const updateUserProfile = async (req, res) => {
             user.city = req.body.city || user.city;
             user.restaurantName = req.body.restaurantName || user.restaurantName;
             user.currency = req.body.currency || user.currency;
+            user.profilePicture = req.body.profilePicture || user.profilePicture;
 
             if (req.body.password) {
                 user.password = req.body.password;
@@ -130,6 +131,8 @@ const updateUserProfile = async (req, res) => {
                 city: updatedUser.city,
                 restaurantName: updatedUser.restaurantName,
                 currency: updatedUser.currency,
+                profilePicture: updatedUser.profilePicture,
+                restaurantDetails: updatedUser.restaurantDetails,
                 token: generateToken(updatedUser._id),
             });
         } else {

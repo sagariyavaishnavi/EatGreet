@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     city: { type: String },
     restaurantName: { type: String }, // Added to derive tenant database name
     currency: { type: String, default: 'INR' },
+    profilePicture: { type: String },
 
     // Embed Restaurant Details (Merged 'resto_names' into Users)
     restaurantDetails: {
@@ -17,9 +18,49 @@ const userSchema = new mongoose.Schema({
         address: { type: String },
         contactNumber: { type: String },
         logo: { type: String },
+        gstNumber: { type: String },
+        cuisineType: { type: String },
+        businessEmail: { type: String },
+        location: {
+            lat: { type: Number, default: 23.0225 },
+            lng: { type: Number, default: 72.5714 }
+        },
+        operatingHours: {
+            open: { type: String, default: '09:00' },
+            close: { type: String, default: '23:00' }
+        },
         isActive: { type: Boolean, default: true },
         joinedAt: { type: Date, default: Date.now }
     },
+
+    orderPreferences: {
+        acceptOrders: { type: Boolean, default: true },
+        autoAccept: { type: Boolean, default: false },
+        cancelEnabled: { type: Boolean, default: true },
+        avgPrepTime: { type: Number, default: 25 }
+    },
+
+    bankDetails: {
+        accountHolder: { type: String },
+        accountNumber: { type: String },
+        bankName: { type: String },
+        ifscCode: { type: String },
+        settlementCycle: { type: String, default: 'Daily (T+1)' }
+    },
+
+    notificationPreferences: {
+        newOrder: { type: Boolean, default: true },
+        statusUpdates: { type: Boolean, default: true },
+        lowStock: { type: Boolean, default: true },
+        paymentReceived: { type: Boolean, default: true }
+    },
+
+    staff: [{
+        name: { type: String },
+        role: { type: String },
+        email: { type: String },
+        isActive: { type: Boolean, default: true }
+    }],
 
     // Embed Payments (Merged 'payments' into Users)
     payments: [{

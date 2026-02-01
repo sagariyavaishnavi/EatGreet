@@ -92,20 +92,25 @@ const AdminOrders = () => {
     const fetchOrders = async () => {
         try {
             const { data } = await orderAPI.getOrders();
-            setOrders(data || []);
+            const orderList = data || [];
+            setOrders(orderList);
+
+            // Filter for today's orders
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayOrders = orderList.filter(o => new Date(o.createdAt) >= today);
 
             // Calculate stats from orders
             const newStats = {
-                total: data.length,
-                pending: data.filter(o => o.status === 'pending').length,
-                preparing: data.filter(o => o.status === 'preparing').length,
-                ready: data.filter(o => o.status === 'ready').length,
-                completed: data.filter(o => o.status === 'completed').length
+                total: todayOrders.length,
+                pending: orderList.filter(o => o.status === 'pending').length,
+                preparing: orderList.filter(o => o.status === 'preparing').length,
+                ready: orderList.filter(o => o.status === 'ready').length,
+                completed: todayOrders.filter(o => o.status === 'completed').length
             };
             setStats(newStats);
         } catch (error) {
             console.error('Failed to fetch orders', error);
-            // toast.error('Failed to update orders');
         } finally {
             setLoading(false);
         }

@@ -17,12 +17,12 @@ api.interceptors.request.use(
         if (user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
         }
-        // Add restaurantName for tenant resolution, but don't override if already set
+        // Add restaurantName for tenant resolution, but don't override if already set in params or headers
         if (user.restaurantName) {
-          if (!config.headers['x-restaurant-name']) {
+          if (!config.headers['x-restaurant-name'] && !config.params?.restaurantName) {
             config.headers['x-restaurant-name'] = user.restaurantName;
           }
-          if (!config.params?.restaurantName) {
+          if (!config.params?.restaurantName && !config.headers['x-restaurant-name']) {
             config.params = { ...config.params, restaurantName: user.restaurantName };
           }
         }
@@ -72,7 +72,7 @@ export const categoryAPI = {
 };
 
 export const orderAPI = {
-  getOrders: () => api.get('/orders'),
+  getOrders: (params) => api.get('/orders', { params }),
   create: (orderData) => api.post('/orders', orderData),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
   updateItemStatus: (orderId, itemIdx, status) => api.put(`/orders/${orderId}/items/${itemIdx}/status`, { status }),

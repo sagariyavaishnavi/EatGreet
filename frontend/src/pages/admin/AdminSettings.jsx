@@ -9,8 +9,13 @@ import { authAPI, restaurantAPI, uploadAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
 
 const AdminSettings = () => {
-    const { user, updateSettings } = useSettings();
+    const settings = useSettings();
+    const user = settings?.user;
+    const updateSettings = settings?.updateSettings;
     const [activeTab, setActiveTab] = useState('profile');
+    const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
+
+    if (!settings) return null;
 
     const [profile, setProfile] = useState({
         name: user?.name || '',

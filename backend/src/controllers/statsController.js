@@ -1,28 +1,26 @@
 const getAdminStats = async (req, res) => {
     try {
-        const { Order, MenuItem } = req.tenantModels;
+        const { Order } = req.tenantModels;
 
-        // Get total orders
-        const totalOrders = await Order.countDocuments();
+        // Run all stats queries in parallel
+        const [totalOrders, activeOrders, dineInCount, revenueData] = await Promise.all([
+            Order.countDocuments(),
+            Order.countDocuments({ status: { $in: ['pending', 'preparing', 'ready'] } }),
+            Order.countDocuments({ tableNumber: { $exists: true, $ne: '' } }),
+            Order.aggregate([
+                { $match: { status: 'completed' } },
+                { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
+            ])
+        ]);
 
-        // Get active orders (pending, preparing, ready)
-        const activeOrders = await Order.countDocuments({
-            status: { $in: ['pending', 'preparing', 'ready'] }
-        });
-
-        // Get dine-in orders count
-        const dineIn = await Order.countDocuments({ tableNumber: { $exists: true, $ne: '' } });
-
-        // Get total revenue
-        const orders = await Order.find({ status: 'completed' });
-        const revenue = orders.reduce((acc, order) => acc + (order.totalAmount || 0), 0);
+        const revenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
 
         res.json({
             totalOrders,
             activeOrders,
             revenue,
-            dineIn,
-            takeaway: totalOrders - dineIn
+            dineIn: dineInCount,
+            takeaway: totalOrders - dineInCount
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

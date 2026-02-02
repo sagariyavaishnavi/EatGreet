@@ -108,25 +108,26 @@ const createOrder = async (req, res) => {
         }
 
         // 4. CREATE NEW ORDER
-        customerInfo: resolvedCustomerInfo,
+        const order = new Order({
+            customerInfo: resolvedCustomerInfo,
             tableNumber,
             items: items.map(item => ({ ...item, addedAt: new Date() })),
-                totalAmount,
-                instruction
-    });
+            totalAmount,
+            instruction
+        });
 
-    const createdOrder = await order.save();
+        const createdOrder = await order.save();
 
-    const io = req.app.get('io');
-    if (io && req.tenantDbName) {
-        io.to(req.tenantDbName).emit('orderUpdated', { action: 'create', data: createdOrder });
+        const io = req.app.get('io');
+        if (io && req.tenantDbName) {
+            io.to(req.tenantDbName).emit('orderUpdated', { action: 'create', data: createdOrder });
+        }
+
+        res.status(201).json(createdOrder);
+    } catch (error) {
+        console.error("Order Creation Error:", error);
+        res.status(500).json({ message: `Server Error: ${error.message}` });
     }
-
-    res.status(201).json(createdOrder);
-} catch (error) {
-    console.error("Order Creation Error:", error);
-    res.status(500).json({ message: `Server Error: ${error.message}` });
-}
 };
 
 
@@ -136,16 +137,31 @@ const createOrder = async (req, res) => {
 const getOrders = async (req, res) => {
     try {
         const { Order } = req.tenantModels;
+        const { status, limit } = req.query;
 
-        // If Customer, filter by their ID (stored in customerInfo.id)
+        // Base filter
         let filter = {};
         if (req.user && req.user.role === 'customer') {
             filter['customerInfo.id'] = req.user._id.toString();
         }
 
-        const orders = await Order.find(filter)
-            .populate('items.menuItem')
-            .sort({ createdAt: -1 });
+        // Add status filter if provided
+        if (status) {
+            if (status.includes(',')) {
+                filter.status = { $in: status.split(',') };
+            } else {
+                filter.status = status;
+            }
+        }
+
+        let query = Order.find(filter).sort({ createdAt: -1 });
+
+        // Add limit if provided
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const orders = await query.populate('items.menuItem');
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });

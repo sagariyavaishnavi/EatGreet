@@ -23,10 +23,13 @@ export default function Login() {
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('userRole', userData.role);
 
-            if (userData.role === 'super-admin') {
+            // Direct navigation to skip redundant redirects
+            if (userData.role === 'super-admin' || userData.role === 'superadmin') {
                 navigate('/super-admin');
-            } else if (userData.role === 'admin') {
-                navigate('/admin');
+            } else if (userData.role === 'admin' || userData.role === 'kitchen' || userData.role === 'manager') {
+                const restaurantSlug = userData.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+                const base = userData.role === 'kitchen' ? 'kitchen' : 'admin';
+                navigate(`/${restaurantSlug}/${base}`);
             } else {
                 navigate('/admin');
             }

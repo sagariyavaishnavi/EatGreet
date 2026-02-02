@@ -41,7 +41,10 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Socket.io Setup
 const io = new Server(server, {
-    cors: corsOptions
+    cors: corsOptions,
+    pingTimeout: 60000, // 60s
+    pingInterval: 25000, // 25s
+    connectTimeout: 45000 // 45s
 });
 
 // Store io instance in app to use in controllers

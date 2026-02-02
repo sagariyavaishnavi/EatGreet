@@ -18,9 +18,10 @@ export const SocketProvider = ({ children }) => {
 
         const newSocket = io(socketUrl, {
             withCredentials: true,
-            transports: ['websocket', 'polling'], // Try websocket first
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
+            transports: ['polling', 'websocket'], // Start with polling then upgrade to websocket
+            reconnectionAttempts: 10,
+            reconnectionDelay: 2000,
+            timeout: 20000, // Increase connection timeout to 20s
         });
 
         setSocket(newSocket);

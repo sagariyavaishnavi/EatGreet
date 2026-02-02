@@ -28,13 +28,13 @@ const resolveTenant = async (req, res, next) => {
 
         // --- RESOLVE FROM REQUEST (Public or GET requests) ---
         if (!restaurantName) {
-            // 1. Get from Custom Header (Explicit overrides used by frontend for specific flows)
-            if (req.headers['x-restaurant-name']) {
-                restaurantName = req.headers['x-restaurant-name'];
-            }
-            // 2. Get from Query Params (Public/Customer URLs)
-            else if (req.query.restaurantName) {
+            // 1. Get from Query Params (Public/Customer URLs) - HIGHEST PRIORITY for GET
+            if (req.query.restaurantName) {
                 restaurantName = req.query.restaurantName;
+            }
+            // 2. Get from Custom Header (Explicit overrides used by frontend for specific flows)
+            else if (req.headers['x-restaurant-name']) {
+                restaurantName = req.headers['x-restaurant-name'];
             }
             // 3. Get from Body
             else if (req.body && req.body.restaurantName) {

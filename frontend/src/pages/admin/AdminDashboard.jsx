@@ -109,12 +109,16 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // 1. Fetch Key Stats
-                const statsRes = await statsAPI.getAdminStats();
+                // Fetch stats and orders in parallel for better performance
+                const [statsRes, ordersRes] = await Promise.all([
+                    statsAPI.getAdminStats(),
+                    orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 10 })
+                ]);
+
+                // 1. Process Stats
                 setStats(statsRes.data);
 
-                // 2. Fetch Orders for Feed and Graph
-                const ordersRes = await orderAPI.getOrders();
+                // 2. Process Orders for Feed and Graph
                 const orders = ordersRes.data || [];
 
                 // Process Feed (Latest 3 Active Orders)
@@ -131,13 +135,8 @@ const AdminDashboard = () => {
                 setFeedItems(activeOrdersList);
 
                 // Process Sales Graph (Last 7 Days Revenue)
-                // Simplified: Just showing dummy or derived data if possible
-                // For now, mapping days of week from orders would be complex without backend aggregation
-                // So we will initialize a basic structure or empty if no orders
                 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 const graphData = days.map(d => ({ name: d, value: 0 }));
-                // Populate if we had real date data, but strictly speaking 'salesData' was static. 
-                // We'll leave it 0-filled or basic for now to avoid 'local data' rule violation.
                 setSalesData(graphData);
 
             } catch (error) {

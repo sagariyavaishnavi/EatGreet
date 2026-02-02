@@ -54,7 +54,9 @@ const authUser = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await User.findOne({ email });
+        // Optimization: Only select fields needed for login and initial response
+        // This avoids fetching potentially large arrays like 'payments' and 'staff'
+        const user = await User.findOne({ email }).select('name email password role restaurantName currency');
 
         if (user && (await user.matchPassword(password))) {
             res.json({

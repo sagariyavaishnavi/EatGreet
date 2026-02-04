@@ -476,9 +476,9 @@ const AdminMenu = () => {
     return (
         <div className="space-y-6 relative">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Menu Management</h1>
-                <div className="flex gap-3">
+            <div className="flex justify-between items-center gap-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Menu Management</h1>
+                <div className="flex gap-2 items-center">
                     <button
                         onClick={() => {
                             if (restaurantName) {
@@ -488,37 +488,38 @@ const AdminMenu = () => {
                                 toast.error("Restaurant details not loaded yet");
                             }
                         }}
-                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                        className="w-10 h-10 shrink-0 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-full flex items-center justify-center transition-colors shadow-sm"
+                        title="Preview"
                     >
-                        <Eye className="w-4 h-4" />
-                        Preview
+                        <Eye className="w-5 h-5" />
                     </button>
                     <button
                         onClick={openModal}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
                     >
                         <Plus className="w-5 h-5" />
-                        Add Item
+                        <span className="hidden sm:inline">Add Item</span>
+                        <span className="sm:hidden">Add</span>
                     </button>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
 
                 {/* Filter and Search Bar */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <h2 className="text-xl font-bold text-gray-800">All Menu</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+                    <h2 className="text-xl font-bold text-gray-800 w-full sm:w-auto">All Menu</h2>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-64">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-64">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                             <input
                                 type="text"
                                 placeholder="Search..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
+                                className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
                             />
                         </div>
 
@@ -565,7 +566,7 @@ const AdminMenu = () => {
                 </div>
 
                 {/* Menu Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
 
                     {/* Menu Items */}
                     {/* Loading State */}
@@ -593,97 +594,98 @@ const AdminMenu = () => {
                         const categoryName = catObj ? catObj.name : 'Uncategorized';
 
                         return (
-                            <div key={item._id} className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
+                            <div key={item._id} className="bg-white rounded-3xl p-3 sm:p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative flex flex-row sm:flex-col gap-4 sm:gap-0 h-44 sm:h-auto overflow-hidden">
                                 {/* Image Container */}
-                                <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
+                                <div className="relative w-32 sm:w-full h-full sm:h-48 shrink-0 rounded-2xl sm:rounded-2xl overflow-hidden sm:mb-4 bg-gray-50">
                                     <MediaSlider
                                         media={item.media && item.media.length > 0 ? item.media : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     {/* Availability Tag */}
-                                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                                        <div className={`w-2 h-2 rounded-full ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                        <span className="text-[10px] font-bold text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
+                                    <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 sm:gap-1.5 shadow-sm">
+                                        <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
                                     </div>
 
                                     {/* Veg/Non-Veg Symbol - Top Left */}
-                                    <div className="absolute top-3 left-3 z-10 w-5 h-5 bg-white/90 backdrop-blur-sm rounded-md shadow-sm p-0.5">
+                                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 w-4 h-4 sm:w-5 sm:h-5 bg-white/90 backdrop-blur-sm rounded-md shadow-sm p-0.5">
                                         <img
                                             src={item.isVeg ? vegIcon : nonVegIcon}
                                             alt={item.isVeg ? "Veg" : "Non-Veg"}
                                             className="w-full h-full object-contain"
                                         />
                                     </div>
-
                                 </div>
 
                                 {/* Content */}
-                                <div className="space-y-2 px-1">
-                                    <span className="text-[10px] font-bold text-[#FD6941] tracking-wider uppercase">
-                                        {categoryName}
-                                    </span>
+                                <div className="flex-1 flex flex-col justify-between py-1 sm:px-1">
+                                    <div className="space-y-1 sm:space-y-2">
+                                        <span className="text-[8px] sm:text-[10px] font-bold text-[#FD6941] tracking-wider uppercase">
+                                            {categoryName}
+                                        </span>
 
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-bold text-gray-800 text-lg leading-tight w-2/3">{item.name || 'Unnamed'}</h3>
-                                        <span className="font-bold text-xl text-gray-800">{currencySymbol}{item.price || 0}</span>
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-bold text-gray-800 text-sm sm:text-lg leading-tight w-2/3 line-clamp-2 sm:line-clamp-none">{item.name || 'Unnamed'}</h3>
+                                            <span className="font-bold text-base sm:text-xl text-gray-800">{currencySymbol}{item.price || 0}</span>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[8px] sm:text-[10px] font-bold text-gray-400">
+                                            <span>{item.calories || '- kcal'}</span>
+                                            <span>•</span>
+                                            <span>{item.time || '- min'}</span>
+
+                                            {/* Dietary Labels in Description */}
+                                            {item.labels && item.labels.length > 0 && (
+                                                <div className="hidden sm:flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
+                                                    {item.labels.map(label => dietaryIcons[label] && (
+                                                        <img
+                                                            key={label}
+                                                            src={dietaryIcons[label]}
+                                                            alt={label}
+                                                            title={label}
+                                                            className="w-3.5 h-3.5"
+                                                            style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed line-clamp-2 h-7 sm:h-10">
+                                            {item.description}
+                                        </p>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold text-gray-400">
-                                        <span>{item.calories || '- kcal'}</span>
-                                        <span>•</span>
-                                        <span>{item.time || '- min'}</span>
+                                    {/* Actions Footer */}
+                                    <div className="mt-2 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-50 flex items-center justify-between">
+                                        {/* Toggle Switch */}
+                                        <div>
+                                            <label className="flex items-center cursor-pointer relative scale-75 origin-left sm:scale-100">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={item.isAvailable}
+                                                    onChange={() => toggleStatus(item._id)}
+                                                />
+                                                <div className="block w-12 h-6 sm:w-14 sm:h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
+                                                <div className={`absolute left-0.5 top-0.5 bg-white w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                            </label>
+                                        </div>
 
-                                        {/* Dietary Labels in Description */}
-                                        {item.labels && item.labels.length > 0 && (
-                                            <div className="flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
-                                                {item.labels.map(label => dietaryIcons[label] && (
-                                                    <img
-                                                        key={label}
-                                                        src={dietaryIcons[label]}
-                                                        alt={label}
-                                                        title={label}
-                                                        className="w-3.5 h-3.5"
-                                                        style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
-                                                    />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 h-10">
-                                        {item.description}
-                                    </p>
-                                </div>
-
-                                {/* Actions Footer */}
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
-                                    {/* Toggle Switch */}
-                                    <div>
-                                        <label className="flex items-center cursor-pointer relative">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={item.isAvailable}
-                                                onChange={() => toggleStatus(item._id)}
-                                            />
-                                            <div className="block w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
-                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                        </label>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEdit(item)}
-                                            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item._id)}
-                                            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex gap-1.5 sm:gap-2">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                                            >
+                                                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item._id)}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -693,9 +695,9 @@ const AdminMenu = () => {
                     {/* Add New Item Card */}
                     <div
                         onClick={openModal}
-                        className="border-2 border-dashed border-gray-200 rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[200px] sm:min-h-[350px] group bg-gray-50"
+                        className="border-2 border-dashed border-gray-200 rounded-3xl p-4 sm:p-8 flex flex-row sm:flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-44 sm:min-h-[350px] group bg-gray-50 gap-4"
                     >
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
                             <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#FD6941]" />
                         </div>
                         <h3 className="font-bold text-base sm:text-lg text-gray-800">Add New Item</h3>

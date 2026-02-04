@@ -155,41 +155,45 @@ const AdminCategory = () => {
     return (
         <div className="space-y-6 relative">
             {/* Header Section */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Category Management</h1>
-                <button
-                    onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
-                    className="bg-[#FD6941] hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 transition-colors shadow-sm"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add Category
-                </button>
+            {/* Header Section */}
+            <div className="flex justify-between items-center gap-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Category Management</h1>
+                <div className="flex gap-2 items-center">
+                    <button
+                        onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span className="hidden sm:inline">Add Category</span>
+                        <span className="sm:hidden">Add</span>
+                    </button>
+                </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
 
                 {/* Search & Toolbar */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <h2 className="text-xl font-bold text-gray-800">All Categories</h2>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+                    <h2 className="text-xl font-bold text-gray-800 w-full sm:w-auto">All Categories</h2>
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-80">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                             <input
                                 type="text"
-                                placeholder="Search categories..."
+                                placeholder="Search..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
+                                className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
                             />
                         </div>
-                        <button className="p-3 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
-                            <Filter className="w-5 h-5" />
+                        <button className="p-2.5 sm:p-3 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
+                            <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {/* Category Cards */}
                     {categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => {
                         // Find the icon component based on the label, or default to Utensils
@@ -199,14 +203,14 @@ const AdminCategory = () => {
                         return (
                             <div key={category._id}
                                 onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
-                                className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:border-[#FD6941]">
+                                className="bg-white rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-row sm:flex-col h-40 sm:h-full cursor-pointer hover:border-[#FD6941] gap-4 sm:gap-0 relative overflow-hidden">
 
-                                {/* Icon Mode Layout */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className={`w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center`}>
-                                        <DisplayIcon className="w-7 h-7" />
+                                {/* Top/Left: Icon */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start mb-0 sm:mb-6 shrink-0">
+                                    <div className={`w-14 h-14 sm:w-14 sm:h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center shrink-0`}>
+                                        <DisplayIcon className="w-7 h-7 sm:w-7 sm:h-7" />
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="hidden sm:flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
                                             className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
@@ -223,47 +227,65 @@ const AdminCategory = () => {
                                 </div>
 
                                 {/* Middle: Title */}
-                                <div className="mb-8">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{category.name}</h3>
-                                    <p className="text-gray-400 text-sm font-medium">{category.count || 0} Items Available</p>
+                                <div className="flex-1 flex flex-col justify-between py-1 sm:mb-8 sm:block">
+                                    <div>
+                                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-0.5 sm:mb-1 line-clamp-1">{category.name}</h3>
+                                        <p className="text-gray-400 text-[10px] sm:text-sm font-medium">{category.count || 0} Items Available</p>
+                                    </div>
+
+                                    {/* Mobile Edit/Delete - hidden on desktop */}
+                                    <div className="flex sm:hidden gap-1.5 mt-2">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
+                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* Bottom: Status & Toggle */}
-                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
+                                {/* Bottom/Right: Status & Toggle */}
+                                <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between mt-0 sm:mt-auto pt-0 sm:pt-4 border-t-0 sm:border-t border-gray-50 gap-2">
+                                    <div className="flex items-center gap-2 sm:gap-2">
+                                        <span className="hidden sm:inline text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                                             {category.status || 'INACTIVE'}
                                         </span>
                                     </div>
 
-                                    <label
-                                        className="flex items-center cursor-pointer"
+                                    <div
+                                        className="scale-75 sm:scale-100 origin-right sm:origin-center"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <div className="relative">
+                                        <label className="relative inline-block w-14 h-8 cursor-pointer">
                                             <input
                                                 type="checkbox"
-                                                className="sr-only"
+                                                className="sr-only peer"
                                                 checked={category.status === 'ACTIVE'}
                                                 onChange={() => toggleStatus(category._id)}
                                             />
-                                            <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ${category.status === 'ACTIVE' ? 'bg-[#FD6941]' : 'bg-gray-300'}`}></div>
+                                            <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
                                             <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                        </div>
-                                    </label>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        ); // Closing the return statement of map
+                        );
                     })}
 
                     {/* Add New Category Card */}
                     <div
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
-                        className="border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all min-h-[150px] sm:min-h-[200px] group bg-gray-50/50"
+                        className="border-2 border-dashed border-gray-200 rounded-3xl flex flex-row sm:flex-col items-center justify-center p-4 sm:p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-40 sm:min-h-[220px] group bg-gray-50/50 gap-4"
                     >
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-[#FD6941]" />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                            <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-[#FD6941]" />
                         </div>
                         <h3 className="text-base sm:text-lg font-bold text-gray-700">Add New Category</h3>
                     </div>

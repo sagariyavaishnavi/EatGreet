@@ -227,86 +227,99 @@ const AdminTable = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Table Management</h1>
-
-                <button
-                    onClick={addTable}
-                    className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold shadow-sm hover:bg-orange-600 transition-colors flex items-center gap-2"
-                >
-                    <Plus className="w-4 h-4" /> Add Table
-                </button>
+            <div className="flex justify-between items-center gap-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Table Management</h1>
+                <div className="flex gap-2 items-center">
+                    <button
+                        onClick={addTable}
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span className="hidden sm:inline">Add Table</span>
+                        <span className="sm:hidden">Add</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                 {tables.map(table => {
                     const url = getTableUrl(table);
                     const tableOrder = activeOrders.find(o => String(o.tableNumber) === String(table));
                     const isLive = !!tableOrder;
 
                     return (
-                        <div key={table} className={`bg-white rounded-[2rem] p-5 aspect-square shadow-sm border ${isLive ? 'border-[#FD6941]' : 'border-gray-100'} flex flex-col justify-between group hover:border-[#FD6941]/30 transition-all relative overflow-hidden`}>
-                            {isLive && (
-                                <div className="absolute top-0 right-0">
-                                    <div className="bg-[#FD6941] text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
-                                        <Activity className="w-3 h-3 animate-pulse" /> LIVE
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-start">
-                                <div className={`w-12 h-12 ${isLive ? 'bg-orange-100' : 'bg-orange-50'} rounded-2xl flex items-center justify-center text-[#FD6941] font-bold text-xl`}>
-                                    {table}
-                                </div>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {isLive && (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedTableOrder(tableOrder);
-                                                    setIsPreviewOpen(true);
-                                                }}
-                                                className="p-2 bg-orange-50 text-[#FD6941] rounded-xl transition-colors"
-                                                title="View Live Order"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setInvoiceOrder(tableOrder);
-                                                    setIsInvoicePreviewOpen(true);
-                                                }}
-                                                className="p-2 bg-green-50 text-green-500 rounded-xl transition-colors"
-                                                title="View Invoice Preview"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                            </button>
-                                        </>
-                                    )}
-                                    <button
-                                        onClick={() => setQrModal({ isOpen: true, url, tableNo: table })}
-                                        className="p-2 bg-blue-50 text-blue-500 rounded-xl transition-colors"
-                                        title="Generate QR Code"
-                                    >
-                                        <QrCode className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-center justify-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-[#FD6941] animate-pulse' : 'bg-gray-200'}`}></div>
-                                <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isLive ? 'text-[#FD6941]' : 'text-gray-300'}`}>
-                                    {isLive ? 'Occupied' : 'Available'}
-                                </p>
-                            </div>
-
-                            <div className="flex justify-between items-center mt-auto">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Table</div>
+                        <div key={table}
+                            className={`bg-white rounded-[2.5rem] p-6 aspect-square shadow-sm border-2 transition-all group relative flex flex-col items-center justify-center text-center overflow-hidden
+                                ${isLive ? 'border-[#FD6941] bg-orange-50/30' : 'border-gray-100 hover:border-gray-200'}
+                            `}
+                        >
+                            {/* Top Actions Bar - Delete only on Right */}
+                            <div className="absolute top-4 right-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
                                 <button
                                     onClick={() => removeTable(table)}
-                                    className="p-2 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-xl transition-colors"
+                                    className="p-1.5 bg-white text-gray-300 hover:text-red-500 rounded-lg shadow-sm border border-gray-100 transition-colors"
+                                    title="Delete Table"
                                 >
                                     <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Center Content */}
+                            <div className="flex flex-col items-center">
+                                <span className={`text-6xl sm:text-7xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
+                                    {table}
+                                </span>
+                                <div className={`px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
+                                    ${isLive
+                                        ? 'bg-[#FD6941] text-white border-[#FD6941] shadow-orange-100'
+                                        : 'bg-gray-50 text-gray-400 border-gray-100'}
+                                `}>
+                                    {isLive ? 'Occupied' : 'Vacant'}
+                                </div>
+                            </div>
+
+                            {/* Bottom Actions Bar (Brand Styled - Clean Dock) */}
+                            <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-2">
+                                <button
+                                    onClick={() => setQrModal({ isOpen: true, url, tableNo: table })}
+                                    className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
+                                    title="Scan QR"
+                                >
+                                    <QrCode className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (isLive) {
+                                            setSelectedTableOrder(tableOrder);
+                                            setIsPreviewOpen(true);
+                                        }
+                                    }}
+                                    disabled={!isLive}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm group/icon
+                                        ${isLive
+                                            ? 'bg-gray-900 text-white border-gray-900 hover:bg-black hover:scale-110 active:scale-95'
+                                            : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
+                                    `}
+                                    title="Preview Order"
+                                >
+                                    <Eye className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (isLive) {
+                                            setInvoiceOrder(tableOrder);
+                                            setIsInvoicePreviewOpen(true);
+                                        }
+                                    }}
+                                    disabled={!isLive}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm group/icon
+                                        ${isLive
+                                            ? 'bg-orange-50 text-[#FD6941] border-[#FD6941]/20 hover:bg-[#FD6941] hover:text-white hover:scale-110 active:scale-95'
+                                            : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
+                                    `}
+                                    title="Invoice"
+                                >
+                                    <FileText className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
                                 </button>
                             </div>
                         </div>
@@ -317,134 +330,79 @@ const AdminTable = () => {
             {/* Live Order Preview Modal */}
             {
                 isPreviewOpen && selectedTableOrder && createPortal(
-                    <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Table {selectedTableOrder.tableNumber} - Live Order</h2>
-                                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" /> Started {new Date(selectedTableOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setInvoiceOrder(selectedTableOrder);
-                                            setIsInvoicePreviewOpen(true);
-                                        }}
-                                        className="w-10 h-10 bg-white shadow-sm border border-gray-100 rounded-full flex items-center justify-center text-green-500 hover:text-green-600 transition-colors"
-                                        title="View Invoice Preview"
-                                    >
-                                        <FileText className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => setIsPreviewOpen(false)}
-                                        className="w-10 h-10 bg-white shadow-sm border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
+                    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="bg-white w-full max-w-md rounded-[3.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                            {/* Premium Modal Header */}
+                            <div className="relative p-8 pb-4 text-center">
+                                <button
+                                    onClick={() => setIsPreviewOpen(false)}
+                                    className="absolute right-8 top-8 w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors border border-gray-100"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+
+                                <h2 className="text-4xl font-black font-urbanist text-gray-900 tracking-tighter mt-4">Table {selectedTableOrder.tableNumber}</h2>
+                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Live Order View</p>
                             </div>
 
-                            <div className="p-6">
-                                <div className="flex items-center gap-4 mb-6 p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#FD6941] shadow-sm">
+                            <div className="p-8 space-y-6">
+                                {/* Customer Card - Cleaner */}
+                                <div className="flex items-center gap-4 p-5 bg-gray-50/80 rounded-[2.5rem] border border-gray-100">
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
                                         <User className="w-6 h-6" />
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">Customer</p>
-                                        <p className="text-lg font-bold text-gray-900">{selectedTableOrder.customerInfo?.name || 'Guest'}</p>
-                                    </div>
-                                    <div className="ml-auto">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight ${selectedTableOrder.status === 'pending' ? 'bg-red-100 text-red-600' :
-                                            selectedTableOrder.status === 'preparing' ? 'bg-yellow-100 text-yellow-600' :
-                                                'bg-green-100 text-green-600'
-                                            }`}>
-                                            {selectedTableOrder.status}
-                                        </span>
+                                    <div className="flex-1">
+                                        <p className="text-gray-400 text-[9px] font-black uppercase tracking-wider mb-0.5">Ordering Person</p>
+                                        <p className="text-lg font-bold text-gray-900 font-urbanist leading-tight">{selectedTableOrder.customerInfo?.name || 'Guest User'}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest px-1">Order Items</p>
+                                {/* Order Items List */}
+                                <div className="space-y-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
                                     {selectedTableOrder.items?.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center font-bold text-gray-400 border border-gray-100 text-xs">
+                                        <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 group hover:border-orange-200 transition-all">
+                                            <div className="flex items-center gap-4 min-w-0">
+                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-[#FD6941] font-black text-sm">
                                                     {item.quantity}x
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className={`text-[10px] font-bold uppercase ${item.status === 'ready' ? 'text-green-500' :
-                                                            item.status === 'preparing' ? 'text-yellow-500' :
-                                                                item.status === 'served' ? 'text-blue-500' :
-                                                                    item.status === 'completed' ? 'text-gray-400' :
-                                                                        'text-red-400'
-                                                            }`}>
-                                                            {item.status || 'pending'}
-                                                        </p>
-                                                        {item.status === 'ready' && (
-                                                            <button
-                                                                onClick={async (e) => {
-                                                                    e.stopPropagation();
-                                                                    try {
-                                                                        await orderAPI.updateItemStatus(selectedTableOrder._id, idx, 'served');
-                                                                        fetchActiveOrders();
-                                                                        // Update the selected order in local state too
-                                                                        const updatedItems = [...selectedTableOrder.items];
-                                                                        updatedItems[idx].status = 'served';
-                                                                        setSelectedTableOrder({ ...selectedTableOrder, items: updatedItems });
-                                                                        toast.success(`${item.name} served!`);
-                                                                    } catch (err) {
-                                                                        toast.error("Failed to serve item");
-                                                                    }
-                                                                }}
-                                                                className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-md font-bold hover:bg-green-600 transition-colors"
-                                                            >
-                                                                Mark Served
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                                                    <p className={`text-[10px] font-black uppercase ${item.status === 'ready' ? 'text-green-500' : 'text-gray-400'}`}>
+                                                        {item.status || 'Pending'}
+                                                    </p>
                                                 </div>
                                             </div>
+                                            <p className="text-sm font-bold text-gray-900 font-urbanist">{currencySymbol}{item.price}</p>
                                         </div>
                                     ))}
                                 </div>
 
-                                <div className="bg-gray-900 rounded-2xl p-5 text-white flex justify-between items-center shadow-lg mb-4">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1 opacity-60">Bill Amount</p>
-                                        <p className="text-2xl font-bold">{currencySymbol}{selectedTableOrder.totalAmount?.toFixed(2) || (selectedTableOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05).toFixed(2)}</p>
+                                {/* Total Amount Section - LIGHT THEME */}
+                                <div className="p-8 bg-gray-50 rounded-[3rem] text-gray-900 flex justify-between items-center border border-gray-100 relative overflow-hidden group shadow-sm">
+                                    <div className="relative z-10">
+                                        <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.1em] mb-1.5">Grand Total Amount</p>
+                                        <p className="text-4xl sm:text-5xl font-bold font-urbanist tracking-tighter">
+                                            {currencySymbol}{selectedTableOrder.totalAmount?.toFixed(2) || (selectedTableOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05).toFixed(2)}
+                                        </p>
                                     </div>
-                                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                                        <UtensilsCrossed className="w-5 h-5 text-white opacity-40" />
+                                    <div className="relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                                        <span className="text-3xl text-gray-300 font-light font-urbanist">#</span>
                                     </div>
+                                    {/* Subtle Ambient Glow */}
+                                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-100/30 blur-[60px] rounded-full" />
                                 </div>
 
+                                {/* Action Button */}
                                 <button
-                                    disabled={!selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) && selectedTableOrder.status !== 'ready'}
                                     onClick={() => handleCompleteOrder(selectedTableOrder)}
-                                    className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
-                                        ? 'bg-[#FD6941] text-white hover:bg-orange-600 hover:shadow-orange-200'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                                        }`}
+                                    className={`w-full py-5 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
+                                        ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
+                                            ? 'bg-gray-900 text-white hover:bg-black hover:scale-[1.02] shadow-gray-200'
+                                            : 'bg-gray-100 text-gray-300 cursor-not-allowed'}
+                                    `}
                                 >
-                                    <div className={`p-1.5 rounded-lg ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready') ? 'bg-white/20' : 'bg-gray-300'}`}>
-                                        <UtensilsCrossed className={`w-5 h-5 ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready') ? 'text-white' : 'text-gray-400'}`} />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-sm font-bold">
-                                            {selectedTableOrder.items?.some(it => ['pending', 'preparing'].includes(it.status)) ? 'Complete Ready Items' : 'Complete Order'}
-                                        </p>
-                                        <p className="text-[10px] uppercase tracking-wider">
-                                            {selectedTableOrder.items?.some(it => ['pending', 'preparing'].includes(it.status))
-                                                ? 'Settles ready items & keeps pending live'
-                                                : 'Settles table & frees up space'}
-                                        </p>
-                                    </div>
+                                    Finish & Settle Order
                                 </button>
-
                             </div>
                         </div>
                     </div>,

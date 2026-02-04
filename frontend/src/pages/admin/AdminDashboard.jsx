@@ -15,18 +15,18 @@ import { useSettings } from '../../context/SettingsContext';
 const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => {
     const { currencySymbol } = useSettings();
     return (
-        <div className="bg-white rounded-[2rem] px-6 py-4 flex items-center h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
-                    <img src={icon} alt="icon" className="w-6 h-6 opacity-80" />
+        <div className="bg-white rounded-[1.2rem] sm:rounded-[2rem] px-4 sm:px-6 py-3 sm:py-4 flex items-center h-[100px] sm:h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
+            <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
+                    <img src={icon} alt="icon" className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" />
                 </div>
                 <div className="flex flex-col">
-                    <h3 className="text-[32px] font-medium text-black leading-none flex items-baseline">
-                        {isCurrency && <span className="text-[24px] mr-1 font-medium">{currencySymbol}</span>}
+                    <h3 className="text-[20px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline">
+                        {isCurrency && <span className="text-[16px] sm:text-[20px] lg:text-[24px] mr-0.5 sm:mr-1 font-medium">{currencySymbol}</span>}
                         {value}
-                        {subValue && <span className="text-[24px] text-gray-300 font-medium ml-1">/{subValue}</span>}
+                        {subValue && <span className="text-[16px] sm:text-[20px] lg:text-[24px] text-gray-300 font-medium ml-0.5 sm:ml-1">/{subValue}</span>}
                     </h3>
-                    <p className="text-[14px] text-gray-400 mt-2 font-medium tracking-tight">{label}</p>
+                    <p className="text-[11px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight truncate max-w-[80px] sm:max-w-full">{label}</p>
                 </div>
             </div>
         </div>
@@ -148,46 +148,52 @@ const AdminDashboard = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-transparent px-4 py-8 space-y-4">
+        <div className="min-h-screen bg-transparent px-2 sm:px-4 py-4 sm:py-8 space-y-4 md:space-y-6">
             <div className="space-y-1">
-                <h1 className="text-[46px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
-                <p className="text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
+                <h1 className="text-[32px] sm:text-[40px] lg:text-[46px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
+                <p className="text-[16px] sm:text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
             </div>
 
-            {/* Main Content Grid - 2 Columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Main Content Grid - 1 Column on Mobile, 12 on Desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
                 {/* Left Column (Span 8) */}
-                <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
                     {/* Top Row: KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <DashboardCard value={stats.activeOrders || 0} label="Total Active Orders" icon={activityIcon} />
-                        <DashboardCard value={stats.dineIn || 0} subValue={stats.totalOrders || 0} label="Dine-in / Total" icon={tableIcon} />
-                        <DashboardCard value={(stats.revenue || 0).toLocaleString()} label="Total Revenue" icon={revenueIcon} isCurrency />
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+                        <div className="col-span-1">
+                            <DashboardCard value={stats.activeOrders || 0} label="Active Orders" icon={activityIcon} />
+                        </div>
+                        <div className="col-span-1">
+                            <DashboardCard value={stats.dineIn || 0} subValue={stats.totalOrders || 0} label="Dine-in/Total" icon={tableIcon} />
+                        </div>
+                        <div className="col-span-2 md:col-span-1">
+                            <DashboardCard value={(stats.revenue || 0).toLocaleString()} label="Total Revenue" icon={revenueIcon} isCurrency />
+                        </div>
                     </div>
 
                     {/* Middle Row: Sales Analytics */}
-                    <div className="bg-white rounded-[2.8rem] p-8 relative shadow-sm h-[740px] flex flex-col border border-transparent">
-                        <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-[24px] font-medium text-black">Sales Analytics</h2>
-                            <button className="flex items-center gap-2 px-8 py-2.5 rounded-full border border-gray-100 text-[16px] font-medium text-gray-500 hover:bg-gray-50">
+                    <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 relative shadow-sm h-[400px] sm:h-[600px] lg:h-[740px] flex flex-col border border-transparent">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-2">
+                            <h2 className="text-[20px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
+                            <button className="flex items-center gap-2 px-4 sm:px-8 py-2 rounded-full border border-gray-100 text-[14px] sm:text-[16px] font-medium text-gray-500 hover:bg-gray-50">
                                 Today <ChevronDown className="w-4 h-4 text-gray-400" />
                             </button>
                         </div>
 
                         <div className="flex-1 w-full relative">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={salesData} margin={{ top: 0, right: 30, left: 10, bottom: 40 }}>
+                                <BarChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 16, fontWeight: 700, fontFamily: 'Urbanist' }}
-                                        dy={30}
+                                        tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 700, fontFamily: 'Urbanist' }}
+                                        dy={10}
                                     />
                                     <Tooltip cursor={false} content={() => null} />
                                     <Bar
                                         dataKey="value"
-                                        shape={<CustomPillBar />}
+                                        shape={(props) => <CustomPillBar {...props} pillWidth={window.innerWidth < 640 ? 24 : 46} />}
                                     />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -196,32 +202,34 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Right Column (Span 4) */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
+                <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
                     {/* Time Status Gauge */}
-                    <TimeStatusGauge />
+                    <div className="hidden sm:block">
+                        <TimeStatusGauge />
+                    </div>
 
                     {/* Live Active Feed */}
-                    <div className="bg-white rounded-[2.8rem] p-8 shadow-sm flex flex-col h-[560px] border border-transparent">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-[24px] font-medium text-black">Live Active Feed</h2>
-                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100">
-                                <ArrowUpRight className="w-6 h-6 text-gray-400" />
+                    <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 shadow-sm flex flex-col h-[400px] sm:h-[500px] lg:h-[560px] border border-transparent">
+                        <div className="flex justify-between items-center mb-4 sm:mb-6">
+                            <h2 className="text-[20px] sm:text-[24px] font-medium text-black">Live Feed</h2>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100">
+                                <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                             </div>
                         </div>
 
-                        <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-3 sm:space-y-6 flex-1 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar no-scrollbar">
                             {feedItems.length > 0 ? feedItems.map(item => (
-                                <div key={item.id} className="flex items-center justify-between p-5 bg-[#F9FAFB] rounded-[2.2rem] border border-gray-50 hover:bg-white hover:border-gray-100 transition-all cursor-pointer">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-[72px] h-[72px] rounded-full bg-[#F3F5F7] flex items-center justify-center shrink-0">
-                                            <img src={item.icon} alt={item.title} className="w-9 h-9 opacity-70" />
+                                <div key={item.id} className="flex items-center justify-between p-3 sm:p-5 bg-[#F9FAFB] rounded-[1.2rem] sm:rounded-[2.2rem] border border-gray-50 hover:bg-white hover:border-gray-100 transition-all cursor-pointer">
+                                    <div className="flex items-center gap-3 sm:gap-5">
+                                        <div className="w-12 h-12 sm:w-[72px] sm:h-[72px] rounded-full bg-[#F3F5F7] flex items-center justify-center shrink-0">
+                                            <img src={item.icon} alt={item.title} className="w-6 h-6 sm:w-9 sm:h-9 opacity-70" />
                                         </div>
                                         <div className="flex flex-col">
-                                            <h4 className="font-bold text-black text-[18px] leading-tight">{item.title}</h4>
-                                            <p className="text-[15px] text-gray-400 font-bold mt-0.5 truncate max-w-[120px]">{item.sub}</p>
+                                            <h4 className="font-bold text-black text-[15px] sm:text-[18px] leading-tight">{item.title}</h4>
+                                            <p className="text-[12px] sm:text-[15px] text-gray-400 font-bold mt-0.5 truncate max-w-[100px] sm:max-w-[120px]">{item.sub}</p>
                                         </div>
                                     </div>
-                                    <button className="bg-black text-white text-[14px] font-black px-7 py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95">
+                                    <button className="bg-black text-white text-[12px] sm:text-[14px] font-black px-4 sm:px-7 py-2 sm:py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95">
                                         View
                                     </button>
                                 </div>

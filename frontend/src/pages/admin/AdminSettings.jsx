@@ -247,56 +247,57 @@ const AdminSettings = () => {
     };
 
     return (
-        <div className="flex flex-col lg:flex-row gap-8 pb-10 max-w-7xl mx-auto h-[calc(100vh-6rem)]">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 pb-10 max-w-7xl mx-auto h-auto lg:h-[calc(100vh-6rem)]">
 
-            {/* Sidebar */}
-            <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
-                <div>
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">Management</h3>
-                    <div className="space-y-1">
+            {/* Sidebar / Tabs */}
+            <div className="w-full lg:w-64 flex-shrink-0">
+                <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar pb-2 lg:pb-0 gap-2 lg:gap-6">
+                    <div className="hidden lg:block lg:mb-4 px-2">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Management</h3>
+                    </div>
+                    <div className="flex lg:flex-col gap-1 sm:gap-2 min-w-max lg:min-w-0">
                         <SidebarItem
                             icon={User}
-                            label="Admin Profile"
+                            label="Profile"
                             isActive={activeTab === 'profile'}
                             onClick={() => setActiveTab('profile')}
                         />
                         <SidebarItem
                             icon={Store}
-                            label="Restaurant Details"
+                            label="Restaurant"
                             isActive={activeTab === 'restaurant'}
                             onClick={() => setActiveTab('restaurant')}
                         />
                         <SidebarItem
                             icon={ClipboardList}
-                            label="Order Preferences"
+                            label="Orders"
                             isActive={activeTab === 'orders'}
                             onClick={() => setActiveTab('orders')}
                         />
                         <SidebarItem
                             icon={CreditCard}
-                            label="Subscription Info"
+                            label="Subscription"
                             isActive={activeTab === 'subscription'}
                             onClick={() => setActiveTab('subscription')}
                         />
                         <SidebarItem
                             icon={FileText}
-                            label="Payment & Settlement"
+                            label="Payments"
                             isActive={activeTab === 'settlement'}
                             onClick={() => setActiveTab('settlement')}
                         />
                         <SidebarItem
                             icon={Users}
-                            label="Staff Management"
+                            label="Staff"
                             isActive={activeTab === 'staff'}
                             onClick={() => setActiveTab('staff')}
                         />
                         <SidebarItem
                             icon={Bell}
-                            label="Notifications"
+                            label="Alerts"
                             isActive={activeTab === 'notifications'}
                             onClick={() => setActiveTab('notifications')}
                         />
-
                     </div>
                 </div>
             </div>
@@ -305,9 +306,9 @@ const AdminSettings = () => {
             <div className="flex-1 flex flex-col gap-6 overflow-hidden">
 
                 {/* Header */}
-                <div className="flex items-center justify-between shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
                             {activeTab === 'profile' && 'Admin Profile'}
                             {activeTab === 'restaurant' && 'Restaurant Details'}
                             {activeTab === 'orders' && 'Order Preferences'}
@@ -316,7 +317,7 @@ const AdminSettings = () => {
                             {activeTab === 'staff' && 'Staff Management'}
                             {activeTab === 'notifications' && 'Notification Preferences'}
                         </h1>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-500 text-xs sm:text-sm">
                             {activeTab === 'profile' && 'Manage your personal account details'}
                             {activeTab === 'restaurant' && 'Update restaurant information and branding'}
                             {activeTab === 'orders' && 'Configure order acceptance and timing'}
@@ -329,7 +330,7 @@ const AdminSettings = () => {
                     {activeTab !== 'subscription' && (
                         <button
                             onClick={handleSaveProfile}
-                            className="bg-[#FD6941] hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-sm"
+                            className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm w-full sm:w-auto text-sm sm:text-base"
                         >
                             <Save className="w-4 h-4" />
                             Save Changes
@@ -745,12 +746,12 @@ const SidebarItem = ({ icon: Icon, label, isActive, onClick }) => (
 );
 
 const SectionCard = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-orange-50 rounded-xl text-[#FD6941]">
-                <Icon className="w-6 h-6" />
+    <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="p-2 sm:p-3 bg-orange-50 rounded-xl text-[#FD6941]">
+                <Icon className="w-5 h-5 sm:w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-gray-800">{title}</h3>
         </div>
         {children}
     </div>

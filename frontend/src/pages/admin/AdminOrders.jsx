@@ -1,4 +1,4 @@
-import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer, FileText, User, Calendar, Hash } from 'lucide-react';
+import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer, FileText, User, Calendar, Hash, Search, RefreshCw } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import PropTypes from 'prop-types';
 import clockIcon from '../../assets/clock.svg';
@@ -450,49 +450,49 @@ const AdminOrders = () => {
     }
 
     return (
-        <div className="space-y-8">
-            <div className="mb-8">
-                <h1 className="text-3xl text-gray-800">Orders</h1>
-                <p className="text-gray-500">Manage your restaurant active orders</p>
+        <div className="space-y-4 sm:space-y-8 px-1 sm:px-0">
+            <div className="mb-4 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Orders</h1>
+                <p className="text-gray-500 text-sm sm:text-base">Manage your restaurant active orders</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-32 sm:h-40 relative group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                             <img src={clockIcon} alt="Pending" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl text-gray-900">{stats.pending}</span>
+                        <span className="text-2xl sm:text-4xl text-gray-900">{stats.pending}</span>
                     </div>
-                    <p className="text-gray-400 text-sm pl-1">Total Pending Orders</p>
+                    <p className="text-gray-400 text-[10px] sm:text-sm pl-1">Pending Orders</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-32 sm:h-40 relative group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                             <img src={chefHatIcon} alt="Preparing" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl text-gray-900">{stats.preparing}</span>
+                        <span className="text-2xl sm:text-4xl text-gray-900">{stats.preparing}</span>
                     </div>
-                    <p className="text-gray-400 text-sm pl-1">Preparing Orders</p>
+                    <p className="text-gray-400 text-[10px] sm:text-sm pl-1">Preparing</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-40 relative group hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-center h-32 sm:h-40 relative group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                             <img src={bellIcon} alt="Ready" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-4xl text-gray-900">{stats.ready}</span>
+                        <span className="text-2xl sm:text-4xl text-gray-900">{stats.ready}</span>
                     </div>
-                    <p className="text-gray-400 text-sm pl-1">Ready to serve</p>
+                    <p className="text-gray-400 text-[10px] sm:text-sm pl-1">Ready to serve</p>
                 </div>
 
-                <div className={`p-6 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden bg-gradient-to-b from-white to-[#F9FAFB] flex flex-col justify-between h-40 lg:col-span-2`}>
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-gray-800 text-lg font-medium leading-tight max-w-[50%]">Today Orders Complete</p>
+                <div className={`p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden bg-gradient-to-b from-white to-[#F9FAFB] flex flex-col justify-between h-32 sm:h-40 col-span-2 lg:col-span-2`}>
+                    <div className="flex justify-between items-start mb-1 sm:mb-2">
+                        <p className="text-gray-800 text-sm sm:text-lg font-medium leading-tight max-w-[50%]">Total Complete</p>
                         <div className="text-right">
-                            <span className="text-4xl font-normal text-gray-900">{stats.completed}</span>
-                            <span className="text-2xl font-light text-gray-400">/{stats.total}</span>
+                            <span className="text-2xl sm:text-4xl font-normal text-gray-900">{stats.completed}</span>
+                            <span className="text-lg sm:text-2xl font-light text-gray-400">/{stats.total}</span>
                         </div>
                     </div>
 
@@ -523,25 +523,26 @@ const AdminOrders = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl text-gray-800">Active Order</h2>
-                    <div className="flex gap-4">
-                        <div className="relative">
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 shadow-sm border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Active Orders</h2>
+                    <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-80">
                             <input
                                 type="text"
-                                placeholder="Search by Table, ID..."
+                                placeholder="Search by order ID, table or name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-4 py-3 bg-gray-50 rounded-full text-sm w-80 focus:outline-none focus:ring-1 focus:ring-primary placeholder-gray-400"
+                                className="pl-11 pr-4 py-2.5 sm:py-3 bg-gray-50 rounded-full text-sm w-full focus:outline-none focus:ring-1 focus:ring-[#FD6941] placeholder-gray-400 border border-transparent focus:bg-white transition-all"
                             />
-                            <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         </div>
                         <button
                             onClick={fetchOrders}
-                            className={`p-3 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition-colors ${loading ? 'animate-spin' : ''}`}
+                            className={`p-2.5 sm:p-3 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition-colors ${loading ? 'opacity-50' : ''}`}
+                            title="Refresh Orders"
                         >
-                            <Loader2 className="w-5 h-5" />
+                            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
                 </div>
@@ -553,24 +554,46 @@ const AdminOrders = () => {
                             const statusBgColor = order.status === 'pending' ? 'bg-red-100' : order.status === 'preparing' ? 'bg-yellow-100' : 'bg-green-100';
 
                             return (
-                                <div key={order._id} className="relative flex items-center justify-between p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100">
-                                            <UtensilsCrossed className={`w-5 h-5 ${statusTextColor}`} />
+                                <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-white rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-2 sm:gap-4 group">
+                                    {/* Left: Info */}
+                                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                        <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
+                                            <UtensilsCrossed className={`w-5 h-5 sm:w-6 sm:h-6 ${statusTextColor}`} />
                                         </div>
-                                        <div>
-                                            <h4 className="text-gray-900 text-lg">Order #{order._id.slice(-4)}</h4>
-                                            <p className="text-sm text-gray-500"><span className="capitalize">{order.tableNumber ? `Table #${order.tableNumber}` : 'Takeaway'}</span></p>
+                                        <div className="min-w-0">
+                                            <h4 className="text-gray-900 text-sm sm:text-lg font-bold font-urbanist truncate">#{order._id.slice(-4)}</h4>
+                                            <p className="text-[10px] sm:text-sm text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+
+                                    {/* Middle for Mobile / Hidden on Desktop */}
+                                    <div className="flex-1 flex justify-center items-center sm:hidden">
+                                        <div className={`px-2.5 py-1 rounded-full border shadow-sm flex items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10`}>
+                                            <div className="relative flex h-1.5 w-1.5">
+                                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
+                                                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                                            </div>
+                                            <span className="text-[8px] font-black uppercase tracking-widest">{order.status}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Side: Status (Desktop) + Action (Both) */}
+                                    <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
+                                        {/* Status moved here for Desktop only - Smaller padding */}
+                                        <div className={`hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10`}>
+                                            <div className="relative flex h-1.5 w-1.5">
+                                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
+                                                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{order.status}</span>
+                                        </div>
+
                                         <button
                                             onClick={() => setSelectedOrder(order)}
-                                            className="px-5 py-2 bg-[#FD6941] text-white rounded-full text-sm hover:bg-orange-600 transition-colors"
+                                            className="px-4 py-2 sm:px-8 sm:py-3 bg-gray-900 text-white rounded-xl sm:rounded-full text-[10px] sm:text-sm font-bold hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
                                         >
-                                            View Details
+                                            View
                                         </button>
-                                        <span className={`px-4 py-1.5 rounded-full text-xs uppercase font-medium ${statusTextColor} ${statusBgColor}`}>{order.status}</span>
                                     </div>
                                 </div>
                             );
@@ -605,25 +628,37 @@ const AdminOrders = () => {
                     {filteredHistoryOrders.length > 0 ? (
                         <div className="space-y-4">
                             {filteredHistoryOrders.map(order => (
-                                <div key={order._id} className="flex items-center justify-between p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100">
-                                            <UtensilsCrossed className="w-5 h-5 text-green-600" />
+                                <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-gray-50/50 rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 gap-2 sm:gap-4 transition-all hover:bg-gray-50">
+                                    {/* Left: Info */}
+                                    <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-2xl flex items-center justify-center border border-gray-100 shrink-0">
+                                            <UtensilsCrossed className="w-5 h-5 text-gray-400" />
                                         </div>
-                                        <div>
-                                            <h4 className="text-gray-900 text-lg">Order #{order._id.slice(-4)}</h4>
-                                            <p className="text-sm text-gray-500"><span className="capitalize">{order.tableNumber ? `Table #${order.tableNumber}` : 'Takeaway'}</span></p>
+                                        <div className="min-w-0">
+                                            <h4 className="text-gray-900 text-sm sm:text-lg font-bold font-urbanist truncate px-0">#{order._id.slice(-4)}</h4>
+                                            <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+
+                                    {/* Middle: Status (Mobile Only) */}
+                                    <div className="flex-1 flex justify-center sm:hidden">
+                                        <span className="px-3 py-1 rounded-full text-[8px] uppercase font-black tracking-widest text-green-600 bg-green-50/50 border border-green-200/50">
+                                            Completed
+                                        </span>
+                                    </div>
+
+                                    {/* Right: Status (Desktop) + Invoice Icon (Both) */}
+                                    <div className="flex-1 flex justify-end items-center gap-3 sm:gap-4">
+                                        <span className="hidden sm:inline-block px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest text-green-600 bg-green-50/50 border border-green-200/50">
+                                            Completed
+                                        </span>
                                         <button
                                             onClick={() => setSelectedOrder(order)}
-                                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-100 hover:shadow-sm transition-all hover:bg-gray-50 text-gray-400 hover:text-[#FD6941]"
+                                            className="w-9 h-9 sm:w-11 sm:h-11 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center border border-gray-200 hover:shadow-md transition-all text-blue-500 hover:scale-110 active:scale-95"
                                             title="View Invoice"
                                         >
-                                            <FileText className="w-5 h-5" />
+                                            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
-                                        <span className="px-4 py-1.5 rounded-full text-xs uppercase font-medium text-green-600 bg-green-100">Completed</span>
                                     </div>
                                 </div>
                             ))}
@@ -643,12 +678,13 @@ const AdminOrders = () => {
             {selectedOrder && createPortal(
                 <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
                     <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl relative flex flex-col border border-gray-100 overflow-hidden">
+
                         <button
                             onClick={() => {
                                 setSelectedOrder(null);
                                 setSelectedItems([]);
                             }}
-                            className="absolute top-4 sm:top-6 right-4 sm:right-6 w-8 h-8 sm:w-10 sm:h-10 bg-white/80 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
+                            className="absolute top-4 sm:top-6 right-4 sm:right-6 w-9 h-9 sm:w-11 sm:h-11 bg-white/90 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
                         >
                             <X className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
@@ -743,14 +779,9 @@ const AdminOrders = () => {
                             ) : (
                                 <div className="flex flex-col h-full overflow-hidden">
                                     <div className="flex-1 overflow-y-auto no-scrollbar pr-2 mb-4">
-                                        <div className="flex items-start justify-between mb-8">
-                                            <div>
-                                                <h2 className="text-3xl text-gray-900 mb-2 font-bold tracking-tight font-urbanist">Order #{selectedOrder._id.slice(-4)}</h2>
-                                                <p className="text-gray-500 font-medium">Order details and active items</p>
-                                            </div>
-                                            <span className={`px-5 py-2 rounded-full text-xs uppercase font-bold tracking-wider ${getStatusColor(selectedOrder.status)}`}>
-                                                {selectedOrder.status}
-                                            </span>
+                                        <div className="mb-8 mt-4 sm:mt-0">
+                                            <h2 className="text-3xl sm:text-4xl text-gray-900 mb-2 font-black tracking-tighter font-urbanist">Order #{selectedOrder._id.slice(-4)}</h2>
+                                            <p className="text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em]">Live Order View</p>
                                         </div>
 
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
@@ -876,14 +907,19 @@ const AdminOrders = () => {
 
                                     {/* Fixed Bottom Action Area */}
                                     <div className="pt-4 sm:pt-6 border-t border-gray-100 bg-white/50 backdrop-blur-md">
-                                        <div className="flex items-center justify-between p-4 sm:p-6 bg-gray-900 rounded-[1.5rem] sm:rounded-[2.3rem] text-white mb-4 sm:mb-6 shadow-xl">
-                                            <div>
-                                                <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1 sm:mb-1.5 opacity-60">Grand Total Amount</p>
-                                                <p className="text-2xl sm:text-4xl font-bold leading-none">{currencySymbol}{(selectedOrder.totalAmount || 0).toFixed(2)}</p>
+                                        <div className="flex items-center justify-between p-6 sm:p-8 bg-gray-50 rounded-[2.5rem] sm:rounded-[3rem] text-gray-900 mb-4 sm:mb-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+                                            <div className="relative z-10">
+                                                <p className="text-[10px] sm:text-[11px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1 sm:mb-2 italic">Grand Total Amount</p>
+                                                <p className="text-2xl sm:text-5xl font-black font-urbanist tracking-tighter flex items-center gap-2">
+                                                    <span className="text-[#FD6941]">{currencySymbol}</span>
+                                                    {(selectedOrder.totalAmount || 0).toFixed(2)}
+                                                </p>
                                             </div>
-                                            <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md">
-                                                <Hash className="w-5 h-5 sm:w-6 sm:h-6 text-white opacity-40" />
+                                            <div className="relative z-10 w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm transition-transform group-hover:rotate-12">
+                                                <Hash className="w-5 h-5 sm:w-7 sm:h-7 text-gray-300 font-light" />
                                             </div>
+                                            {/* Subtle Ambient Glow */}
+                                            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-100/30 blur-[60px] rounded-full group-hover:bg-orange-200/40 transition-colors" />
                                         </div>
 
                                         <div className="flex gap-4">

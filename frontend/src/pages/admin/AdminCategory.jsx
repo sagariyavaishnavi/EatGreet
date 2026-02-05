@@ -157,15 +157,16 @@ const AdminCategory = () => {
             {/* Header Section */}
             {/* Header Section */}
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Category Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Category Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                     >
-                        <Plus className="w-5 h-5" />
-                        <span className="hidden sm:inline">Add Category</span>
-                        <span className="sm:hidden">Add</span>
+                        <Plus className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                        <span className="max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                            Add Category
+                        </span>
                     </button>
                 </div>
             </div>
@@ -175,7 +176,7 @@ const AdminCategory = () => {
 
                 {/* Search & Toolbar */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-                    <h2 className="text-xl font-bold text-gray-800 w-full sm:w-auto">All Categories</h2>
+                    <h2 className="text-[16px] sm:text-[20px] font-medium text-black w-full sm:w-auto">All Categories</h2>
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -205,64 +206,84 @@ const AdminCategory = () => {
                                 onClick={() => navigate(`/customer/menu?category=${encodeURIComponent(category.name)}`)}
                                 className="bg-white rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-row sm:flex-col h-40 sm:h-full cursor-pointer hover:border-[#FD6941] gap-4 sm:gap-0 relative overflow-hidden">
 
-                                {/* Top/Left: Icon */}
-                                <div className="flex flex-col sm:flex-row justify-between items-start mb-0 sm:mb-6 shrink-0">
+                                {/* Mobile ONLY: Status Badge at top right corner */}
+                                <div className="sm:hidden absolute top-3 right-3 z-10">
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        {category.status || 'INACTIVE'}
+                                    </span>
+                                </div>
+
+                                {/* Desktop ONLY: Hover actions at top right */}
+                                <div className="hidden sm:flex absolute top-6 right-6 gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                                        className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
+                                        className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Left Column (Mobile) / Top Area (Desktop) */}
+                                <div className="flex flex-col justify-between shrink-0 mb-0 sm:mb-6">
                                     <div className={`w-14 h-14 sm:w-14 sm:h-14 rounded-2xl bg-orange-50 text-orange-500 bg-opacity-10 flex items-center justify-center shrink-0`}>
                                         <DisplayIcon className="w-7 h-7 sm:w-7 sm:h-7" />
                                     </div>
-                                    <div className="hidden sm:flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                    {/* Mobile ONLY: Actions at bottom-left */}
+                                    <div className="flex sm:hidden gap-1.5 mt-auto">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
-                                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
                                         >
-                                            <Pencil className="w-4 h-4" />
+                                            <Pencil className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
-                                            className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Middle: Title */}
-                                <div className="flex-1 flex flex-col justify-between py-1 sm:mb-8 sm:block">
+                                {/* Right Column (Mobile) / Middle Area (Desktop) */}
+                                <div className="flex-1 flex flex-col justify-between sm:justify-start py-0 sm:py-1 sm:mb-8">
                                     <div>
                                         <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-0.5 sm:mb-1 line-clamp-1">{category.name}</h3>
                                         <p className="text-gray-400 text-[10px] sm:text-sm font-medium">{category.count || 0} Items Available</p>
                                     </div>
 
-                                    {/* Mobile Edit/Delete - hidden on desktop */}
-                                    <div className="flex sm:hidden gap-1.5 mt-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
-                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDelete(category._id); }}
-                                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    {/* Mobile ONLY: Toggle at bottom-right of this column */}
+                                    <div className="flex sm:hidden justify-end mt-auto origin-right scale-75" onClick={(e) => e.stopPropagation()}>
+                                        <label className="relative inline-block w-14 h-8 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={category.status === 'ACTIVE'}
+                                                onChange={() => toggleStatus(category._id)}
+                                            />
+                                            <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
+                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        </label>
                                     </div>
                                 </div>
 
-                                {/* Bottom/Right: Status & Toggle */}
-                                <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between mt-0 sm:mt-auto pt-0 sm:pt-4 border-t-0 sm:border-t border-gray-50 gap-2">
-                                    <div className="flex items-center gap-2 sm:gap-2">
-                                        <span className="hidden sm:inline text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
+                                {/* Desktop ONLY Bottom Section: Status & Toggle */}
+                                <div className="hidden sm:flex flex-row items-center justify-between mt-auto pt-4 border-t border-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Status</span>
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${category.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                                             {category.status || 'INACTIVE'}
                                         </span>
                                     </div>
 
-                                    <div
-                                        className="scale-75 sm:scale-100 origin-right sm:origin-center"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
+                                    <div className="origin-center" onClick={(e) => e.stopPropagation()}>
                                         <label className="relative inline-block w-14 h-8 cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -282,7 +303,7 @@ const AdminCategory = () => {
                     {/* Add New Category Card */}
                     <div
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
-                        className="border-2 border-dashed border-gray-200 rounded-3xl flex flex-row sm:flex-col items-center justify-center p-4 sm:p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-40 sm:min-h-[220px] group bg-gray-50/50 gap-4"
+                        className="border-2 border-dashed border-gray-200 rounded-3xl flex flex-row sm:flex-col items-center justify-center p-4 sm:p-6 text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-40 sm:h-full group bg-gray-50/50 gap-4"
                     >
                         <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
                             <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-[#FD6941]" />

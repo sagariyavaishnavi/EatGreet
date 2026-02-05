@@ -477,7 +477,7 @@ const AdminMenu = () => {
         <div className="space-y-6 relative">
             {/* Header */}
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Menu Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Menu Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={() => {
@@ -495,11 +495,12 @@ const AdminMenu = () => {
                     </button>
                     <button
                         onClick={openModal}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                     >
-                        <Plus className="w-5 h-5" />
-                        <span className="hidden sm:inline">Add Item</span>
-                        <span className="sm:hidden">Add</span>
+                        <Plus className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                        <span className="max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                            Add Item
+                        </span>
                     </button>
                 </div>
             </div>
@@ -509,7 +510,7 @@ const AdminMenu = () => {
 
                 {/* Filter and Search Bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-                    <h2 className="text-xl font-bold text-gray-800 w-full sm:w-auto">All Menu</h2>
+                    <h2 className="text-[16px] sm:text-[20px] font-medium text-black w-full sm:w-auto">All Menu</h2>
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-64">

@@ -104,9 +104,9 @@ export default function LandingPage() {
 
             {/* Navbar */}
             <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <img src={logoFull} alt="EatGreet Logo" className="h-10 w-auto" />
+                        <img src={logoFull} alt="EatGreet Logo" className="h-8 md:h-10 w-auto" />
                     </div>
 
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
@@ -116,9 +116,9 @@ export default function LandingPage() {
                         <a href="#insights" className="hover:text-primary transition-colors">INSIGHTS</a>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <a href="/login" className="text-sm font-bold text-gray-700 hover:text-primary transition-colors">LOGIN</a>
-                        <a href="#contact" className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <a href="/login" className="text-xs md:text-sm font-bold text-gray-700 hover:text-primary transition-colors">LOGIN</a>
+                        <a href="#contact" className="px-4 py-2 md:px-6 md:py-3 bg-primary text-white text-xs md:text-sm font-bold rounded-full hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30 whitespace-nowrap">
                             GET STARTED
                         </a>
                     </div>
@@ -126,19 +126,19 @@ export default function LandingPage() {
             </nav>
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-[#FFF5F1] rounded-bl-[100px] -z-10" />
+            <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+                <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-[#FFF5F1] md:rounded-bl-[100px] -z-10" />
 
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 md:gap-12 items-center">
                     <div className="space-y-8">
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-full border border-orange-100">
                             <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
                             <span className="text-xs font-bold text-orange-600 tracking-wide uppercase">v4.0 Global Release</span>
                         </div>
 
-                        <h1 className="text-6xl md:text-7xl leading-[1.1] font-bold">
-                            The Future <br />
-                            <span className="text-primary italic pr-2">of Dining,</span> <br />
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl leading-[1.1] font-bold">
+                            The Future <br className="hidden sm:block" />
+                            <span className="text-primary italic pr-2">of Dining,</span> <br className="hidden sm:block" />
                             Today.
                         </h1>
 
@@ -147,7 +147,7 @@ export default function LandingPage() {
                         </p>
 
                         <div className="flex flex-wrap items-center gap-4">
-                            <a href="#contact" className="px-8 py-4 bg-primary text-white font-bold rounded-lg hover:bg-orange-600 transition-all shadow-xl shadow-orange-500/20">
+                            <a href="#contact" className="w-full sm:w-auto text-center px-8 py-4 bg-primary text-white font-bold rounded-lg hover:bg-orange-600 transition-all shadow-xl shadow-orange-500/20">
                                 BOOK A DEMO
                             </a>
 
@@ -161,7 +161,7 @@ export default function LandingPage() {
                             transition={{ duration: 0.8 }}
                             className="relative z-10"
                         >
-                            <img src={heroDashboard} alt="Dashboard Interface" className="w-full drop-shadow-2xl rounded-xl transform perspective-1000 rotate-y-minus-12 hover:rotate-0 transition-transform duration-500" />
+                            <img src={heroDashboard} alt="Dashboard Interface" className="w-full drop-shadow-2xl rounded-xl md:transform md:perspective-1000 md:rotate-y-minus-12 md:hover:rotate-0 transition-transform duration-500" />
                         </motion.div>
 
                         {/* Decorative Elements */}
@@ -172,10 +172,10 @@ export default function LandingPage() {
             </section>
 
             {/* Unified Experience Section */}
-            <section className="py-24 bg-white">
-                <div className="max-w-7xl mx-auto px-6 text-center">
+            <section className="py-16 md:py-24 bg-white">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
                     <span className="text-orange-500 font-bold tracking-widest text-xs uppercase mb-2 block">The Integrated Flow</span>
-                    <h2 className="text-4xl font-bold mb-16">A Unified Experience</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-10 md:mb-16">A Unified Experience</h2>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {[
@@ -201,15 +201,15 @@ export default function LandingPage() {
             </section>
 
             {/* Deep Dive Grid */}
-            <section className="py-20 bg-gray-50">
-                <div className="max-w-7xl mx-auto px-6">
+            <section className="py-16 md:py-20 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 md:px-6">
                     <div className="grid md:grid-cols-2 gap-8 mb-8">
                         {/* AI Sales Reports */}
-                        <div className="bg-[#FFF5F1] p-10 rounded-3xl flex flex-col justify-between relative overflow-hidden group">
+                        <div className="bg-[#FFF5F1] p-6 md:p-10 rounded-3xl flex flex-col justify-between relative overflow-hidden group">
                             <div className="relative z-10">
                                 <span className="text-orange-500 font-bold text-xs tracking-widest uppercase mb-2 block">Twin Intelligence</span>
-                                <h3 className="text-3xl font-bold mb-4">AI-Driven Sales Reports</h3>
-                                <p className="text-gray-600 mb-8 max-w-sm">Predict demand patterns, identify menu stars, and automate labor costs with 98.4% accuracy.</p>
+                                <h3 className="text-2xl md:text-3xl font-bold mb-4">AI-Driven Sales Reports</h3>
+                                <p className="text-gray-600 mb-8 max-w-sm text-sm">Predict demand patterns, identify menu stars, and automate labor costs with 98.4% accuracy.</p>
                                 <button className="text-orange-500 font-bold flex items-center gap-2 hover:gap-3 transition-all group-hover:text-orange-600">
                                     ANALYZE NOW <ArrowRight className="w-4 h-4" />
                                 </button>
@@ -231,11 +231,11 @@ export default function LandingPage() {
                         </div>
 
                         {/* 3D Multimedia Menus */}
-                        <div className="bg-primary text-white p-10 rounded-3xl relative overflow-hidden flex flex-col justify-center">
+                        <div className="bg-primary text-white p-6 md:p-10 rounded-3xl relative overflow-hidden flex flex-col justify-center">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
                             <div className="relative z-10 max-w-md">
-                                <h3 className="text-3xl font-bold mb-4">3D Multimedia <br /> Menus</h3>
+                                <h3 className="text-2xl md:text-3xl font-bold mb-4">3D Multimedia <br /> Menus</h3>
                                 <p className="text-white/80 mb-8 text-sm">Immersive visual dining that increases average order value by 32%.</p>
 
                                 <div className="flex items-center gap-3">
@@ -277,15 +277,14 @@ export default function LandingPage() {
             </section>
 
             {/* Footer / CTA Section */}
-            <section id="contact" className="py-20 px-6">
-                <div className="max-w-7xl mx-auto bg-[#F8F9FA] rounded-[3rem] p-8 md:p-12 shadow-sm border border-gray-100">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <section id="contact" className="py-16 md:py-20 px-4 md:px-6">
+                <div className="max-w-7xl mx-auto bg-[#F8F9FA] rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-sm border border-gray-100">
+                    <div className="grid lg:grid-cols-2 gap-10 md:gap-12 items-center">
                         {/* Left Side: Illustration & Text */}
                         <div className="space-y-6">
                             <div>
-                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">We’d Love to answer your
-                                    questions</h2>
-                                <p className="text-gray-500 text-lg">Have a query? We'd be happy to answer any questions you might have.</p>
+                                <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight text-center lg:text-left">We’d Love to answer your questions</h2>
+                                <p className="text-gray-500 text-base md:text-lg text-center lg:text-left">Have a query? We'd be happy to answer any questions you might have.</p>
                             </div>
                             <div className="flex justify-center lg:justify-start">
                                 <img src={contactIllustrationHD} alt="Contact Illustration" className="w-full max-w-md object-contain" />

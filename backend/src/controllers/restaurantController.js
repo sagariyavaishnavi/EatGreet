@@ -18,6 +18,7 @@ const getRestaurantDetails = async (req, res) => {
                 cuisineType: user.restaurantDetails.cuisineType,
                 businessEmail: user.restaurantDetails.businessEmail,
                 isActive: user.restaurantDetails.isActive ?? true,
+                totalTables: user.restaurantDetails.totalTables || 0,
                 currency: user.currency || 'INR',
                 location: user.restaurantDetails.location,
                 operatingHours: user.restaurantDetails.operatingHours,
@@ -54,6 +55,7 @@ const updateRestaurantDetails = async (req, res) => {
             user.restaurantDetails.gstNumber = req.body.gstNumber || user.restaurantDetails.gstNumber;
             user.restaurantDetails.cuisineType = req.body.cuisineType || user.restaurantDetails.cuisineType;
             user.restaurantDetails.businessEmail = req.body.businessEmail || user.restaurantDetails.businessEmail;
+            user.restaurantDetails.totalTables = req.body.totalTables ?? user.restaurantDetails.totalTables;
 
             // New Fields
             if (req.body.location) {

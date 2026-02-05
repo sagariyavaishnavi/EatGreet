@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
             close: { type: String, default: '23:00' }
         },
         isActive: { type: Boolean, default: true },
+        totalTables: { type: Number, default: 0 },
         joinedAt: { type: Date, default: Date.now }
     },
 

@@ -2,25 +2,88 @@ const getAdminStats = async (req, res) => {
     try {
         const { Order } = req.tenantModels;
 
-        // Run all stats queries in parallel
-        const [totalOrders, activeOrders, dineInCount, revenueData] = await Promise.all([
+        // 1. Calculate Occupied Tables (Unique NUMERIC tableNumbers with active orders)
+        // We use a regex to ensure only real table numbers are counted, avoiding trash or "takeaway"
+        const occupiedTablesResult = await Order.aggregate([
+            {
+                $match: {
+                    status: { $in: ['pending', 'preparing', 'ready'] },
+                    tableNumber: { $regex: /^[0-9]+$/ } // Only count numeric table numbers
+                }
+            },
+            { $group: { _id: "$tableNumber" } },
+            { $group: { _id: null, count: { $sum: 1 } } }
+        ]);
+        const dineInCount = occupiedTablesResult.length > 0 ? occupiedTablesResult[0].count : 0;
+
+        // 2. Today's Revenue & Total Stats
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        // 3. Last 7 Days Revenue for Graph
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const [totalOrders, activeOrders, todayRevenueData, totalRevenueData, weeklyRevenueData, hourlyRevenueData] = await Promise.all([
             Order.countDocuments(),
             Order.countDocuments({ status: { $in: ['pending', 'preparing', 'ready'] } }),
-            Order.countDocuments({ tableNumber: { $exists: true, $ne: '' } }),
+            Order.aggregate([
+                { $match: { status: 'completed', updatedAt: { $gte: startOfToday } } },
+                { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+            ]),
             Order.aggregate([
                 { $match: { status: 'completed' } },
                 { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
+            ]),
+            Order.aggregate([
+                {
+                    $match: {
+                        status: 'completed',
+                        updatedAt: { $gte: sevenDaysAgo }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
+                        total: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ]),
+            Order.aggregate([
+                {
+                    $match: {
+                        status: 'completed',
+                        updatedAt: { $gte: startOfToday }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $hour: "$updatedAt" },
+                        total: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { _id: 1 } }
             ])
         ]);
 
-        const revenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
+        const todayRevenue = todayRevenueData.length > 0 ? todayRevenueData[0].total : 0;
+        const totalRevenue = totalRevenueData.length > 0 ? totalRevenueData[0].totalRevenue : 0;
+
+        // Note: totalTables fallback
+        const totalTables = req.user?.restaurantDetails?.totalTables || 0;
 
         res.json({
             totalOrders,
             activeOrders,
-            revenue,
+            revenue: totalRevenue,
+            todayRevenue,
             dineIn: dineInCount,
-            takeaway: totalOrders - dineInCount
+            totalTables,
+            takeaway: totalOrders - dineInCount,
+            weeklyRevenue: weeklyRevenueData,
+            hourlyRevenue: hourlyRevenueData
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

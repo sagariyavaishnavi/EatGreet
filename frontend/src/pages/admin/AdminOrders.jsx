@@ -1,4 +1,5 @@
-import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer, FileText, User, Calendar, Hash, Search, RefreshCw } from 'lucide-react';
+import { Clock, Loader2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Printer, FileText, User, Calendar, Hash, Search, RefreshCw, ChevronDown } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import PropTypes from 'prop-types';
 import clockIcon from '../../assets/clock.svg';
@@ -49,11 +50,29 @@ const AdminOrders = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
     const [searchQuery, setSearchQuery] = useState('');
     const [historyFilter, setHistoryFilter] = useState('today'); // 'today', 'yesterday', 'lastWeek'
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [timers, setTimers] = useState({});
     const [restaurant, setRestaurant] = useState(null);
     const socket = useSocket();
     const { user } = useSettings();
     const lastItemCounts = useRef({});
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const orderIdParam = searchParams.get('orderId');
+
+    // Deep link handling for dashboard notifications (once per redirect)
+    useEffect(() => {
+        if (orderIdParam && orders.length > 0) {
+            const linkedOrder = orders.find(o => o._id === orderIdParam);
+            if (linkedOrder) {
+                setSelectedOrder(linkedOrder);
+                // Clear the param after opening once to prevent re-opening "again and again"
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete('orderId');
+                setSearchParams(newParams, { replace: true });
+            }
+        }
+    }, [orderIdParam, orders, setSearchParams]);
 
     // Socket Listener for real-time updates
     useEffect(() => {
@@ -452,7 +471,7 @@ const AdminOrders = () => {
     return (
         <div className="space-y-4 sm:space-y-8 px-1 sm:px-0">
             <div className="mb-4 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Orders</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Orders</h1>
                 <p className="text-gray-500 text-sm sm:text-base">Manage your restaurant active orders</p>
             </div>
 
@@ -556,24 +575,24 @@ const AdminOrders = () => {
                             return (
                                 <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-white rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-2 sm:gap-4 group">
                                     {/* Left: Info */}
-                                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                                        <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
-                                            <UtensilsCrossed className={`w-5 h-5 sm:w-6 sm:h-6 ${statusTextColor}`} />
+                                    <div className="flex items-center gap-2 sm:gap-4 flex-[1.5] sm:flex-1 min-w-0">
+                                        <div className={`w-9 h-9 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
+                                            <UtensilsCrossed className={`w-4 h-4 sm:w-6 sm:h-6 ${statusTextColor}`} />
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="text-gray-900 text-sm sm:text-lg font-bold font-urbanist truncate">#{order._id.slice(-4)}</h4>
+                                            <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate">#{order._id.slice(-4)}</h4>
                                             <p className="text-[10px] sm:text-sm text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                         </div>
                                     </div>
 
                                     {/* Middle for Mobile / Hidden on Desktop */}
-                                    <div className="flex-1 flex justify-center items-center sm:hidden">
-                                        <div className={`px-2.5 py-1 rounded-full border shadow-sm flex items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10`}>
-                                            <div className="relative flex h-1.5 w-1.5">
+                                    <div className="flex-1 flex justify-center items-center sm:hidden shrink-0">
+                                        <div className={`px-2 py-0.5 rounded-full border shadow-sm flex items-center gap-1.5 ${statusTextColor} ${statusBgColor} border-current/10`}>
+                                            <div className="relative flex h-1 w-1">
                                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
-                                                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                                                <span className={`relative inline-flex rounded-full h-1 w-1 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                                             </div>
-                                            <span className="text-[8px] font-black uppercase tracking-widest">{order.status}</span>
+                                            <span className="text-[7px] font-black uppercase tracking-widest">{order.status}</span>
                                         </div>
                                     </div>
 
@@ -614,15 +633,35 @@ const AdminOrders = () => {
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl text-gray-800">Order History</h2>
-                        <select
-                            value={historyFilter}
-                            onChange={(e) => setHistoryFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-100 text-gray-600 text-sm rounded-full focus:ring-primary focus:border-primary block p-2.5 px-6 outline-none appearance-none cursor-pointer hover:bg-gray-100 transition-colors"
-                        >
-                            <option value="today">Today</option>
-                            <option value="yesterday">Yesterday</option>
-                            <option value="lastWeek">Last Week</option>
-                        </select>
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="flex items-center gap-1.5 px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-full border border-gray-100 text-[12px] sm:text-[14px] font-medium text-gray-500 hover:bg-gray-50 transition-all active:scale-95"
+                            >
+                                {historyFilter.charAt(0).toUpperCase() + historyFilter.slice(1)} <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-36 bg-white rounded-[1.2rem] shadow-xl border border-gray-50 py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                                    {[
+                                        { label: 'Today', value: 'today' },
+                                        { label: 'Yesterday', value: 'yesterday' },
+                                        { label: 'Last Week', value: 'lastWeek' }
+                                    ].map((option) => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => {
+                                                setHistoryFilter(option.value);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors ${historyFilter === option.value ? 'text-[#FD6941] bg-orange-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {filteredHistoryOrders.length > 0 ? (
@@ -630,19 +669,19 @@ const AdminOrders = () => {
                             {filteredHistoryOrders.map(order => (
                                 <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-gray-50/50 rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 gap-2 sm:gap-4 transition-all hover:bg-gray-50">
                                     {/* Left: Info */}
-                                    <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-2xl flex items-center justify-center border border-gray-100 shrink-0">
-                                            <UtensilsCrossed className="w-5 h-5 text-gray-400" />
+                                    <div className="flex-[1.5] sm:flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
+                                        <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white rounded-2xl flex items-center justify-center border border-gray-100 shrink-0">
+                                            <UtensilsCrossed className="w-4 h-4 text-gray-400" />
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="text-gray-900 text-sm sm:text-lg font-bold font-urbanist truncate px-0">#{order._id.slice(-4)}</h4>
+                                            <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate px-0">#{order._id.slice(-4)}</h4>
                                             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                         </div>
                                     </div>
 
                                     {/* Middle: Status (Mobile Only) */}
-                                    <div className="flex-1 flex justify-center sm:hidden">
-                                        <span className="px-3 py-1 rounded-full text-[8px] uppercase font-black tracking-widest text-green-600 bg-green-50/50 border border-green-200/50">
+                                    <div className="flex-1 flex justify-center sm:hidden shrink-0">
+                                        <span className="px-2 py-0.5 rounded-full text-[7px] uppercase font-black tracking-widest text-green-600 bg-green-50/50 border border-green-200/50">
                                             Completed
                                         </span>
                                     </div>

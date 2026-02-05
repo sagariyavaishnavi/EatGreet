@@ -28,8 +28,19 @@ const AdminTable = () => {
     const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
     const [invoiceOrder, setInvoiceOrder] = useState(null);
 
+    const syncTableCount = async (count) => {
+        try {
+            await restaurantAPI.updateDetails({ totalTables: count });
+        } catch (error) {
+            console.error("Failed to sync table count", error);
+        }
+    };
+
     useEffect(() => {
         localStorage.setItem('admin_tables', JSON.stringify(tables));
+        if (tables.length > 0) {
+            syncTableCount(tables.length);
+        }
         fetchRestaurantDetails();
         fetchActiveOrders();
 
@@ -66,8 +77,6 @@ const AdminTable = () => {
     const fetchRestaurantDetails = async () => {
         try {
             const { data } = await restaurantAPI.getDetails();
-            // Use restaurant business name and fallback to owner name, sanitize for URL if needed
-            // Currently assuming restaurantName is stored in user object properly
             setRestaurant(data);
             setRestaurantName(data.name || 'restaurant');
         } catch (error) {
@@ -86,7 +95,8 @@ const AdminTable = () => {
     };
 
     const removeTable = (table) => {
-        setTables(tables.filter(t => t !== table));
+        const newTables = tables.filter(t => t !== table);
+        setTables(newTables);
         toast.success(`Table ${table} removed`);
     };
 
@@ -228,15 +238,16 @@ const AdminTable = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Table Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Table Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={addTable}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                     >
-                        <Plus className="w-5 h-5" />
-                        <span className="hidden sm:inline">Add Table</span>
-                        <span className="sm:hidden">Add</span>
+                        <Plus className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                        <span className="max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                            Add Table
+                        </span>
                     </button>
                 </div>
             </div>
@@ -249,27 +260,27 @@ const AdminTable = () => {
 
                     return (
                         <div key={table}
-                            className={`bg-white rounded-[2.5rem] p-6 aspect-square shadow-sm border-2 transition-all group relative flex flex-col items-center justify-center text-center overflow-hidden
+                            className={`bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 aspect-square shadow-sm border-2 transition-all group relative flex flex-col items-center justify-center text-center overflow-hidden
                                 ${isLive ? 'border-[#FD6941] bg-orange-50/30' : 'border-gray-100 hover:border-gray-200'}
                             `}
                         >
                             {/* Top Actions Bar - Delete only on Right */}
-                            <div className="absolute top-4 right-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+                            <div className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
                                 <button
                                     onClick={() => removeTable(table)}
-                                    className="p-1.5 bg-white text-gray-300 hover:text-red-500 rounded-lg shadow-sm border border-gray-100 transition-colors"
+                                    className="p-1 bg-white text-gray-300 hover:text-red-500 rounded-md shadow-sm border border-gray-100 transition-colors"
                                     title="Delete Table"
                                 >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 className="w-3 h-3" />
                                 </button>
                             </div>
 
                             {/* Center Content */}
-                            <div className="flex flex-col items-center">
-                                <span className={`text-6xl sm:text-7xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
+                            <div className="flex flex-col items-center mb-10 sm:mb-12">
+                                <span className={`text-3xl md:text-6xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
                                     {table}
                                 </span>
-                                <div className={`px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
+                                <div className={`px-4 sm:px-5 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
                                     ${isLive
                                         ? 'bg-[#FD6941] text-white border-[#FD6941] shadow-orange-100'
                                         : 'bg-gray-50 text-gray-400 border-gray-100'}
@@ -279,13 +290,13 @@ const AdminTable = () => {
                             </div>
 
                             {/* Bottom Actions Bar (Brand Styled - Clean Dock) */}
-                            <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-2">
+                            <div className="absolute bottom-3 sm:bottom-6 left-0 right-0 flex justify-center items-center gap-1 sm:gap-2 px-2">
                                 <button
                                     onClick={() => setQrModal({ isOpen: true, url, tableNo: table })}
-                                    className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
+                                    className="w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
                                     title="Scan QR"
                                 >
-                                    <QrCode className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
+                                    <QrCode className="w-3 h-3 md:w-4 md:h-4 group-hover/icon:scale-110 transition-transform" />
                                 </button>
                                 <button
                                     onClick={() => {
@@ -295,14 +306,14 @@ const AdminTable = () => {
                                         }
                                     }}
                                     disabled={!isLive}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm group/icon
+                                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl transition-all border shadow-sm group/icon
                                         ${isLive
                                             ? 'bg-gray-900 text-white border-gray-900 hover:bg-black hover:scale-110 active:scale-95'
                                             : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
                                     `}
                                     title="Preview Order"
                                 >
-                                    <Eye className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
+                                    <Eye className="w-3 h-3 md:w-4 md:h-4 group-hover/icon:scale-110 transition-transform" />
                                 </button>
                                 <button
                                     onClick={() => {
@@ -312,14 +323,14 @@ const AdminTable = () => {
                                         }
                                     }}
                                     disabled={!isLive}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm group/icon
+                                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl transition-all border shadow-sm group/icon
                                         ${isLive
                                             ? 'bg-orange-50 text-[#FD6941] border-[#FD6941]/20 hover:bg-[#FD6941] hover:text-white hover:scale-110 active:scale-95'
                                             : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
                                     `}
                                     title="Invoice"
                                 >
-                                    <FileText className="w-4 h-4 group-hover/icon:scale-110 transition-transform" />
+                                    <FileText className="w-3 h-3 md:w-4 md:h-4 group-hover/icon:scale-110 transition-transform" />
                                 </button>
                             </div>
                         </div>
@@ -331,21 +342,21 @@ const AdminTable = () => {
             {
                 isPreviewOpen && selectedTableOrder && createPortal(
                     <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-md rounded-[3.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                        <div className="bg-white w-full max-w-md rounded-3xl md:rounded-[3.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
                             {/* Premium Modal Header */}
-                            <div className="relative p-8 pb-4 text-center">
+                            <div className="relative p-6 md:p-8 pb-4 text-center">
                                 <button
                                     onClick={() => setIsPreviewOpen(false)}
-                                    className="absolute right-8 top-8 w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors border border-gray-100"
+                                    className="absolute right-4 md:right-8 top-4 md:top-8 w-8 h-8 md:w-10 md:h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors border border-gray-100"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
 
-                                <h2 className="text-4xl font-black font-urbanist text-gray-900 tracking-tighter mt-4">Table {selectedTableOrder.tableNumber}</h2>
+                                <h2 className="text-3xl md:text-4xl font-black font-urbanist text-gray-900 tracking-tighter mt-4 md:mt-4">Table {selectedTableOrder.tableNumber}</h2>
                                 <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Live Order View</p>
                             </div>
 
-                            <div className="p-8 space-y-6">
+                            <div className="p-6 md:p-8 space-y-6">
                                 {/* Customer Card - Cleaner */}
                                 <div className="flex items-center gap-4 p-5 bg-gray-50/80 rounded-[2.5rem] border border-gray-100">
                                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
@@ -378,15 +389,15 @@ const AdminTable = () => {
                                 </div>
 
                                 {/* Total Amount Section - LIGHT THEME */}
-                                <div className="p-8 bg-gray-50 rounded-[3rem] text-gray-900 flex justify-between items-center border border-gray-100 relative overflow-hidden group shadow-sm">
+                                <div className="p-6 md:p-8 bg-gray-50 rounded-2xl md:rounded-[3rem] text-gray-900 flex justify-between items-center border border-gray-100 relative overflow-hidden group shadow-sm">
                                     <div className="relative z-10">
                                         <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.1em] mb-1.5">Grand Total Amount</p>
-                                        <p className="text-4xl sm:text-5xl font-bold font-urbanist tracking-tighter">
+                                        <p className="text-3xl sm:text-5xl font-bold font-urbanist tracking-tighter">
                                             {currencySymbol}{selectedTableOrder.totalAmount?.toFixed(2) || (selectedTableOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05).toFixed(2)}
                                         </p>
                                     </div>
-                                    <div className="relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                                        <span className="text-3xl text-gray-300 font-light font-urbanist">#</span>
+                                    <div className="relative z-10 w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
+                                        <span className="text-2xl md:text-3xl text-gray-300 font-light font-urbanist">#</span>
                                     </div>
                                     {/* Subtle Ambient Glow */}
                                     <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-100/30 blur-[60px] rounded-full" />
@@ -395,7 +406,7 @@ const AdminTable = () => {
                                 {/* Action Button */}
                                 <button
                                     onClick={() => handleCompleteOrder(selectedTableOrder)}
-                                    className={`w-full py-5 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
+                                    className={`w-full py-4 md:py-5 rounded-2xl md:rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
                                         ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
                                             ? 'bg-gray-900 text-white hover:bg-black hover:scale-[1.02] shadow-gray-200'
                                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}

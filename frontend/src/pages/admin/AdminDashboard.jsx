@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine
 } from 'recharts';
 import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import activityIcon from '../../assets/activity.svg';
@@ -21,12 +21,18 @@ const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => {
                     <img src={icon} alt="icon" className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" />
                 </div>
                 <div className="flex flex-col">
-                    <h3 className="text-[20px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline">
-                        {isCurrency && <span className="text-[16px] sm:text-[20px] lg:text-[24px] mr-0.5 sm:mr-1 font-medium">{currencySymbol}</span>}
+                    <h3 className="text-[18px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline">
+                        {isCurrency && <span className="text-[14px] sm:text-[20px] lg:text-[24px] mr-1 font-medium">{currencySymbol}</span>}
                         {value}
-                        {subValue && <span className="text-[16px] sm:text-[20px] lg:text-[24px] text-gray-300 font-medium ml-0.5 sm:ml-1">/{subValue}</span>}
+                        {subValue !== undefined && (
+                            <span className="text-[12px] sm:text-[20px] lg:text-[24px] text-gray-400 opacity-30 font-medium ml-1">
+                                /{subValue}
+                            </span>
+                        )}
                     </h3>
-                    <p className="text-[11px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight truncate max-w-[80px] sm:max-w-full">{label}</p>
+                    <p className={`text-[11px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight ${label === 'Occupied Tables' ? 'whitespace-pre-line max-w-[70px]' : 'truncate max-w-[80px]'} sm:max-w-full sm:whitespace-normal`}>
+                        {label === 'Occupied Tables' ? label.replace(' ', '\n') : label}
+                    </p>
                 </div>
             </div>
         </div>
@@ -76,32 +82,65 @@ const TimeStatusGauge = () => (
 );
 
 const CustomPillBar = (props) => {
-    const { x, y, width, height, highlight } = props;
-    const pillWidth = 46;
-    const pillHeight = height > 20 ? height : 40;
-    const radius = 23;
+    const { x, y, width, height, highlight, payload } = props;
+    const pillWidth = Math.min(width * 0.8, 46);
+    const radius = pillWidth / 2;
+
+    // In the reference image, bars have different heights/positions
+    // For our data, we'll keep it simple but match the pill look
+    const barHeight = height > 0 ? height : 4;
 
     return (
         <g>
+            <defs>
+                <linearGradient id="pillGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22C55E" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#86EFAC" stopOpacity={0.3} />
+                </linearGradient>
+            </defs>
+            {/* Background vertical line for highlighted day (matches image) */}
+            {highlight && (
+                <line
+                    x1={x + width / 2}
+                    y1={0}
+                    x2={x + width / 2}
+                    y2={600}
+                    stroke="#22C55E"
+                    strokeWidth="2"
+                    strokeDasharray="0"
+                />
+            )}
+
+            {/* Main Pill Bar */}
             <rect
                 x={x + (width - pillWidth) / 2}
                 y={y}
                 width={pillWidth}
-                height={pillHeight}
+                height={barHeight}
                 rx={radius}
-                fill={highlight ? '#22C55E' : '#F1F5F9'}
+                fill={highlight ? "url(#pillGradient)" : "#F1F5F9"}
+                className="transition-all duration-300"
             />
+
+            {/* Artistic dots like the image if highlighted */}
+            {highlight && height > 40 && (
+                <circle cx={x + width / 2} cy={y + 10} r="4" fill="white" fillOpacity="0.5" />
+            )}
         </g>
     );
 };
 
+import { useNavigate } from 'react-router-dom';
+
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalOrders: 0,
         activeOrders: 0,
-        revenue: 0,
         dineIn: 0,
-        takeaway: 0
+        todayRevenue: 0,
+        totalTables: 0,
+        revenue: 0
     });
     const [salesData, setSalesData] = useState([]);
     const [feedItems, setFeedItems] = useState([]);
@@ -115,13 +154,34 @@ const AdminDashboard = () => {
                     orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 10 })
                 ]);
 
-                // 1. Process Stats
-                setStats(statsRes.data);
+                // 3. Robust Total Tables count
+                const savedTables = localStorage.getItem('admin_tables');
+                let trackedTables = [1, 2, 3, 4, 5, 6]; // Default fallback
+                if (savedTables) {
+                    try {
+                        const parsed = JSON.parse(savedTables);
+                        if (Array.isArray(parsed)) trackedTables = parsed;
+                    } catch (e) { }
+                }
 
-                // 2. Process Orders for Feed and Graph
+                // 4. Calculate Occupied Count Locally for 100% Accuracy with the UI
                 const orders = ordersRes.data || [];
+                const occupiedTableNumbers = new Set(
+                    orders
+                        .filter(o => ['pending', 'preparing', 'ready'].includes(o.status))
+                        .map(o => String(o.tableNumber))
+                        .filter(tNo => trackedTables.map(String).includes(tNo))
+                );
 
-                // Process Feed (Latest 3 Active Orders)
+                setStats({
+                    activeOrders: statsRes.data.activeOrders || 0,
+                    todayRevenue: statsRes.data.todayRevenue || 0,
+                    revenue: statsRes.data.revenue || 0,
+                    dineIn: occupiedTableNumbers.size,
+                    totalTables: trackedTables.length
+                });
+
+                // Process Feed
                 const activeOrdersList = orders
                     .filter(o => o.status && ['pending', 'preparing', 'ready'].includes(o.status))
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -130,13 +190,29 @@ const AdminDashboard = () => {
                         id: o._id,
                         title: `Order #${o._id.slice(-4)}`,
                         sub: (o.items || []).map(i => i.name || 'Item').join(', '),
-                        icon: tableIcon // Default icon for now
+                        icon: tableIcon
                     }));
                 setFeedItems(activeOrdersList);
 
-                // Process Sales Graph (Last 7 Days Revenue)
-                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                const graphData = days.map(d => ({ name: d, value: 0 }));
+                // Process Live Hourly Data for Today
+                const hourlyRevenue = statsRes.data.hourlyRevenue || [];
+                const currentHour = new Date().getHours();
+                const graphData = [];
+
+                // Show last 7 hours for high-density live feel
+                for (let i = 6; i >= 0; i--) {
+                    const hour = (currentHour - i + 24) % 24;
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+                    const hourLabel = `${displayHour}${ampm}`;
+
+                    const hourData = hourlyRevenue.find(d => d._id === hour);
+                    graphData.push({
+                        name: hourLabel,
+                        value: hourData ? hourData.total : 0,
+                        highlight: i === 0
+                    });
+                }
                 setSalesData(graphData);
 
             } catch (error) {
@@ -145,13 +221,19 @@ const AdminDashboard = () => {
         };
 
         fetchDashboardData();
+        // Poll every 30 seconds for "Live" feel
+        const interval = setInterval(fetchDashboardData, 30000);
+        return () => clearInterval(interval);
     }, []);
 
+    const { user } = useSettings();
+    const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
+
     return (
-        <div className="min-h-screen bg-transparent px-2 sm:px-4 py-4 sm:py-8 space-y-4 md:space-y-6">
+        <div className="min-h-screen bg-transparent px-2 sm:px-4 pt-0 pb-4 sm:pt-0 sm:pb-8 space-y-4 md:space-y-6">
             <div className="space-y-1">
-                <h1 className="text-[32px] sm:text-[40px] lg:text-[46px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
-                <p className="text-[16px] sm:text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
+                <p className="text-[12px] sm:text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
             </div>
 
             {/* Main Content Grid - 1 Column on Mobile, 12 on Desktop */}
@@ -164,40 +246,67 @@ const AdminDashboard = () => {
                             <DashboardCard value={stats.activeOrders || 0} label="Active Orders" icon={activityIcon} />
                         </div>
                         <div className="col-span-1">
-                            <DashboardCard value={stats.dineIn || 0} subValue={stats.totalOrders || 0} label="Dine-in/Total" icon={tableIcon} />
+                            <DashboardCard
+                                value={stats.dineIn || 0}
+                                subValue={stats.totalTables || 0}
+                                label="Occupied Tables"
+                                icon={tableIcon}
+                            />
                         </div>
                         <div className="col-span-2 md:col-span-1">
-                            <DashboardCard value={(stats.revenue || 0).toLocaleString()} label="Total Revenue" icon={revenueIcon} isCurrency />
+                            <DashboardCard value={(stats.todayRevenue || 0).toLocaleString()} label="Today Revenue" icon={revenueIcon} isCurrency />
                         </div>
                     </div>
 
                     {/* Middle Row: Sales Analytics */}
                     <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 relative shadow-sm h-[400px] sm:h-[600px] lg:h-[740px] flex flex-col border border-transparent">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-2">
-                            <h2 className="text-[20px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
-                            <button className="flex items-center gap-2 px-4 sm:px-8 py-2 rounded-full border border-gray-100 text-[14px] sm:text-[16px] font-medium text-gray-500 hover:bg-gray-50">
-                                Today <ChevronDown className="w-4 h-4 text-gray-400" />
-                            </button>
+                        <div className="flex justify-between items-center gap-2 mb-4 sm:mb-2">
+                            <div className="flex flex-col">
+                                <h2 className="text-[16px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
+                                <p className="text-[12px] text-gray-400 font-medium">Live Hourly Breakdown</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div
+                                    onClick={() => navigate(`/${restaurantSlug}/admin/sales`)}
+                                    className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+                                >
+                                    <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex-1 w-full relative">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 700, fontFamily: 'Urbanist' }}
-                                        dy={10}
-                                    />
-                                    <Tooltip cursor={false} content={() => null} />
-                                    <Bar
-                                        dataKey="value"
-                                        shape={(props) => <CustomPillBar {...props} pillWidth={window.innerWidth < 640 ? 24 : 46} />}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={salesData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9CA3AF', fontSize: 13, fontWeight: 500, fontFamily: 'Urbanist' }}
+                                    dy={15}
+                                />
+                                <YAxis hide />
+                                <Tooltip
+                                    cursor={false}
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            return (
+                                                <div className="bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-50">
+                                                    <p className="text-[14px] font-bold text-black font-urb">
+                                                        {currencySymbol}{payload[0].value.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar
+                                    dataKey="value"
+                                    shape={(props) => <CustomPillBar {...props} />}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
@@ -211,17 +320,24 @@ const AdminDashboard = () => {
                     {/* Live Active Feed */}
                     <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 shadow-sm flex flex-col h-[400px] sm:h-[500px] lg:h-[560px] border border-transparent">
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
-                            <h2 className="text-[20px] sm:text-[24px] font-medium text-black">Live Feed</h2>
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100">
-                                <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+                            <h2 className="text-[16px] sm:text-[24px] font-medium text-black">Live Feed</h2>
+                            <div
+                                onClick={() => navigate(`/${restaurantSlug}/admin/orders`)}
+                                className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+                            >
+                                <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                             </div>
                         </div>
 
                         <div className="space-y-3 sm:space-y-6 flex-1 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar no-scrollbar">
                             {feedItems.length > 0 ? feedItems.map(item => (
-                                <div key={item.id} className="flex items-center justify-between p-3 sm:p-5 bg-[#F9FAFB] rounded-[1.2rem] sm:rounded-[2.2rem] border border-gray-50 hover:bg-white hover:border-gray-100 transition-all cursor-pointer">
+                                <div
+                                    key={item.id}
+                                    onClick={() => navigate(`/${restaurantSlug}/admin/orders?orderId=${item.id}`)}
+                                    className="flex items-center justify-between p-3 sm:p-5 bg-[#F9FAFB] rounded-[1.2rem] sm:rounded-[2.2rem] border border-gray-50 hover:bg-white hover:border-gray-100 transition-all cursor-pointer group"
+                                >
                                     <div className="flex items-center gap-3 sm:gap-5">
-                                        <div className="w-12 h-12 sm:w-[72px] sm:h-[72px] rounded-full bg-[#F3F5F7] flex items-center justify-center shrink-0">
+                                        <div className="w-12 h-12 sm:w-[72px] sm:h-[72px] rounded-full bg-[#F3F5F7] flex items-center justify-center shrink-0 group-hover:bg-white transition-colors">
                                             <img src={item.icon} alt={item.title} className="w-6 h-6 sm:w-9 sm:h-9 opacity-70" />
                                         </div>
                                         <div className="flex flex-col">
@@ -229,7 +345,10 @@ const AdminDashboard = () => {
                                             <p className="text-[12px] sm:text-[15px] text-gray-400 font-bold mt-0.5 truncate max-w-[100px] sm:max-w-[120px]">{item.sub}</p>
                                         </div>
                                     </div>
-                                    <button className="bg-black text-white text-[12px] sm:text-[14px] font-black px-4 sm:px-7 py-2 sm:py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/${restaurantSlug}/admin/orders?orderId=${item.id}`); }}
+                                        className="bg-black text-white text-[12px] sm:text-[14px] font-black px-4 sm:px-7 py-2 sm:py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95"
+                                    >
                                         View
                                     </button>
                                 </div>

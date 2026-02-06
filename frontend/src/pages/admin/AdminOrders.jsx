@@ -174,7 +174,7 @@ const AdminOrders = () => {
     };
 
     useEffect(() => {
-        orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status)).forEach(order => {
+        orders.filter(o => o.status === 'preparing').forEach(order => {
             const currentItemCount = order.items?.length || 0;
             const prevItemCount = lastItemCounts.current[order._id] || 0;
 
@@ -398,6 +398,7 @@ const AdminOrders = () => {
 
                     <div class="divider"></div>
                     <div class="info-row"><span>Name:</span> <span>${order.customerInfo?.name || 'Guest'}</span></div>
+                    ${order.customerInfo?.phone ? `<div class="info-row"><span>Tel:</span> <span>${order.customerInfo.phone}</span></div>` : ''}
                     <div class="divider"></div>
                     
                     <div class="info-row">
@@ -409,7 +410,7 @@ const AdminOrders = () => {
                     </div>
                     <div class="info-row">
                         <span>Cashier: Admin</span>
-                        <span>Bill No: ${order._id.slice(-4)}</span>
+                        <span>Bill No: ${order.dailySequence ? String(order.dailySequence).padStart(3, '0') : order._id.slice(-4)}</span>
                     </div>
 
                     <div class="divider"></div>
@@ -579,9 +580,23 @@ const AdminOrders = () => {
                                         <div className={`w-9 h-9 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
                                             <UtensilsCrossed className={`w-4 h-4 sm:w-6 sm:h-6 ${statusTextColor}`} />
                                         </div>
-                                        <div className="min-w-0">
-                                            <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate">#{order._id.slice(-4)}</h4>
-                                            <p className="text-[10px] sm:text-sm text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
+                                        <div className="min-w-0 flex flex-col gap-1">
+                                            <div>
+                                                <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate">#{order.dailySequence ? String(order.dailySequence).padStart(3, '0') : order._id.slice(-4)}</h4>
+                                                <p className="text-[10px] sm:text-sm text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
+                                            </div>
+                                            {/* Item List Display */}
+                                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-[13px] text-gray-600 font-medium">
+                                                {order.items && order.items.length > 0 ? (
+                                                    order.items.map((item, idx) => (
+                                                        <span key={idx} className="bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
+                                                            <span className="font-bold text-black">{item.quantity}x</span> {item.name}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-gray-400 italic">No items</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -674,7 +689,7 @@ const AdminOrders = () => {
                                             <UtensilsCrossed className="w-4 h-4 text-gray-400" />
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate px-0">#{order._id.slice(-4)}</h4>
+                                            <h4 className="text-gray-900 text-[13px] sm:text-lg font-bold font-urbanist truncate px-0">#{order.dailySequence ? String(order.dailySequence).padStart(3, '0') : order._id.slice(-4)}</h4>
                                             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                         </div>
                                     </div>
@@ -759,6 +774,12 @@ const AdminOrders = () => {
                                             <span>Name:</span>
                                             <span className="font-bold">{selectedOrder.customerInfo?.name || 'Guest'}</span>
                                         </div>
+                                        {selectedOrder.customerInfo?.phone && (
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Tel:</span>
+                                                <span className="font-bold">{selectedOrder.customerInfo.phone}</span>
+                                            </div>
+                                        )}
                                         <div className="border-t border-dashed border-black my-4"></div>
 
                                         <div className="flex justify-between text-[13px] mb-1">
@@ -770,7 +791,7 @@ const AdminOrders = () => {
                                         </div>
                                         <div className="flex justify-between text-[13px] mb-1">
                                             <span>Cashier: Admin</span>
-                                            <span>Bill No: {selectedOrder._id.slice(-4)}</span>
+                                            <span>Bill No: {selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</span>
                                         </div>
 
                                         <div className="border-t border-dashed border-black my-4"></div>
@@ -819,7 +840,7 @@ const AdminOrders = () => {
                                 <div className="flex flex-col h-full overflow-hidden">
                                     <div className="flex-1 overflow-y-auto no-scrollbar pr-2 mb-4">
                                         <div className="mb-8 mt-4 sm:mt-0">
-                                            <h2 className="text-3xl sm:text-4xl text-gray-900 mb-2 font-black tracking-tighter font-urbanist">Order #{selectedOrder._id.slice(-4)}</h2>
+                                            <h2 className="text-3xl sm:text-4xl text-gray-900 mb-2 font-black tracking-tighter font-urbanist">Order #{selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</h2>
                                             <p className="text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em]">Live Order View</p>
                                         </div>
 
@@ -838,8 +859,9 @@ const AdminOrders = () => {
                                                     <img src={userIcon} alt="Customer" className="w-6 h-6 opacity-60" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Guest</p>
-                                                    <p className="text-lg text-gray-900 font-bold">{(selectedOrder.customerInfo?.name || 'User').split(' ')[0]}</p>
+                                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Customer</p>
+                                                    <p className="text-sm sm:text-lg text-gray-900 font-bold truncate max-w-[150px]" title={selectedOrder.customerInfo?.name}>{selectedOrder.customerInfo?.name || 'Guest'}</p>
+                                                    {selectedOrder.customerInfo?.phone && <p className="text-[10px] sm:text-xs text-gray-500 font-mono font-bold">{selectedOrder.customerInfo.phone}</p>}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">

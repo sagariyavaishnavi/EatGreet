@@ -47,7 +47,7 @@ export default function KitchenDashboard() {
                         if (prev.find(o => o._id === data._id)) return prev;
                         return [data, ...prev];
                     });
-                    toast.success(`Order #${data._id.slice(-3).toUpperCase()} received!`);
+                    toast.success(`Order #${data.dailySequence ? String(data.dailySequence).padStart(3, '0') : data._id.slice(-4).toUpperCase()} received!`);
                 }
             }
             else if (action === 'update') {
@@ -150,7 +150,7 @@ export default function KitchenDashboard() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">Table {round.tableNumber}</h3>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Order #{round._id.slice(-4).toUpperCase()}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Order #{round.dailySequence ? String(round.dailySequence).padStart(3, '0') : round._id.slice(-4).toUpperCase()}</p>
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${round.roundSequence > 1 ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'
                                             }`}>

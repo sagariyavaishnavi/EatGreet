@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createOrder, getOrders, updateOrderStatus } = require('../controllers/orderController');
+const { createOrder, getOrders, updateOrderStatus, checkTableStatus } = require('../controllers/orderController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { resolveTenant } = require('../middleware/tenantMiddleware');
 
@@ -8,6 +8,8 @@ const { resolveTenant } = require('../middleware/tenantMiddleware');
 router.route('/')
     .post(resolveTenant, createOrder)
     .get(protect, resolveTenant, getOrders);
+
+router.get('/table-status/:tableNumber', resolveTenant, checkTableStatus);
 
 router.route('/:id/status')
     .put(protect, admin, resolveTenant, updateOrderStatus);

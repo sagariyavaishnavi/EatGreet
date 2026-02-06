@@ -65,7 +65,7 @@ const AdminTable = () => {
         try {
             const { data } = await orderAPI.getOrders();
             // Filter for active orders only
-            const active = (data || []).filter(o => ['pending', 'preparing', 'ready'].includes(o.status));
+            const active = (data || []).filter(o => ['pending', 'preparing', 'ready', 'served'].includes(o.status));
             setActiveOrders(active);
         } catch (error) {
             console.error("Failed to fetch active orders", error);
@@ -292,7 +292,13 @@ const AdminTable = () => {
                             {/* Bottom Actions Bar (Brand Styled - Clean Dock) */}
                             <div className="absolute bottom-3 sm:bottom-6 left-0 right-0 flex justify-center items-center gap-1 sm:gap-2 px-2">
                                 <button
-                                    onClick={() => setQrModal({ isOpen: true, url, tableNo: table })}
+                                    onClick={() => {
+                                        if (isLive) {
+                                            toast.error("You can't order here, this table is already occupied. Please check your table number and scan the QR Code again.", { duration: 4000 });
+                                            return;
+                                        }
+                                        setQrModal({ isOpen: true, url, tableNo: table });
+                                    }}
                                     className="w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
                                     title="Scan QR"
                                 >

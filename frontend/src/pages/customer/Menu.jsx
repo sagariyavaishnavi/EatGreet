@@ -3,7 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { MENU_ITEMS_KEY, CATEGORIES_KEY } from '../../constants';
 import {
     Search, Heart, Plus, Minus, ShoppingBag,
-    ChevronRight, Star, Clock, Flame
+    ChevronRight, Star, Clock, Flame, UtensilsCrossed
 } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import sugarFreeIcon from '../../assets/suger-free.svg';
@@ -36,58 +36,12 @@ const dietaryIcons = {
 
 const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(1600%) hue-rotate(335deg) brightness(101%) contrast(98%)";
 
-const mockMenuData = [
-    {
-        _id: '101',
-        name: 'Truffle Mushroom Risotto',
-        category: 'Main Course',
-        price: 450,
-        description: 'Creamy arborio rice cooked to perfection with mixed wild mushrooms, finished with premium black truffle oil and a crispy parmesan tuile.',
-        calories: '420 kcal',
-        time: '25-30 min',
-        isVeg: true,
-        rating: 4.8,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80',
-        labels: ['Chef Special', 'Gluten-Free']
-    },
-    {
-        _id: '102',
-        name: 'Spicy Peri-Peri Chicken',
-        category: 'Main Course',
-        price: 380,
-        description: 'Succulent chicken breast marinated for 24 hours in our house-special peri-peri spice blend, grilled over open flame and served with roasted veggies.',
-        calories: '350 kcal',
-        time: '20-25 min',
-        isVeg: false,
-        rating: 4.6,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
-        labels: ['Spicy', 'High Protein']
-    },
-    {
-        _id: '103',
-        name: 'Classic Gourmet Burger',
-        category: 'Burgers',
-        price: 299,
-        description: 'A juicy handmade patty topped with melting sharp cheddar, caramelized onions, fresh lettuce, and our secret signature sauce on a toasted brioche bun.',
-        calories: '550 kcal',
-        time: '15-20 min',
-        isVeg: false,
-        rating: 4.9,
-        isAvailable: true,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
-        labels: ['Bestseller']
-    }
-];
-
 const offers = [
     { id: 1, title: "50% OFF", subtitle: "On your first order", code: "WELCOME50", bg: "bg-black", text: "text-white" },
     { id: 2, title: "FREE FRIES", subtitle: "Orders above 299", code: "FREEMEAL", bg: "bg-[#FD6941]", text: "text-white" }, // Orange
     { id: 3, title: "FLAT 100 OFF", subtitle: "On gourmet pizzas", code: "PIZZAPARTY", bg: "bg-green-600", text: "text-white" },
 ];
 
-// Initial like counts are no longer needed since we are not showing counts
 const currencyMap = {
     'USD': '$',
     'EUR': '€',
@@ -136,24 +90,19 @@ const Menu = () => {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState(["All"]);
-    const [showFullForm, setShowFullForm] = useState(false);
 
-    const [customerDetails, setCustomerDetails] = useState(() => {
-        const saved = localStorage.getItem(`customer_details_${tenantName}`);
-        if (saved) {
-            const { data, timestamp } = JSON.parse(saved);
-            const oneHour = 60 * 60 * 1000;
-            if (Date.now() - timestamp < oneHour) {
-                return { ...data, tableNo: tableNo, notes: "" };
-            }
-        }
-        return {
-            name: "",
-            phone: "",
-            tableNo: tableNo,
-            notes: ""
-        };
+    const [customerDetails, setCustomerDetails] = useState({
+        name: "",
+        phone: "",
+        tableNo: tableNo,
+        notes: ""
     });
+
+    const [showFullForm, setShowFullForm] = useState(true);
+
+    const [isTableOccupied, setIsTableOccupied] = useState(false);
+    const [occupantInfo, setOccupantInfo] = useState(null);
+    const [verificationPhone, setVerificationPhone] = useState("");
 
     useEffect(() => {
         if (tenantName) {
@@ -164,7 +113,33 @@ const Menu = () => {
             if (tenantName) fetchData();
         }, 10000);
         return () => clearInterval(interval);
-    }, [restaurantId, tenantName]); // Added tenantName to dependencies
+    }, [restaurantId, tenantName]);
+
+    // Check Table Occupancy
+    useEffect(() => {
+        const checkStatus = async () => {
+            if (tenantName && tableNo && tableNo !== 'preview') {
+                 try {
+                     const res = await orderAPI.checkTableStatus(tableNo, tenantName);
+                     if (res.data.status === 'occupied') {
+                         if (!customerDetails.phone || customerDetails.phone !== res.data.customer.phone) {
+                             setIsTableOccupied(true);
+                             setOccupantInfo(res.data.customer);
+                         } else {
+                            setIsTableOccupied(false);
+                         }
+                     } else {
+                         setIsTableOccupied(false);
+                     }
+                 } catch (e) {
+                     console.error("Occupancy Check Failed", e);
+                 }
+            }
+        };
+        checkStatus();
+        const interval = setInterval(checkStatus, 5000);
+        return () => clearInterval(interval);
+    }, [tenantName, tableNo, customerDetails.phone]);
 
     const fetchData = async () => {
         try {
@@ -188,21 +163,25 @@ const Menu = () => {
     }, [tableNo]);
 
     // Update persistence when name/phone changes
-    useEffect(() => {
-        if (customerDetails.name || customerDetails.phone) {
-            const persistData = {
-                data: { name: customerDetails.name, phone: customerDetails.phone },
-                timestamp: Date.now()
-            };
-            localStorage.setItem(`customer_details_${tenantName}`, JSON.stringify(persistData));
-        }
-    }, [customerDetails.name, customerDetails.phone, tenantName]);
+    // Persistence disabled to force new entry every time
 
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
 
         if (Object.keys(cart).length === 0) {
             toast.error("Your cart is empty");
+            return;
+        }
+
+        // STRICT VALIDATION: Name and Phone are compulsory for QR orders
+        if (!customerDetails.name || !customerDetails.name.trim()) {
+            toast.error("Please enter your full name");
+            setShowFullForm(true); // Ensure form is visible
+            return;
+        }
+        if (!customerDetails.phone || !customerDetails.phone.trim() || customerDetails.phone.length < 10) {
+            toast.error("Please enter a valid phone number");
+            setShowFullForm(true);
             return;
         }
 
@@ -559,7 +538,7 @@ const Menu = () => {
                                             )}
                                         </div>
 
-                                        {!showFullForm && customerDetails.name && customerDetails.phone ? (
+                                        {!showFullForm ? (
                                             <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-3">
                                                 <div className="flex items-center justify-between">
                                                     <div>
@@ -661,6 +640,50 @@ const Menu = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+            
+            {/* Occupied Table Blocker Modal */}
+            {isTableOccupied && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl animate-bounce-in">
+                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                             <UtensilsCrossed className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Table Occupied</h3>
+                        <p className="text-gray-500 mb-6 px-4">
+                            You can't order here, this table is already occupied.
+                            <br />Please check your table number and scan the QR Code again.
+                        </p>
+                        
+                        <div className="border-t border-gray-100 pt-6">
+                            <p className="text-sm font-bold text-gray-800 mb-3">Is this your table?</p>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="tel" 
+                                    placeholder="Enter your phone number"
+                                    value={verificationPhone}
+                                    onChange={e => setVerificationPhone(e.target.value)}
+                                    className="flex-1 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-red-500 text-sm"
+                                />
+                                <button 
+                                    onClick={() => {
+                                        if (occupantInfo && verificationPhone === occupantInfo.phone) {
+                                            toast.success("Identity Verified! Welcome back.");
+                                            setCustomerDetails(prev => ({ ...prev, phone: verificationPhone, name: occupantInfo.name }));
+                                            setIsTableOccupied(false);
+                                            setShowFullForm(false);
+                                        } else {
+                                            toast.error("Phone number does not match current order.");
+                                        }
+                                    }}
+                                    className="bg-black text-white px-4 py-2 rounded-xl text-sm font-bold"
+                                >
+                                    Verify
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -76,6 +76,7 @@ export const orderAPI = {
   create: (orderData) => api.post('/orders', orderData),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
   updateItemStatus: (orderId, itemIdx, status) => api.put(`/orders/${orderId}/items/${itemIdx}/status`, { status }),
+  checkTableStatus: (tableNumber, restaurantName) => api.get(`/orders/table-status/${tableNumber}`, { params: { restaurantName } }),
 
   // Public Kitchen API
   getKitchenOrders: (restaurantName) => api.get(`/orders/kitchen/${restaurantName}`),

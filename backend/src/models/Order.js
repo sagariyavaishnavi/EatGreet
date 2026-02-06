@@ -22,7 +22,8 @@ const orderSchema = new mongoose.Schema({
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'preparing', 'ready', 'completed', 'cancelled'], default: 'pending' },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
-    instruction: { type: String }
+    instruction: { type: String },
+    dailySequence: { type: Number } // Sequential daily order number (e.g. 1, 2, 3...)
 }, {
     timestamps: true,
     collection: 'orders' // Match user's DB structure

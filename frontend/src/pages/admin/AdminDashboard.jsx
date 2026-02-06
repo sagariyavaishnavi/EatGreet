@@ -188,29 +188,29 @@ const AdminDashboard = () => {
                     .slice(0, 3)
                     .map(o => ({
                         id: o._id,
-                        title: `Order #${o._id.slice(-4)}`,
+                        title: `Order #${o.dailySequence ? String(o.dailySequence).padStart(3, '0') : o._id.slice(-4)}`,
                         sub: (o.items || []).map(i => i.name || 'Item').join(', '),
                         icon: tableIcon
                     }));
                 setFeedItems(activeOrdersList);
 
-                // Process Live Hourly Data for Today
-                const hourlyRevenue = statsRes.data.hourlyRevenue || [];
-                const currentHour = new Date().getHours();
+                // Process Weekly Revenue Data (Last 7 Days)
+                const weeklyRevenue = statsRes.data.weeklyRevenue || [];
                 const graphData = [];
 
-                // Show last 7 hours for high-density live feel
                 for (let i = 6; i >= 0; i--) {
-                    const hour = (currentHour - i + 24) % 24;
-                    const ampm = hour >= 12 ? 'PM' : 'AM';
-                    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-                    const hourLabel = `${displayHour}${ampm}`;
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    // Use ISO string for matching with backend (UTC dates)
+                    const dateStr = d.toISOString().split('T')[0];
+                    // Use local locale for display labels
+                    const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
 
-                    const hourData = hourlyRevenue.find(d => d._id === hour);
+                    const dayData = weeklyRevenue.find(w => w._id === dateStr);
                     graphData.push({
-                        name: hourLabel,
-                        value: hourData ? hourData.total : 0,
-                        highlight: i === 0
+                        name: dayLabel,
+                        value: dayData ? dayData.total : 0,
+                        highlight: i === 0 // Highlight today
                     });
                 }
                 setSalesData(graphData);
@@ -226,7 +226,7 @@ const AdminDashboard = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const { user } = useSettings();
+    const { user, currencySymbol } = useSettings();
     const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
 
     return (
@@ -263,7 +263,7 @@ const AdminDashboard = () => {
                         <div className="flex justify-between items-center gap-2 mb-4 sm:mb-2">
                             <div className="flex flex-col">
                                 <h2 className="text-[16px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
-                                <p className="text-[12px] text-gray-400 font-medium">Live Hourly Breakdown</p>
+                                <p className="text-[12px] text-gray-400 font-medium">Weekly Breakdown</p>
                             </div>
 
                             <div className="flex items-center gap-2 sm:gap-3">
@@ -276,37 +276,39 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={salesData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#9CA3AF', fontSize: 13, fontWeight: 500, fontFamily: 'Urbanist' }}
-                                    dy={15}
-                                />
-                                <YAxis hide />
-                                <Tooltip
-                                    cursor={false}
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <div className="bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-50">
-                                                    <p className="text-[14px] font-bold text-black font-urb">
-                                                        {currencySymbol}{payload[0].value.toLocaleString()}
-                                                    </p>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                                <Bar
-                                    dataKey="value"
-                                    shape={(props) => <CustomPillBar {...props} />}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="flex-1 w-full min-h-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={salesData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#9CA3AF', fontSize: 13, fontWeight: 500, fontFamily: 'Urbanist' }}
+                                        dy={15}
+                                    />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        cursor={false}
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-50">
+                                                        <p className="text-[14px] font-bold text-black font-urb">
+                                                            {currencySymbol}{payload[0].value.toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Bar
+                                        dataKey="value"
+                                        shape={(props) => <CustomPillBar {...props} />}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
 

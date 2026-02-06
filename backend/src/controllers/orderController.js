@@ -13,6 +13,14 @@ const createOrder = async (req, res) => {
 
         const resolvedCustomerInfo = customerInfo || {};
 
+        // Strict Validation: Name and Phone are compulsory
+        if (!resolvedCustomerInfo.name || !resolvedCustomerInfo.name.trim()) {
+            return res.status(400).json({ message: 'Name is required' });
+        }
+        if (!resolvedCustomerInfo.phone || !resolvedCustomerInfo.phone.trim()) {
+             return res.status(400).json({ message: 'Phone number is required' });
+        }
+
         // 2. SAVE/UPDATE CUSTOMER DATA (Scoped to eatgreet_customer DB)
         let customer = null;
         if (resolvedCustomerInfo.phone) {
@@ -108,12 +116,23 @@ const createOrder = async (req, res) => {
         }
 
         // 4. CREATE NEW ORDER
+        // Calculate Daily Sequence Number
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const lastDailyOrder = await Order.findOne({
+            createdAt: { $gte: startOfDay }
+        }).sort({ dailySequence: -1 });
+
+        const nextSequence = (lastDailyOrder && lastDailyOrder.dailySequence) ? lastDailyOrder.dailySequence + 1 : 1;
+
         const order = new Order({
             customerInfo: resolvedCustomerInfo,
             tableNumber,
             items: items.map(item => ({ ...item, addedAt: new Date() })),
             totalAmount,
-            instruction
+            instruction,
+            dailySequence: nextSequence
         });
 
         const createdOrder = await order.save();
@@ -138,6 +157,28 @@ const getOrders = async (req, res) => {
     try {
         const { Order } = req.tenantModels;
         const { status, limit } = req.query;
+
+        // --- AUTO-MIGRATION: Fix missing sequences for today (Self-Healing) ---
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const unsequencedCount = await Order.countDocuments({
+            createdAt: { $gte: startOfDay },
+            dailySequence: { $exists: false }
+        });
+
+        if (unsequencedCount > 0) {
+            const todaysOrders = await Order.find({ createdAt: { $gte: startOfDay } }).sort({ createdAt: 1 });
+            const bulkOps = todaysOrders.map((order, index) => ({
+                updateOne: {
+                    filter: { _id: order._id },
+                    update: { $set: { dailySequence: index + 1 } }
+                }
+            }));
+            if (bulkOps.length > 0) {
+                await Order.bulkWrite(bulkOps);
+            }
+        }
+        // -----------------------------------------------------------------------
 
         // Base filter
         let filter = {};
@@ -225,4 +266,39 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getOrders, updateOrderStatus };
+// @desc    Check if table is occupied
+// @route   GET /api/orders/table-status/:tableNumber
+// @access  Public
+const checkTableStatus = async (req, res) => {
+    try {
+        const { Order } = req.tenantModels;
+        const { tableNumber } = req.params;
+
+        if (!tableNumber) {
+            return res.status(400).json({ message: 'Table number is required' });
+        }
+
+        const activeOrder = await Order.findOne({
+            tableNumber: tableNumber,
+            status: { $in: ['pending', 'preparing', 'ready', 'served'] }
+        }).sort({ createdAt: -1 });
+
+        if (activeOrder) {
+            return res.status(200).json({
+                status: 'occupied',
+                customer: {
+                    name: activeOrder.customerInfo?.name || 'Guest',
+                    phone: activeOrder.customerInfo?.phone || ''
+                },
+                message: 'Table is occupied'
+            });
+        }
+
+        res.status(200).json({ status: 'free', message: 'Table is available' });
+    } catch (error) {
+        console.error("Check Table Status Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createOrder, getOrders, updateOrderStatus, checkTableStatus };

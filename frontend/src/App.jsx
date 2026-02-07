@@ -25,6 +25,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminTable from './pages/admin/AdminTable';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminSales from './pages/admin/AdminSales';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 import KitchenLayout from './layouts/KitchenLayout';
@@ -151,7 +152,7 @@ function App() {
               <Route path="category" element={<AdminCategory />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="table" element={<AdminTable />} />
-              <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
+              <Route path="sales" element={<AdminSales />} />
               <Route path="profile" element={<AdminProfile />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>

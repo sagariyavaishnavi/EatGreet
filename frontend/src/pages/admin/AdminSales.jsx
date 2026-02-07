@@ -3,9 +3,14 @@ import { createPortal } from 'react-dom';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Legend
 } from 'recharts';
-import { Calendar, DollarSign, TrendingUp, Download, Eye, X, Printer, FileText, Search, Filter, ChevronDown, Wallet } from 'lucide-react';
+import {
+    Calendar, DollarSign, TrendingUp, Download, Eye, X, Printer,
+    FileText, Search, Filter, ChevronDown, Wallet, ShoppingBag, PieChart, Activity
+} from 'lucide-react';
 import { orderAPI, restaurantAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Helper to format currency
 const formatCurrency = (amount, symbol = '$') => {
@@ -13,23 +18,22 @@ const formatCurrency = (amount, symbol = '$') => {
     return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const SalesCard = ({ title, value, subValue, icon: Icon, trend }) => {
+const SalesCard = ({ title, value, subValue, icon: Icon, isCurrency }) => {
     return (
-        <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-transparent hover:border-gray-100 transition-all">
-            <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-black">
-                    <Icon className="w-6 h-6 opacity-70" />
+        <div className="bg-white rounded-[1.2rem] sm:rounded-[2rem] px-4 sm:px-6 py-3 sm:py-4 flex items-center h-[100px] sm:h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
+            <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 opacity-60 text-black" />
                 </div>
-                {trend && (
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {trend > 0 ? '+' : ''}{trend}%
-                    </span>
-                )}
-            </div>
-            <div>
-                <p className="text-gray-400 text-sm font-medium mb-1">{title}</p>
-                <h3 className="text-2xl font-bold text-black">{value}</h3>
-                {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
+                <div className="flex flex-col">
+                    <h3 className="text-[18px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline tracking-tight">
+                        {value}
+                    </h3>
+                    <p className="text-[11px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight truncate max-w-[120px] sm:max-w-full">
+                        {title}
+                        {subValue && <span className="opacity-60 ml-1 font-normal">- {subValue}</span>}
+                    </p>
+                </div>
             </div>
         </div>
     );
@@ -40,7 +44,7 @@ const DynamicEbitdaCard = ({ stats, currencySymbol }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const getData = () => {
-        switch(period) {
+        switch (period) {
             case 'Weekly': return stats.weekly.ebitda;
             case 'Quarterly': return stats.quarterly.ebitda;
             case 'Annual': return stats.annual.ebitda;
@@ -55,16 +59,16 @@ const DynamicEbitdaCard = ({ stats, currencySymbol }) => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-orange-600 bg-orange-50">
                     <Wallet className="w-6 h-6" />
                 </div>
-                
+
                 {/* Dropdown */}
                 <div className="relative">
-                    <button 
+                    <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="flex items-center gap-1 text-xs font-bold bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded-lg text-gray-500 transition-colors"
                     >
                         {period} <ChevronDown className="w-3 h-3" />
                     </button>
-                    
+
                     {isOpen && (
                         <>
                             <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
@@ -235,7 +239,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200" onClick={onClose}>
             <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] shadow-2xl relative flex flex-col border border-gray-100 overflow-hidden" onClick={e => e.stopPropagation()}>
-                
+
                 <button
                     onClick={onClose}
                     className="absolute top-6 right-6 w-11 h-11 bg-white/90 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
@@ -243,7 +247,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                     <X className="w-6 h-6" />
                 </button>
 
-                 <div className="p-8 overflow-y-auto custom-scrollbar flex items-center justify-center bg-gray-100/50 h-full">
+                <div className="p-8 overflow-y-auto custom-scrollbar flex items-center justify-center bg-gray-100/50 h-full">
                     <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative" style={{ width: '380px' }}>
                         <button
                             onClick={handlePrint}
@@ -356,22 +360,18 @@ const AdminSales = () => {
     const { currencySymbol } = useSettings();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
-    const [searchQuery, setSearchQuery] = useState('');
-    const [paymentFilter, setPaymentFilter] = useState('All'); // 'All', 'Cash', 'Online'
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [restaurant, setRestaurant] = useState(null);
 
     // Fetch Restaurant Details on Mount
     useEffect(() => {
         const fetchRestaurantDetails = async () => {
-             try {
-                 const { data } = await restaurantAPI.getDetails();
-                 setRestaurant(data);
-             } catch (error) {
-                 console.error('Failed to fetch restaurant details', error);
-             }
+            try {
+                const { data } = await restaurantAPI.getDetails();
+                setRestaurant(data);
+            } catch (error) {
+                console.error('Failed to fetch restaurant details', error);
+            }
         };
         fetchRestaurantDetails();
     }, []);
@@ -392,110 +392,125 @@ const AdminSales = () => {
         fetchAllOrders();
     }, []);
 
-    // Memoized calculations
-    const stats = useMemo(() => {
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-        const currentWeekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
+    // State for Date Filter
+    // defaulting to empty so it shows "All Time" data initially (per user request "not impact to data")
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-        let weekly = 0, monthly = 0, quarterly = 0, annual = 0;
-        let weeklyVol = 0, monthlyVol = 0, quarterlyVol = 0, annualVol = 0;
-        let weeklyEbitda = 0, monthlyEbitda = 0, quarterlyEbitda = 0, annualEbitda = 0;
-        
-        const TAX_RATE = 0.10; // 10%
-        const EBITDA_MARGIN = 0.35; // 35%
+    const [searchQuery, setSearchQuery] = useState('');
+    const [paymentFilter, setPaymentFilter] = useState('All');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-        orders.forEach(order => {
-            const d = new Date(order.createdAt);
-            const amount = order.totalAmount || 0;
-            const ebitda = amount * EBITDA_MARGIN;
-
-            // Annual
-            if (d.getFullYear() === currentYear) {
-                annual += amount;
-                annualVol++;
-                annualEbitda += ebitda;
-
-                // Monthly
-                if (d.getMonth() === currentMonth) {
-                    monthly += amount;
-                    monthlyVol++;
-                    monthlyEbitda += ebitda;
-                }
-
-                // Quarterly (Simple check)
-                const q = Math.floor(d.getMonth() / 3);
-                const currentQ = Math.floor(currentMonth / 3);
-                if (q === currentQ) {
-                    quarterly += amount;
-                    quarterlyVol++;
-                    quarterlyEbitda += ebitda;
-                }
-            }
-
-            // Weekly
-            if (d >= currentWeekStart) {
-                weekly += amount;
-                weeklyVol++;
-                weeklyEbitda += ebitda;
-            }
-        });
-
-        return {
-            weekly: { sales: weekly, vol: weeklyVol, ebitda: weeklyEbitda },
-            monthly: { sales: monthly, vol: monthlyVol, ebitda: monthlyEbitda },
-            quarterly: { sales: quarterly, vol: quarterlyVol, ebitda: quarterlyEbitda },
-            annual: { sales: annual, vol: annualVol, ebitda: annualEbitda },
-        };
-    }, [orders]);
-
-    // Graph Data Preparation
-    const graphData = useMemo(() => {
-        // Group by Month (Last 12 months or Current Year)
-        const groups = {};
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-        months.forEach(m => groups[m] = { name: m, sales: 0, volume: 0, tax: 0, ebitda: 0 });
-
-        orders.forEach(order => {
-            const d = new Date(order.createdAt);
-            if (d.getFullYear() === new Date().getFullYear()) {
-                const m = months[d.getMonth()];
-                const amount = order.totalAmount || 0;
-                groups[m].sales += amount;
-                groups[m].volume += 1;
-                groups[m].tax += amount * 0.1; // Mock 10%
-                groups[m].ebitda += amount * 0.35; // Mock 35%
-            }
-        });
-
-        return Object.values(groups);
-    }, [orders]);
-
-    // Filtered Orders Table
+    // 1. Filter Orders based on Date Range & Search
     const filteredOrders = useMemo(() => {
-        let result = orders;
+        let filtered = orders;
 
-        // 1. Date Range Filter
-        if (dateRange.start || dateRange.end) {
-            const start = dateRange.start ? new Date(dateRange.start) : new Date('1970-01-01');
-            const end = dateRange.end ? new Date(dateRange.end) : new Date();
-            end.setHours(23, 59, 59, 999);
-            result = result.filter(o => {
-                const d = new Date(o.createdAt);
-                return d >= start && d <= end;
-            });
-        } else {
-             // By default show all, or maybe limit? Let's show all for "searchability" then slice later for initial view if needed
+        // Date Filter
+        if (dateRange.start) {
+            const startDate = new Date(dateRange.start);
+            startDate.setHours(0, 0, 0, 0);
+            filtered = filtered.filter(o => new Date(o.createdAt) >= startDate);
+        }
+        if (dateRange.end) {
+            const endDate = new Date(dateRange.end);
+            endDate.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(o => new Date(o.createdAt) <= endDate);
         }
 
-        // 2. Search Filter (Dynamic)
+        // Search Filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(o =>
+                (o.customerInfo?.name || '').toLowerCase().includes(query) ||
+                (o._id || '').toLowerCase().includes(query) ||
+                (o.dailySequence || '').toString().includes(query)
+            );
+        }
+
+        // Payment Filter
+        if (paymentFilter !== 'All') {
+            filtered = filtered.filter(o =>
+                (o.paymentMethod || 'Cash').toLowerCase() === paymentFilter.toLowerCase()
+            );
+        }
+
+        return filtered;
+    }, [orders, dateRange, searchQuery, paymentFilter]);
+
+    // 2. Stats Calculation based on Filtered Data
+    const stats = useMemo(() => {
+        let totalRevenue = 0;
+        let totalOrders = 0;
+        let totalEbitda = 0;
+
+        // Custom EBITDA definition: Revenue excluding Tax (5%)
+        // Total = Subtotal * 1.05
+        // Subtotal (EBITDA) = Total / 1.05
+
+        filteredOrders.forEach(order => {
+            const amount = order.totalAmount || 0;
+            totalRevenue += amount;
+            totalOrders++;
+            totalEbitda += (amount / 1.05);
+        });
+
+        const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+        return {
+            revenue: totalRevenue,
+            orders: totalOrders,
+            aov: aov,
+            ebitda: totalEbitda
+        };
+    }, [filteredOrders]);
+
+    // 3. Graph Data Preparation (Current Year Overview)
+    const graphData = useMemo(() => {
+        const groups = {};
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentYear = new Date().getFullYear();
+
+        // Initialize all 12 months with 0
+        months.forEach(m => {
+            groups[m] = { name: m, sales: 0, cash: 0, online: 0, ebitda: 0, volume: 0 };
+        });
+
+        // Process orders for the current year
+        orders.forEach(order => {
+            const d = new Date(order.createdAt);
+            // Only aggregate data for the current year
+            if (d.getFullYear() !== currentYear) return;
+
+            const key = d.toLocaleDateString('en-US', { month: 'short' });
+
+            if (groups[key]) {
+                const amount = order.totalAmount || 0;
+                groups[key].sales += amount;
+                groups[key].volume += 1;
+
+                // Payment breakdown for Volume (if needed later)
+                const method = (order.paymentMethod || 'Cash').toLowerCase();
+                if (method === 'online' || method === 'card' || method === 'upi') {
+                    groups[key].online += 1;
+                } else {
+                    groups[key].cash += 1;
+                }
+
+                groups[key].ebitda += (amount / 1.05); // Revenue ex. tax
+            }
+        });
+
+        // Return ordered array Jan -> Dec
+        return months.map(m => groups[m]);
+    }, [orders]);
+
+    // 4. Table Display Data (Search & Payment Filter on top of Date Filter)
+    const tableData = useMemo(() => {
+        let result = filteredOrders;
+
+        // Search Filter
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(o => 
+            result = result.filter(o =>
                 (o.dailySequence && String(o.dailySequence).includes(lowerQuery)) ||
                 (o._id && o._id.toLowerCase().includes(lowerQuery)) ||
                 (o.customerInfo?.name && o.customerInfo.name.toLowerCase().includes(lowerQuery)) ||
@@ -503,79 +518,135 @@ const AdminSales = () => {
             );
         }
 
-        // 3. Payment Mode Filter
+        // Payment Mode Filter
         if (paymentFilter !== 'All') {
-             result = result.filter(o => {
-                 const mode = o.paymentMethod || 'Cash'; // Default to Cash if undefined
-                 return mode.toLowerCase() === paymentFilter.toLowerCase();
-             });
+            result = result.filter(o => {
+                const mode = o.paymentMethod || 'Cash';
+                return mode.toLowerCase() === paymentFilter.toLowerCase();
+            });
         }
+        return result;
+    }, [filteredOrders, searchQuery, paymentFilter]);
 
-        // Sort by date desc
-        return result.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }, [orders, dateRange, searchQuery, paymentFilter]);
+    // Download PDF Handler
+    const handleDownloadPDF = () => {
+        try {
+            // Instantiate jsPDF
+            const jsPDFConstructor = jsPDF.default || jsPDF;
+            const doc = new jsPDFConstructor();
+
+            // Header
+            doc.setFontSize(18);
+            doc.text("Sales Report", 14, 22);
+
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            let dateText = "All Time";
+            if (dateRange.start || dateRange.end) {
+                dateText = `${dateRange.start || 'Start'} to ${dateRange.end || 'Now'}`;
+            }
+            doc.text(`Period: ${dateText}`, 14, 30);
+
+            // Summary
+            doc.text(`Total Revenue: ${formatCurrency(stats.revenue, currencySymbol)}`, 14, 40);
+            doc.text(`Total Orders: ${stats.orders}`, 80, 40);
+
+            // Table
+            const tableColumn = ["Date", "Order ID", "Customer", "Payment", "Items", "Total"];
+            const tableRows = tableData.map(order => [
+                new Date(order.createdAt).toLocaleDateString(),
+                order.dailySequence || order._id.slice(-6),
+                order.customerInfo?.name || 'Guest',
+                order.paymentMethod || 'Cash',
+                order.items?.length || 0,
+                `${currencySymbol}${(order.totalAmount || 0).toFixed(2)}`
+            ]);
+
+            // Use functional autoTable
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 50,
+                theme: 'grid',
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [0, 0, 0] }
+            });
+
+            doc.save(`sales_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            alert(`Failed to generate PDF: ${error.message}`);
+        }
+    };
 
     return (
         <div className="space-y-6 pb-10">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-black tracking-tight">Sales Dashboard</h1>
+                    <h1 className="text-3xl font-medium text-black tracking-tight leading-none">Sales Dashboard</h1>
                     <p className="text-gray-400 font-medium">Financial Overview & Analytics</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                     <input
                         type="date"
                         value={dateRange.start}
                         onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block px-3 py-2 outline-none shadow-sm"
+                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-full focus:ring-black focus:border-black block px-4 py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
-                    <span className="self-center text-gray-400">-</span>
+                    <span className="self-center text-gray-400 font-medium">-</span>
                     <input
                         type="date"
                         value={dateRange.end}
                         onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block px-3 py-2 outline-none shadow-sm"
+                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-full focus:ring-black focus:border-black block px-4 py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
-                    <button className="bg-black text-white p-2 rounded-lg hover:bg-gray-800 transition-colors">
-                        <Download size={18} />
+                    <button
+                        onClick={handleDownloadPDF}
+                        className="bg-black hover:bg-gray-800 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 hover:w-auto hover:px-6 hover:gap-2"
+                        title="Download PDF Report"
+                    >
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                        <span className="max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden">
+                            Download PDF
+                        </span>
                     </button>
                 </div>
             </div>
 
-            {/* 5 Summary Tiles Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* 4 Summary Cards as requested */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* 1. Total Revenue */}
                 <SalesCard
-                    title="Weekly Sales"
-                    value={formatCurrency(stats.weekly.sales, currencySymbol)}
-                    subValue={`${stats.weekly.vol} Orders`}
+                    title="Total Revenue"
+                    value={formatCurrency(stats.revenue, currencySymbol)}
+                    subValue={dateRange.start ? "Period Revenue" : "All Time Revenue"}
                     icon={DollarSign}
-                    trend={12} // Mock trend
                 />
+
+                {/* 2. Total Orders */}
                 <SalesCard
-                    title="Monthly Sales"
-                    value={formatCurrency(stats.monthly.sales, currencySymbol)}
-                    subValue={`${stats.monthly.vol} Orders`}
-                    icon={Calendar}
-                    trend={-5}
+                    title="Total Orders"
+                    value={stats.orders}
+                    subValue={dateRange.start ? "Period Orders" : "All Time Orders"}
+                    icon={ShoppingBag}
                 />
+
+                {/* 3. Avg Order Value (AOV) */}
                 <SalesCard
-                    title="Quarterly Sales"
-                    value={formatCurrency(stats.quarterly.sales, currencySymbol)}
-                    subValue={`${stats.quarterly.vol} Orders`}
-                    icon={TrendingUp}
-                    trend={8}
+                    title="Avg Order Value (AOV)"
+                    value={formatCurrency(stats.aov, currencySymbol)}
+                    subValue="Average per order"
+                    icon={Activity}
                 />
+
+                {/* 4. Yearly EBITDA */}
                 <SalesCard
-                    title="Annual Sales"
-                    value={formatCurrency(stats.annual.sales, currencySymbol)}
-                    subValue={`${stats.annual.vol} Orders`}
-                    icon={DollarSign}
-                    trend={24}
+                    title="EBITDA"
+                    value={formatCurrency(stats.ebitda, currencySymbol)}
+                    subValue={dateRange.start ? "Period (Excl. Tax)" : "Total (Excl. Tax)"}
+                    icon={PieChart}
                 />
-                
-                {/* Dynamic EBITDA Card */}
-                <DynamicEbitdaCard stats={stats} currencySymbol={currencySymbol} />
             </div>
 
             {/* Charts Section */}
@@ -613,11 +684,11 @@ const AdminSales = () => {
                     </div>
                 </div>
 
-                {/* Secondary Graph: Volume & Tax */}
+                {/* Secondary Graph: Total Volume */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-[1.5rem] shadow-sm">
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-black">Volume & Tax</h3>
-                        <p className="text-sm text-gray-400">Transaction counts & tax collected</p>
+                        <h3 className="text-xl font-bold text-black">Total Orders</h3>
+                        <p className="text-sm text-gray-400">Number of orders per period</p>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -628,8 +699,7 @@ const AdminSales = () => {
                                     cursor={{ fill: '#F3F4F6' }}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
-                                <Bar dataKey="volume" name="Volume" fill="#000000" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="tax" name="Tax" fill="#94A3B8" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="volume" name="Orders" fill="#000000" radius={[4, 4, 0, 0]} barSize={40} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -643,14 +713,14 @@ const AdminSales = () => {
                         <h3 className="text-xl font-bold text-black">Transaction History</h3>
                         <p className="text-sm text-gray-400">Detailed list of past orders</p>
                     </div>
-                    
+
                     {/* Controls */}
                     <div className="flex gap-3 w-full sm:w-auto">
                         {/* Search Bar */}
                         <div className="relative flex-1 sm:flex-none">
-                            <input 
-                                type="text" 
-                                placeholder="Search Order ID..." 
+                            <input
+                                type="text"
+                                placeholder="Search Order ID..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-full text-sm w-full sm:w-64 focus:outline-none focus:ring-1 focus:ring-black transition-all"
@@ -660,7 +730,7 @@ const AdminSales = () => {
 
                         {/* Filter Dropdown */}
                         <div className="relative">
-                            <button 
+                            <button
                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-bold transition-all ${paymentFilter !== 'All' ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                             >
@@ -706,8 +776,8 @@ const AdminSales = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredOrders.length > 0 ? (
-                                filteredOrders.map((order) => (
+                            {tableData.length > 0 ? (
+                                tableData.map((order) => (
                                     <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-6 py-4 text-sm font-bold text-black">
                                             #{order.dailySequence || (order._id || '').slice(-6).toUpperCase()}
@@ -716,11 +786,10 @@ const AdminSales = () => {
                                             {new Date(order.createdAt).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                                                (order.paymentMethod || 'Cash') === 'Online' 
-                                                ? 'bg-blue-100 text-blue-700' 
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${(order.paymentMethod || 'Cash') === 'Online'
+                                                ? 'bg-blue-100 text-blue-700'
                                                 : 'bg-green-100 text-green-700'
-                                            }`}>
+                                                }`}>
                                                 {order.paymentMethod || 'Cash'}
                                             </span>
                                         </td>
@@ -734,7 +803,7 @@ const AdminSales = () => {
                                             {formatCurrency(order.totalAmount || 0, currencySymbol)}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedOrder(order)}
                                                 className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-all active:scale-95 shadow-md hover:shadow-lg mx-auto"
                                                 title="View Invoice"
@@ -757,12 +826,12 @@ const AdminSales = () => {
             </div>
 
             {/* Invoice Modal */}
-            <InvoiceModal 
-                order={selectedOrder} 
-                isOpen={!!selectedOrder} 
-                onClose={() => setSelectedOrder(null)} 
+            <InvoiceModal
+                order={selectedOrder}
+                isOpen={!!selectedOrder}
+                onClose={() => setSelectedOrder(null)}
                 currencySymbol={currencySymbol}
-                restaurant={restaurant} 
+                restaurant={restaurant}
             />
         </div>
     );

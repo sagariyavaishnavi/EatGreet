@@ -39,47 +39,90 @@ const DashboardCard = ({ value, label, icon, subValue, isCurrency }) => {
     );
 };
 
-const TimeStatusGauge = () => (
-    <div className="bg-white rounded-[2rem] p-8 h-[320px] shadow-sm flex flex-col relative overflow-hidden transition-all border border-transparent">
-        <h3 className="text-[24px] font-medium text-black mb-1">Time Status</h3>
-        <div className="flex-1 flex items-center justify-center relative translate-y-6">
-            <div className="relative w-full h-full flex items-center justify-center overflow-visible">
-                <svg width="100%" height="100%" viewBox="0 0 220 120" className="max-w-[340px] overflow-visible">
+const TimeStatusGauge = ({ value }) => {
+    // Determine percentage (assume 45 mins is max for full gauge)
+    const maxVal = 45;
+    const percent = Math.min(Math.max((value || 0), 0) / maxVal, 1);
+
+    // Config
+    const numTicks = 42;
+    const cx = 180;
+    const cy = 210;
+    const rInner = 130;
+    const rOuter = 170;
+
+    // Calculate active ticks
+    const activeCount = Math.round(percent * numTicks);
+
+    return (
+        <div className="bg-white rounded-[2rem] p-8 h-[320px] shadow-sm flex flex-col relative overflow-hidden transition-all border border-transparent">
+            <h3 className="text-[24px] font-medium text-black mb-1">Time Status</h3>
+
+            <div className="flex-1 flex items-center justify-center relative translate-y-[-10px]">
+                <svg width="100%" height="240" viewBox="0 0 360 230" className="overflow-visible">
                     <defs>
                         <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#22C55E" />
-                            <stop offset="65%" stopColor="#86EFAC" />
-                            <stop offset="100%" stopColor="#DCFCE7" />
+                            <stop offset="0%" stopColor="#FACC15" />
+                            <stop offset="100%" stopColor="#22C55E" />
                         </linearGradient>
                     </defs>
-                    <path
-                        d="M 10 110 A 100 100 0 0 1 210 110"
-                        fill="none"
-                        stroke="#F3F5F7"
-                        strokeWidth="32"
-                        strokeLinecap="round"
-                    />
-                    <path
-                        d="M 10 110 A 100 100 0 0 1 180.7 39.3"
-                        fill="none"
-                        stroke="url(#gaugeGradient)"
-                        strokeWidth="32"
-                        strokeLinecap="round"
-                    />
+
+                    {Array.from({ length: numTicks }).map((_, i) => {
+                        // Create symmetrical arc from -180 deg to 0 deg
+                        const startAngle = -180;
+                        const endAngle = 0;
+                        const angle = startAngle + (i * (endAngle - startAngle) / (numTicks - 1));
+                        const rad = (angle * Math.PI) / 180;
+
+                        const x1 = cx + rInner * Math.cos(rad);
+                        const y1 = cy + rInner * Math.sin(rad);
+                        const x2 = cx + rOuter * Math.cos(rad);
+                        const y2 = cy + rOuter * Math.sin(rad);
+
+                        const isActive = i < activeCount;
+
+                        return (
+                            <line
+                                key={i}
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke={isActive ? "url(#gaugeGradient)" : "#F3F5F7"}
+                                strokeWidth="10"
+                                strokeLinecap="round"
+                                className={isActive ? "animate-live-pulse" : ""}
+                                style={{
+                                    animationDelay: `${i * 0.03}s` // Live ripple effect
+                                }}
+                            />
+                        );
+                    })}
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
-                    <div className="text-center translate-y-2">
-                        <div className="flex items-baseline justify-center gap-1.5 leading-none mb-1.5">
-                            <span className="text-[36px] font-medium text-black tracking-tight">20</span>
-                            <span className="text-[26px] font-medium text-black">min</span>
-                        </div>
-                        <div className="text-[15px] text-gray-400 font-medium tracking-wide">Avg. wait Time</div>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center pt-24">
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-[56px] font-medium text-black tracking-tight leading-none">
+                            {value || 0}
+                        </span>
+                        <span className="text-[28px] font-medium text-black">min</span>
                     </div>
+                    <span className="text-[16px] text-gray-400 font-medium mt-1">Avg. Wait Time</span>
                 </div>
             </div>
+
+            <style>{`
+                @keyframes live-pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                .animate-live-pulse {
+                    animation: live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
+            `}</style>
         </div>
-    </div>
-);
+    );
+};
 
 const CustomPillBar = (props) => {
     const { x, y, width, height, highlight } = props;
@@ -173,12 +216,31 @@ const AdminDashboard = () => {
                         .filter(tNo => trackedTables.map(String).includes(tNo))
                 );
 
+                // 5. Calculate Real Avg Wait Time (for active orders)
+                const activeOrdersForTime = orders.filter(o => ['pending', 'preparing'].includes(o.status));
+                let calculatedWaitTime = 0;
+
+                if (activeOrdersForTime.length > 0) {
+                    const now = new Date();
+                    const totalTimeMs = activeOrdersForTime.reduce((acc, order) => {
+                        return acc + (now - new Date(order.createdAt));
+                    }, 0);
+                    calculatedWaitTime = Math.round(totalTimeMs / (1000 * 60) / activeOrdersForTime.length);
+                }
+
+                // If no active orders, wait time is 0.
+                // If active orders exist, show their average wait time.
+                const finalWaitTime = calculatedWaitTime > 0
+                    ? calculatedWaitTime
+                    : (activeOrdersForTime.length > 0 ? 1 : 0); // If pending but <1 min, show 1. If no orders, show 0.
+
                 setStats({
-                    activeOrders: statsRes.data.activeOrders || 0,
-                    todayRevenue: statsRes.data.todayRevenue || 0,
-                    revenue: statsRes.data.revenue || 0,
+                    activeOrders: statsRes.data.summary?.activeOrders || 0,
+                    todayRevenue: statsRes.data.summary?.rangeRevenue || 0,
+                    totalRevenue: statsRes.data.summary?.totalRevenue || 0,
                     dineIn: occupiedTableNumbers.size,
-                    totalTables: trackedTables.length
+                    totalTables: trackedTables.length,
+                    avgWaitTime: finalWaitTime
                 });
 
                 // Process Feed
@@ -194,26 +256,38 @@ const AdminDashboard = () => {
                     }));
                 setFeedItems(activeOrdersList);
 
-                // Process Weekly Revenue Data (Last 7 Days)
-                const weeklyRevenue = statsRes.data.weeklyRevenue || [];
+                // Process Hourly Revenue Data (Today)
+                const hourlyData = statsRes.data.charts?.hourlyAnalysis || [];
                 const graphData = [];
 
-                for (let i = 6; i >= 0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    // Use ISO string for matching with backend (UTC dates)
-                    const dateStr = d.toISOString().split('T')[0];
-                    // Use local locale for display labels
-                    const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+                // Create array for hours 0-23
+                for (let i = 0; i < 24; i++) {
+                    const hourLabel = i === 0 ? '12 AM' : i === 12 ? '12 PM' : i > 12 ? `${i - 12} PM` : `${i} AM`;
+                    const hourData = hourlyData.find(h => h._id === i);
 
-                    const dayData = weeklyRevenue.find(w => w._id === dateStr);
                     graphData.push({
-                        name: dayLabel,
-                        value: dayData ? dayData.total : 0,
-                        highlight: i === 0 // Highlight today
+                        name: hourLabel,
+                        value: hourData ? hourData.totalSales : 0,
+                        hourIndex: i // Add index for filtering
                     });
                 }
-                setSalesData(graphData);
+
+                // Dynamic 7-hour window Logic: [Current-3, Current, Current+3]
+                const currentHour = new Date().getHours();
+                let startHour = currentHour - 3;
+                let endHour = currentHour + 3;
+
+                // Adjust window if out of bounds (0-23)
+                if (startHour < 0) {
+                    startHour = 0;
+                    endHour = 6; // Fixed 7-hour window at start of day
+                } else if (endHour > 23) {
+                    endHour = 23;
+                    startHour = 17; // Fixed 7-hour window at end of day
+                }
+
+                const filteredGraphData = graphData.filter(d => d.hourIndex >= startHour && d.hourIndex <= endHour);
+                setSalesData(filteredGraphData);
 
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -261,12 +335,12 @@ const AdminDashboard = () => {
                     {/* Middle Row: Sales Analytics */}
                     <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 relative shadow-sm h-[400px] sm:h-[600px] lg:h-[740px] flex flex-col border border-transparent">
                         <div className="flex justify-between items-center gap-2 mb-4 sm:mb-2">
-                            <div 
+                            <div
                                 className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => navigate(`/${restaurantSlug}/admin/sales`)}
                             >
                                 <h2 className="text-[16px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
-                                <p className="text-[12px] text-gray-400 font-medium">Weekly Breakdown</p>
+                                <p className="text-[12px] text-gray-400 font-medium">Today Breakdown</p>
                             </div>
 
                             <div className="flex items-center gap-2 sm:gap-3">
@@ -319,7 +393,7 @@ const AdminDashboard = () => {
                 <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
                     {/* Time Status Gauge */}
                     <div className="hidden sm:block">
-                        <TimeStatusGauge />
+                        <TimeStatusGauge value={stats.avgWaitTime || 0} />
                     </div>
 
                     {/* Live Active Feed */}
@@ -370,3 +444,4 @@ const AdminDashboard = () => {
     );
 };
 export default AdminDashboard;
+

@@ -9,6 +9,9 @@ const getAdminStats = async (req, res) => {
         start.setHours(0, 0, 0, 0);
         let end = new Date(now);
 
+        const currentYearStart = new Date(now.getFullYear(), 0, 1);
+        const currentYearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+
         if (startDate) {
             start = new Date(startDate);
         }
@@ -47,7 +50,9 @@ const getAdminStats = async (req, res) => {
             totalRevenueData,
             trendRevenueData,
             hourlyRevenueData,
-            bestsellersData
+            bestsellersData,
+            allTimeOrdersCount,
+            yearlyStatsData
         ] = await Promise.all([
             Order.countDocuments({ createdAt: { $gte: start, $lte: end } }),
             Order.countDocuments({ status: { $in: ['pending', 'preparing', 'ready'] } }),
@@ -63,7 +68,7 @@ const getAdminStats = async (req, res) => {
                 { $match: dateFilter },
                 {
                     $group: {
-                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt", timezone: "Asia/Kolkata" } },
                         total: { $sum: "$totalAmount" }
                     }
                 },
@@ -73,7 +78,7 @@ const getAdminStats = async (req, res) => {
                 { $match: dateFilter },
                 {
                     $group: {
-                        _id: { $hour: "$updatedAt" },
+                        _id: { $hour: { date: "$updatedAt", timezone: "Asia/Kolkata" } },
                         total: { $sum: "$totalAmount" }
                     }
                 },
@@ -92,12 +97,35 @@ const getAdminStats = async (req, res) => {
                 },
                 { $sort: { count: -1 } },
                 { $limit: 10 }
+            ]),
+            Order.countDocuments({ status: 'completed' }),
+            Order.aggregate([
+                {
+                    $match: {
+                        status: 'completed',
+                        updatedAt: { $gte: currentYearStart, $lte: currentYearEnd }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalRevenue: { $sum: "$totalAmount" },
+                        count: { $sum: 1 }
+                    }
+                }
             ])
         ]);
 
         const rangeRevenue = rangeRevenueData.length > 0 ? rangeRevenueData[0].total : 0;
         const totalRevenue = totalRevenueData.length > 0 ? totalRevenueData[0].totalRevenue : 0;
-        const avgOrderValue = totalOrders > 0 ? rangeRevenue / totalOrders : 0;
+
+        // Calculate All-Time AOV
+        const allTimeOrders = allTimeOrdersCount || 0;
+        const avgOrderValue = allTimeOrders > 0 ? totalRevenue / allTimeOrders : 0;
+
+        // Yearly Stats
+        const yearlyRevenue = yearlyStatsData.length > 0 ? yearlyStatsData[0].totalRevenue : 0;
+        const yearlyEBITDA = yearlyRevenue * 0.30; // Estimated 30% margin
 
         // Calculate Cancellation Rate
         const cancelledOrders = await Order.countDocuments({
@@ -115,6 +143,9 @@ const getAdminStats = async (req, res) => {
                 totalRevenue,
                 rangeRevenue,
                 avgOrderValue,
+                allTimeOrders,
+                yearlyRevenue,
+                yearlyEBITDA,
                 cancellationRate,
                 dineIn: dineInCount,
                 totalTables,

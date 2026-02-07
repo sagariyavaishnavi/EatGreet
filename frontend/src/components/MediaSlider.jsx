@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MediaSlider = ({ media, interval = 30000, className = "" }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [indices, setIndices] = useState({ current: 0, previous: 0 });
 
     // Filter valid media just in case
     const validMedia = media?.filter(m => m.url) || [];
@@ -11,7 +11,10 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
         if (validMedia.length <= 1) return;
 
         const timer = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % validMedia.length);
+            setIndices(prev => ({
+                previous: prev.current,
+                current: (prev.current + 1) % validMedia.length
+            }));
         }, interval);
 
         return () => clearInterval(timer);
@@ -27,40 +30,62 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
 
     const nextSlide = (e) => {
         e.stopPropagation();
-        setCurrentIndex((prev) => (prev + 1) % validMedia.length);
+        setIndices(prev => ({
+            previous: prev.current,
+            current: (prev.current + 1) % validMedia.length
+        }));
     };
 
     const prevSlide = (e) => {
         e.stopPropagation();
-        setCurrentIndex((prev) => (prev - 1 + validMedia.length) % validMedia.length);
+        setIndices(prev => ({
+            previous: prev.current,
+            current: (prev.current - 1 + validMedia.length) % validMedia.length
+        }));
+    };
+
+    const goToSlide = (index, e) => {
+        e.stopPropagation();
+        setIndices(prev => ({
+            previous: prev.current,
+            current: index
+        }));
     };
 
     return (
         <div className={`relative overflow-hidden w-full h-full group ${className}`}>
-            {validMedia.map((item, index) => (
-                <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                        }`}
-                >
-                    {item.type && item.type.startsWith('video') ? (
-                        <video
-                            src={item.url}
-                            className="w-full h-full object-cover"
-                            muted
-                            loop
-                            autoPlay
-                            playsInline
-                        />
-                    ) : (
-                        <img
-                            src={item.url}
-                            alt={item.name || 'Slide'}
-                            className="w-full h-full object-cover"
-                        />
-                    )}
-                </div>
-            ))}
+            {validMedia.map((item, index) => {
+                let statusClass = 'opacity-0 z-0';
+                if (index === indices.current) {
+                    statusClass = 'opacity-100 z-10';
+                } else if (index === indices.previous) {
+                    statusClass = 'opacity-100 z-0';
+                }
+
+                return (
+                    <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${statusClass}`}
+                    >
+                        {item.type && item.type.startsWith('video') ? (
+                            <video
+                                src={item.url}
+                                className="w-full h-full object-cover"
+                                muted
+                                loop
+                                autoPlay
+                                playsInline
+                            />
+                        ) : (
+                            <img
+                                src={item.url}
+                                alt={item.name || 'Slide'}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                    </div>
+                );
+            })}
 
             {/* Navigation Dots if more than 1 item */}
             {validMedia.length > 1 && (
@@ -69,11 +94,8 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
                         {validMedia.map((_, index) => (
                             <button
                                 key={index}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCurrentIndex(index);
-                                }}
-                                className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentIndex ? 'bg-white w-3' : 'bg-white/50'
+                                onClick={(e) => goToSlide(index, e)}
+                                className={`w-1.5 h-1.5 rounded-full transition-all ${index === indices.current ? 'bg-white w-3' : 'bg-white/50'
                                     }`}
                             />
                         ))}

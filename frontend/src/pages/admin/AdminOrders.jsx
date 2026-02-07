@@ -1148,7 +1148,9 @@ const AdminOrders = () => {
             const subtotal = order.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0;
             const cgst = subtotal * 0.025;
             const sgst = subtotal * 0.025;
-            const grandTotal = subtotal + cgst + sgst;
+            const totalRaw = subtotal + cgst + sgst;
+            const grandTotal = Math.round(totalRaw);
+            const roundOff = grandTotal - totalRaw;
 
             const itemsRows = (order.items || []).map(it => `
                 <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
@@ -1234,6 +1236,15 @@ const AdminOrders = () => {
                         <span>${currencySymbol}${sgst.toFixed(2)}</span>
                     </div>
                     <div class="divider"></div>
+                    <div class="info-row" style="font-weight: bold;">
+                        <span>Total</span>
+                        <span>${currencySymbol}${totalRaw.toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Round Off</span>
+                        <span>${currencySymbol}${roundOff.toFixed(2)}</span>
+                    </div>
+                    <div class="divider"></div>
                     <div class="info-row" style="font-size: 16px; font-weight: bold;">
                         <span>Grand Total</span>
                         <span>${currencySymbol}${grandTotal.toFixed(2)}</span>
@@ -1264,6 +1275,17 @@ const AdminOrders = () => {
             </div>
         );
     }
+
+    // Calculate order stats safely
+    const orderStats = selectedOrder ? (() => {
+        const subtotal = selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0;
+        const cgst = subtotal * 0.025;
+        const sgst = subtotal * 0.025;
+        const totalRaw = subtotal + cgst + sgst;
+        const grandTotal = Math.round(totalRaw);
+        const roundOff = grandTotal - totalRaw;
+        return { subtotal, cgst, sgst, totalRaw, grandTotal, roundOff };
+    })() : null;
 
     return (
         <div className="space-y-4 sm:space-y-8 px-1 sm:px-0">
@@ -1540,9 +1562,10 @@ const AdminOrders = () => {
 
                                     <button
                                         onClick={() => setSelectedOrder(order)}
-                                        className="px-4 py-2 sm:px-8 sm:py-3 bg-gray-900 text-white rounded-xl sm:rounded-full text-[10px] sm:text-sm font-bold hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
+                                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
+                                        title="View Invoice"
                                     >
-                                        View
+                                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -1647,20 +1670,28 @@ const AdminOrders = () => {
                                         <div className="border-t border-dashed border-black my-4"></div>
                                         <div className="flex justify-between font-bold text-[13px] mb-1">
                                             <span>Total Qty: {selectedOrder.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
-                                            <span>Sub Total: {currencySymbol}{(selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0).toFixed(2)}</span>
+                                            <span>Sub Total: {currencySymbol}{orderStats?.subtotal.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between text-[13px] mb-1">
                                             <span>CGST@2.5%</span>
-                                            <span>{currencySymbol}{((selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0) * 0.025).toFixed(2)}</span>
+                                            <span>{currencySymbol}{orderStats?.cgst.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between text-[13px] mb-1">
                                             <span>SGST@2.5%</span>
-                                            <span>{currencySymbol}{((selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0) * 0.025).toFixed(2)}</span>
+                                            <span>{currencySymbol}{orderStats?.sgst.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between font-bold text-[13px] mb-1">
+                                            <span>Total</span>
+                                            <span>{currencySymbol}{orderStats?.totalRaw.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[13px] mb-1">
+                                            <span>Round Off</span>
+                                            <span>{currencySymbol}{orderStats?.roundOff.toFixed(2)}</span>
                                         </div>
                                         <div className="border-t border-dashed border-black my-4"></div>
                                         <div className="flex justify-between font-bold text-lg mb-4">
                                             <span>Grand Total</span>
-                                            <span>{currencySymbol}{(selectedOrder.totalAmount || (selectedOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05)).toFixed(2)}</span>
+                                            <span>{currencySymbol}{orderStats?.grandTotal.toFixed(2)}</span>
                                         </div>
                                         <div className="border-t border-dashed border-black my-4"></div>
                                         <div className="text-center font-bold text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>

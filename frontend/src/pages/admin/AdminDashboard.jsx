@@ -261,7 +261,10 @@ const AdminDashboard = () => {
                     {/* Middle Row: Sales Analytics */}
                     <div className="bg-white rounded-[1.5rem] sm:rounded-[2.8rem] p-4 sm:p-8 relative shadow-sm h-[400px] sm:h-[600px] lg:h-[740px] flex flex-col border border-transparent">
                         <div className="flex justify-between items-center gap-2 mb-4 sm:mb-2">
-                            <div className="flex flex-col">
+                            <div 
+                                className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => navigate(`/${restaurantSlug}/admin/sales`)}
+                            >
                                 <h2 className="text-[16px] sm:text-[24px] font-medium text-black">Sales Analytics</h2>
                                 <p className="text-[12px] text-gray-400 font-medium">Weekly Breakdown</p>
                             </div>

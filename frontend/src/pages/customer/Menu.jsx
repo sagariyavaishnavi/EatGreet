@@ -3,7 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { MENU_ITEMS_KEY, CATEGORIES_KEY } from '../../constants';
 import {
     Search, Heart, Plus, Minus, ShoppingBag,
-    ChevronRight, Star, Clock, Flame, UtensilsCrossed
+    ChevronRight, Star, Clock, Flame, UtensilsCrossed, X
 } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import sugarFreeIcon from '../../assets/suger-free.svg';
@@ -87,6 +87,7 @@ const Menu = () => {
     }, [searchParams]);
 
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedItem, setSelectedItem] = useState(null);
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState(["All"]);
@@ -119,21 +120,21 @@ const Menu = () => {
     useEffect(() => {
         const checkStatus = async () => {
             if (tenantName && tableNo && tableNo !== 'preview') {
-                 try {
-                     const res = await orderAPI.checkTableStatus(tableNo, tenantName);
-                     if (res.data.status === 'occupied') {
-                         if (!customerDetails.phone || customerDetails.phone !== res.data.customer.phone) {
-                             setIsTableOccupied(true);
-                             setOccupantInfo(res.data.customer);
-                         } else {
+                try {
+                    const res = await orderAPI.checkTableStatus(tableNo, tenantName);
+                    if (res.data.status === 'occupied') {
+                        if (!customerDetails.phone || customerDetails.phone !== res.data.customer.phone) {
+                            setIsTableOccupied(true);
+                            setOccupantInfo(res.data.customer);
+                        } else {
                             setIsTableOccupied(false);
-                         }
-                     } else {
-                         setIsTableOccupied(false);
-                     }
-                 } catch (e) {
-                     console.error("Occupancy Check Failed", e);
-                 }
+                        }
+                    } else {
+                        setIsTableOccupied(false);
+                    }
+                } catch (e) {
+                    console.error("Occupancy Check Failed", e);
+                }
             }
         };
         checkStatus();
@@ -305,7 +306,11 @@ const Menu = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredItems.map((item) => (
-                        <div key={item._id} className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 shadow-sm border border-gray-100 hover:shadow-lg transition-all group relative overflow-hidden flex flex-row md:flex-col gap-3 md:gap-0 h-40 md:h-auto">
+                        <div
+                            key={item._id}
+                            onClick={() => setSelectedItem(item)}
+                            className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 shadow-sm border border-gray-100 hover:shadow-lg transition-all group relative overflow-hidden flex flex-row md:flex-col gap-3 md:gap-0 h-40 md:h-auto cursor-pointer"
+                        >
 
                             {/* Card Header / Image Slider */}
                             <div className="relative w-32 md:w-full h-full md:h-64 shrink-0 rounded-2xl md:rounded-[2rem] overflow-hidden md:mb-4 bg-gray-100">
@@ -385,7 +390,7 @@ const Menu = () => {
                                     </div>
                                 </div>
 
-                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-2 md:mb-6 text-balance hidden md:block">
+                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-2 md:h-10 overflow-hidden md:mb-6 text-balance hidden md:block">
                                     {item.description}
                                 </p>
                                 {/* Mobile-only description (shorter) */}
@@ -405,14 +410,20 @@ const Menu = () => {
                                             cart[item._id] ? (
                                                 <div className="flex items-center gap-2 md:gap-4 bg-black text-white px-2 py-1.5 md:py-2 rounded-full shadow-lg w-auto md:w-full md:max-w-[140px] justify-between">
                                                     <button
-                                                        onClick={() => removeFromCart(item._id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeFromCart(item._id);
+                                                        }}
                                                         className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
                                                     >
                                                         <Minus className="w-3 h-3 md:w-4 md:h-4" />
                                                     </button>
                                                     <span className="text-sm md:text-lg w-4 md:w-6 text-center">{cart[item._id].qty}</span>
                                                     <button
-                                                        onClick={() => addToCart(item)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            addToCart(item);
+                                                        }}
                                                         className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
                                                     >
                                                         <Plus className="w-3 h-3 md:w-4 md:h-4" />
@@ -420,7 +431,10 @@ const Menu = () => {
                                                 </div>
                                             ) : (
                                                 <button
-                                                    onClick={() => addToCart(item)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        addToCart(item);
+                                                    }}
                                                     className="w-8 h-8 md:w-16 md:h-16 bg-[#FD6941] text-white rounded-full shadow-lg shadow-orange-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
                                                 >
                                                     <Plus className="w-5 h-5 md:w-8 md:h-8" />
@@ -643,31 +657,169 @@ const Menu = () => {
                     </div>
                 </div>
             )}
-            
+
+            {/* Item Preview Modal */}
+            {selectedItem && (
+                <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col relative animate-in zoom-in-95 duration-200">
+
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setSelectedItem(null)}
+                            className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        {/* Image Section */}
+                        <div className="h-64 md:h-80 w-full bg-gray-100 shrink-0 relative">
+                            {/* Veg/Non-Veg Badge */}
+                            <div className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/90 backdrop-blur rounded-lg shadow-sm p-1.5">
+                                <img
+                                    src={selectedItem.isVeg ? vegIcon : nonVegIcon}
+                                    alt={selectedItem.isVeg ? "Veg" : "Non-Veg"}
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+
+                            {selectedItem.media && selectedItem.media.length > 0 ? (
+                                <MediaSlider media={selectedItem.media} className="w-full h-full object-cover" />
+                            ) : (
+                                <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
+                            )}
+                        </div>
+
+                        {/* Details Section */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-white relative -mt-6 rounded-t-[2rem]">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xs font-bold tracking-wider px-2.5 py-1 rounded-md bg-gray-100 text-gray-500 uppercase">
+                                            {typeof selectedItem.category === 'object' ? selectedItem.category?.name : selectedItem.category}
+                                        </span>
+                                        <div className={`text-[10px] px-2 py-1 rounded-full flex items-center gap-1 font-bold ${selectedItem.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${selectedItem.isAvailable ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                            {selectedItem.isAvailable ? 'Available' : 'Sold Out'}
+                                        </div>
+                                    </div>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-tight">{selectedItem.name}</h2>
+
+                                    {/* Stats Row */}
+                                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                        <span className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg font-medium">
+                                            <Star className="w-4 h-4 fill-current" /> {selectedItem.rating || '4.5'}
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <Clock className="w-4 h-4" /> {selectedItem.time}
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <Flame className="w-4 h-4 text-[#FD6941]" /> {selectedItem.calories}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="block text-3xl font-bold text-gray-900">{activeSymbol}{selectedItem.price}</span>
+                                </div>
+                            </div>
+
+                            <div className="prose prose-sm text-gray-500 mb-8">
+                                <p className="leading-relaxed text-base">{selectedItem.description}</p>
+                            </div>
+
+                            {/* Dietary Tags */}
+                            {selectedItem.labels && selectedItem.labels.length > 0 && (
+                                <div className="mb-8">
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">Dietary Info</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedItem.labels.map(label => (
+                                            <span key={label} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 text-sm font-medium text-gray-700">
+                                                {dietaryIcons[label] && (
+                                                    <img
+                                                        src={dietaryIcons[label]}
+                                                        alt={label}
+                                                        className="w-4 h-4"
+                                                        style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                    />
+                                                )}
+                                                {label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Bar */}
+                            <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${favorites[selectedItem._id] ? 'bg-red-100 text-red-500' : 'bg-white border border-gray-200 text-gray-400'}`}>
+                                        <Heart className={`w-5 h-5 ${favorites[selectedItem._id] ? 'fill-current' : ''}`} />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-500">
+                                        {favorites[selectedItem._id] ? 'Added to favorites' : 'Add to favorites'}
+                                    </span>
+                                </div>
+
+                                {selectedItem.isAvailable ? (
+                                    cart[selectedItem._id] ? (
+                                        <div className="flex items-center gap-4 bg-black text-white px-4 py-3 rounded-full shadow-lg min-w-[160px] justify-between">
+                                            <button
+                                                onClick={() => removeFromCart(selectedItem._id)}
+                                                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition"
+                                            >
+                                                <Minus className="w-4 h-4" />
+                                            </button>
+                                            <span className="text-lg font-bold w-6 text-center">{cart[selectedItem._id].qty}</span>
+                                            <button
+                                                onClick={() => addToCart(selectedItem)}
+                                                className="w-8 h-8 rounded-full bg-[#FD6941] flex items-center justify-center hover:bg-orange-600 transition"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => addToCart(selectedItem)}
+                                            className="px-8 py-3 bg-[#FD6941] text-white rounded-full font-bold shadow-lg shadow-orange-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                        >
+                                            <Plus className="w-5 h-5" /> Add to Order
+                                        </button>
+                                    )
+                                ) : (
+                                    <div className="px-6 py-3 bg-gray-100 text-gray-400 rounded-full font-bold text-sm">
+                                        Currently Unavailable
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Occupied Table Blocker Modal */}
             {isTableOccupied && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                     <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl animate-bounce-in">
                         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
-                             <UtensilsCrossed className="w-10 h-10" />
+                            <UtensilsCrossed className="w-10 h-10" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">Table Occupied</h3>
                         <p className="text-gray-500 mb-6 px-4">
                             You can't order here, this table is already occupied.
                             <br />Please check your table number and scan the QR Code again.
                         </p>
-                        
+
                         <div className="border-t border-gray-100 pt-6">
                             <p className="text-sm font-bold text-gray-800 mb-3">Is this your table?</p>
                             <div className="flex gap-2">
-                                <input 
-                                    type="tel" 
+                                <input
+                                    type="tel"
                                     placeholder="Enter your phone number"
                                     value={verificationPhone}
                                     onChange={e => setVerificationPhone(e.target.value)}
                                     className="flex-1 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-red-500 text-sm"
                                 />
-                                <button 
+                                <button
                                     onClick={() => {
                                         if (occupantInfo && verificationPhone === occupantInfo.phone) {
                                             toast.success("Identity Verified! Welcome back.");

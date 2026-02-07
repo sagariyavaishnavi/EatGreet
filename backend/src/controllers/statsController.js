@@ -1,14 +1,37 @@
 const getAdminStats = async (req, res) => {
     try {
-        const { Order } = req.tenantModels;
+        const { Order, MenuItem } = req.tenantModels;
+        const { startDate, endDate } = req.query;
 
-        // 1. Calculate Occupied Tables (Unique NUMERIC tableNumbers with active orders)
-        // We use a regex to ensure only real table numbers are counted, avoiding trash or "takeaway"
+        // 1. Determine Date Range
+        const now = new Date();
+        let start = new Date();
+        start.setHours(0, 0, 0, 0);
+        let end = new Date(now);
+
+        if (startDate) {
+            start = new Date(startDate);
+        }
+        if (endDate) {
+            end = new Date(endDate);
+            // If only date is provided, set to end of day
+            if (endDate.length <= 10) {
+                end.setHours(23, 59, 59, 999);
+            }
+        }
+
+        // Shared Filter for Date-based queries
+        const dateFilter = {
+            status: 'completed',
+            updatedAt: { $gte: start, $lte: end }
+        };
+
+        // 2. Calculate Occupied Tables (Live status, ignoring date range)
         const occupiedTablesResult = await Order.aggregate([
             {
                 $match: {
                     status: { $in: ['pending', 'preparing', 'ready'] },
-                    tableNumber: { $regex: /^[0-9]+$/ } // Only count numeric table numbers
+                    tableNumber: { $regex: /^[0-9]+$/ }
                 }
             },
             { $group: { _id: "$tableNumber" } },
@@ -16,20 +39,20 @@ const getAdminStats = async (req, res) => {
         ]);
         const dineInCount = occupiedTablesResult.length > 0 ? occupiedTablesResult[0].count : 0;
 
-        // 2. Today's Revenue & Total Stats
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        // 3. Last 7 Days Revenue for Graph
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
-
-        const [totalOrders, activeOrders, todayRevenueData, totalRevenueData, weeklyRevenueData, hourlyRevenueData] = await Promise.all([
-            Order.countDocuments(),
+        // 3. Parallel Stats Fetching
+        const [
+            totalOrders,
+            activeOrders,
+            rangeRevenueData,
+            totalRevenueData,
+            trendRevenueData,
+            hourlyRevenueData,
+            bestsellersData
+        ] = await Promise.all([
+            Order.countDocuments({ createdAt: { $gte: start, $lte: end } }),
             Order.countDocuments({ status: { $in: ['pending', 'preparing', 'ready'] } }),
             Order.aggregate([
-                { $match: { status: 'completed', updatedAt: { $gte: startOfToday } } },
+                { $match: dateFilter },
                 { $group: { _id: null, total: { $sum: "$totalAmount" } } }
             ]),
             Order.aggregate([
@@ -37,12 +60,7 @@ const getAdminStats = async (req, res) => {
                 { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
             ]),
             Order.aggregate([
-                {
-                    $match: {
-                        status: 'completed',
-                        updatedAt: { $gte: sevenDaysAgo }
-                    }
-                },
+                { $match: dateFilter },
                 {
                     $group: {
                         _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
@@ -52,12 +70,7 @@ const getAdminStats = async (req, res) => {
                 { $sort: { _id: 1 } }
             ]),
             Order.aggregate([
-                {
-                    $match: {
-                        status: 'completed',
-                        updatedAt: { $gte: startOfToday }
-                    }
-                },
+                { $match: dateFilter },
                 {
                     $group: {
                         _id: { $hour: "$updatedAt" },
@@ -65,25 +78,53 @@ const getAdminStats = async (req, res) => {
                     }
                 },
                 { $sort: { _id: 1 } }
+            ]),
+            Order.aggregate([
+                { $match: dateFilter },
+                { $unwind: "$items" },
+                {
+                    $group: {
+                        _id: "$items.menuItem",
+                        name: { $first: "$items.name" },
+                        count: { $sum: "$items.quantity" },
+                        revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
             ])
         ]);
 
-        const todayRevenue = todayRevenueData.length > 0 ? todayRevenueData[0].total : 0;
+        const rangeRevenue = rangeRevenueData.length > 0 ? rangeRevenueData[0].total : 0;
         const totalRevenue = totalRevenueData.length > 0 ? totalRevenueData[0].totalRevenue : 0;
+        const avgOrderValue = totalOrders > 0 ? rangeRevenue / totalOrders : 0;
 
-        // Note: totalTables fallback
+        // Calculate Cancellation Rate
+        const cancelledOrders = await Order.countDocuments({
+            status: 'cancelled',
+            createdAt: { $gte: start, $lte: end }
+        });
+        const cancellationRate = totalOrders > 0 ? (cancelledOrders / (totalOrders + cancelledOrders)) * 100 : 0;
+
         const totalTables = req.user?.restaurantDetails?.totalTables || 0;
 
         res.json({
-            totalOrders,
-            activeOrders,
-            revenue: totalRevenue,
-            todayRevenue,
-            dineIn: dineInCount,
-            totalTables,
-            takeaway: totalOrders - dineInCount,
-            weeklyRevenue: weeklyRevenueData,
-            hourlyRevenue: hourlyRevenueData
+            summary: {
+                totalOrders,
+                activeOrders,
+                totalRevenue,
+                rangeRevenue,
+                avgOrderValue,
+                cancellationRate,
+                dineIn: dineInCount,
+                totalTables,
+                takeaway: totalOrders - dineInCount,
+            },
+            charts: {
+                revenueTrend: trendRevenueData,
+                hourlyAnalysis: hourlyRevenueData,
+                bestsellers: bestsellersData
+            }
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

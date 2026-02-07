@@ -50,7 +50,7 @@ const AdminProfile = () => {
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">My Profile</h1>
                 <Link
                     to={`/${user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin/settings`}
                     className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-bold flex items-center gap-2 transition-colors shadow-sm"

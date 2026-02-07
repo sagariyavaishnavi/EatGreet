@@ -56,7 +56,25 @@ const getTenantConnection = (dbName) => {
         return mongoose.connection.useDb(dbName, { useCache: true });
     }
 
-    const conn = mongoose.createConnection(uri);
+    const conn = mongoose.createConnection(uri, {
+        maxPoolSize: 10, // Maintain up to 10 socket connections per tenant
+        minPoolSize: 2,  // Keep at least 2 connections open
+        socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+        connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+        serverSelectionTimeoutMS: 5000, // Fail fast if server is unreachable
+    });
+
+    // Handle connection errors
+    conn.on('error', (err) => {
+        console.error(`Tenant DB Connection Error (${dbName}):`, err);
+        delete connections[dbName]; // Remove from cache so it can be recreated
+    });
+
+    conn.on('disconnected', () => {
+        console.warn(`Tenant DB Disconnected (${dbName})`);
+        delete connections[dbName];
+    });
+
     connections[dbName] = conn;
 
     return conn;

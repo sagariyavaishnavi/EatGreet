@@ -20,7 +20,7 @@ const AdminTable = () => {
 
     const [restaurantName, setRestaurantName] = useState('');
     const [activeOrders, setActiveOrders] = useState([]);
-    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [loadingOrders, setLoadingOrders] = useState(true); // intentionally unused, used for possible future loading UI
     const [selectedTableOrder, setSelectedTableOrder] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [qrModal, setQrModal] = useState({ isOpen: false, url: '', tableNo: null });
@@ -59,6 +59,7 @@ const AdminTable = () => {
                 setIsPreviewOpen(false);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeOrders, isPreviewOpen]);
 
     const fetchActiveOrders = async () => {
@@ -238,7 +239,7 @@ const AdminTable = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Table Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Table Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={addTable}
@@ -252,7 +253,7 @@ const AdminTable = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 sm:gap-6">
                 {tables.map(table => {
                     const url = getTableUrl(table);
                     const tableOrder = activeOrders.find(o => String(o.tableNumber) === String(table));
@@ -260,24 +261,24 @@ const AdminTable = () => {
 
                     return (
                         <div key={table}
-                            className={`bg-white rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 aspect-square shadow-sm border-2 transition-all group relative flex flex-col items-center justify-center text-center overflow-hidden
+                            className={`bg-white rounded-2xl md:rounded-[2rem] p-4 md:p-5 aspect-square shadow-sm border-2 transition-all group relative flex flex-col items-center justify-center text-center overflow-hidden
                                 ${isLive ? 'border-[#FD6941] bg-orange-50/30' : 'border-gray-100 hover:border-gray-200'}
                             `}
                         >
                             {/* Top Actions Bar - Delete only on Right */}
-                            <div className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+                            <div className="absolute top-3 right-3 sm:top-5 sm:right-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
                                 <button
                                     onClick={() => removeTable(table)}
-                                    className="p-1 bg-white text-gray-300 hover:text-red-500 rounded-md shadow-sm border border-gray-100 transition-colors"
+                                    className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-white text-gray-300 hover:text-red-500 rounded-md sm:rounded-lg shadow-sm border border-gray-100 transition-colors"
                                     title="Delete Table"
                                 >
-                                    <Trash2 className="w-3 h-3" />
+                                    <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                 </button>
                             </div>
 
                             {/* Center Content */}
-                            <div className="flex flex-col items-center mb-10 sm:mb-12">
-                                <span className={`text-3xl md:text-6xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
+                            <div className="flex flex-col items-center mb-8 sm:mb-10">
+                                <span className={`text-3xl md:text-5xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
                                     {table}
                                 </span>
                                 <div className={`px-4 sm:px-5 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
@@ -299,7 +300,7 @@ const AdminTable = () => {
                                         }
                                         setQrModal({ isOpen: true, url, tableNo: table });
                                     }}
-                                    className="w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
+                                    className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-lg md:rounded-xl bg-white text-gray-400 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100 shadow-sm group/icon"
                                     title="Scan QR"
                                 >
                                     <QrCode className="w-3 h-3 md:w-4 md:h-4 group-hover/icon:scale-110 transition-transform" />
@@ -312,9 +313,9 @@ const AdminTable = () => {
                                         }
                                     }}
                                     disabled={!isLive}
-                                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl transition-all border shadow-sm group/icon
+                                    className={`w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-lg md:rounded-xl transition-all border shadow-sm group/icon
                                         ${isLive
-                                            ? 'bg-gray-900 text-white border-gray-900 hover:bg-black hover:scale-110 active:scale-95'
+                                            ? 'bg-orange-50 text-[#FD6941] border-[#FD6941]/20 hover:bg-[#FD6941] hover:text-white hover:scale-110 active:scale-95'
                                             : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
                                     `}
                                     title="Preview Order"
@@ -329,7 +330,7 @@ const AdminTable = () => {
                                         }
                                     }}
                                     disabled={!isLive}
-                                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-2xl transition-all border shadow-sm group/icon
+                                    className={`w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-lg md:rounded-xl transition-all border shadow-sm group/icon
                                         ${isLive
                                             ? 'bg-orange-50 text-[#FD6941] border-[#FD6941]/20 hover:bg-[#FD6941] hover:text-white hover:scale-110 active:scale-95'
                                             : 'bg-gray-50/50 text-gray-200 border-gray-100 cursor-not-allowed'}
@@ -347,7 +348,7 @@ const AdminTable = () => {
             {/* Live Order Preview Modal */}
             {
                 isPreviewOpen && selectedTableOrder && createPortal(
-                    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4">
                         <div className="bg-white w-full max-w-md rounded-3xl md:rounded-[3.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
                             {/* Premium Modal Header */}
                             <div className="relative p-6 md:p-8 pb-4 text-center">
@@ -414,7 +415,7 @@ const AdminTable = () => {
                                     onClick={() => handleCompleteOrder(selectedTableOrder)}
                                     className={`w-full py-4 md:py-5 rounded-2xl md:rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
                                         ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
-                                            ? 'bg-gray-900 text-white hover:bg-black hover:scale-[1.02] shadow-gray-200'
+                                            ? 'bg-[#FD6941] text-white hover:bg-orange-600 hover:scale-[1.02] shadow-orange-200'
                                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}
                                     `}
                                 >
@@ -430,7 +431,7 @@ const AdminTable = () => {
             {/* QR Code Modal */}
             {
                 qrModal.isOpen && createPortal(
-                    <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4">
                         <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                 <h2 className="text-xl font-bold text-gray-800">Table {qrModal.tableNo} QR Code</h2>
@@ -485,7 +486,7 @@ const AdminTable = () => {
 
             {/* Invoice Preview Modal */}
             {isInvoicePreviewOpen && invoiceOrder && createPortal(
-                <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>

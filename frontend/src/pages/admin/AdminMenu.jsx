@@ -477,7 +477,7 @@ const AdminMenu = () => {
         <div className="space-y-6 relative">
             {/* Header */}
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Menu Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Menu Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={() => {
@@ -488,10 +488,13 @@ const AdminMenu = () => {
                                 toast.error("Restaurant details not loaded yet");
                             }
                         }}
-                        className="w-10 h-10 shrink-0 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-full flex items-center justify-center transition-colors shadow-sm"
+                        className="bg-white hover:bg-gray-50 text-gray-600 hover:text-black p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group/preview transition-all duration-300 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                         title="Preview"
                     >
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                        <span className="max-w-0 opacity-0 group-hover/preview:max-w-[120px] group-hover/preview:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                            Preview
+                        </span>
                     </button>
                     <button
                         onClick={openModal}
@@ -510,7 +513,7 @@ const AdminMenu = () => {
 
                 {/* Filter and Search Bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-                    <h2 className="text-[16px] sm:text-[20px] font-medium text-black w-full sm:w-auto">All Menu</h2>
+                    <h2 className="text-[16px] sm:text-[22px] font-medium text-black w-full sm:w-auto">All Menu</h2>
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-64">
@@ -567,7 +570,7 @@ const AdminMenu = () => {
                 </div>
 
                 {/* Menu Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4">
 
                     {/* Menu Items */}
                     {/* Loading State */}
@@ -595,9 +598,9 @@ const AdminMenu = () => {
                         const categoryName = catObj ? catObj.name : 'Uncategorized';
 
                         return (
-                            <div key={item._id} className="bg-white rounded-3xl p-3 sm:p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative flex flex-row sm:flex-col gap-4 sm:gap-0 h-44 sm:h-auto overflow-hidden">
+                            <div key={item._id} className="bg-white rounded-3xl p-3 sm:p-1.5 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative flex flex-row sm:flex-col gap-4 sm:gap-0 h-36 sm:h-auto overflow-hidden">
                                 {/* Image Container */}
-                                <div className="relative w-32 sm:w-full h-full sm:h-48 shrink-0 rounded-2xl sm:rounded-2xl overflow-hidden sm:mb-4 bg-gray-50">
+                                <div className="relative w-32 sm:w-full h-full sm:h-52 shrink-0 rounded-2xl sm:rounded-2xl overflow-hidden sm:mb-1 bg-gray-50">
                                     <MediaSlider
                                         media={item.media && item.media.length > 0 ? item.media : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -619,8 +622,8 @@ const AdminMenu = () => {
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 flex flex-col justify-between py-1 sm:px-1">
-                                    <div className="space-y-1 sm:space-y-2">
+                                <div className="flex-1 flex flex-col justify-between py-1 sm:py-1.5 px-3 sm:px-4 sm:pb-3">
+                                    <div className="space-y-0.5">
                                         <span className="text-[8px] sm:text-[10px] font-bold text-[#FD6941] tracking-wider uppercase">
                                             {categoryName}
                                         </span>
@@ -652,24 +655,23 @@ const AdminMenu = () => {
                                             )}
                                         </div>
 
-                                        <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed line-clamp-2 h-7 sm:h-10">
+                                        <p className="text-[10px] sm:text-xs text-gray-400 leading-relaxed line-clamp-2 h-7 sm:h-8">
                                             {item.description}
                                         </p>
                                     </div>
 
                                     {/* Actions Footer */}
-                                    <div className="mt-2 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <div className="mt-1.5 sm:mt-2.5 pt-2 sm:pt-2 border-t border-gray-50 flex items-center justify-between">
                                         {/* Toggle Switch */}
                                         <div>
-                                            <label className="flex items-center cursor-pointer relative scale-75 origin-left sm:scale-100">
+                                            <label className="relative inline-flex items-center cursor-pointer scale-90 sm:scale-100">
                                                 <input
                                                     type="checkbox"
                                                     className="sr-only peer"
                                                     checked={item.isAvailable}
                                                     onChange={() => toggleStatus(item._id)}
                                                 />
-                                                <div className="block w-12 h-6 sm:w-14 sm:h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
-                                                <div className={`absolute left-0.5 top-0.5 bg-white w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                                             </label>
                                         </div>
 
@@ -696,7 +698,7 @@ const AdminMenu = () => {
                     {/* Add New Item Card */}
                     <div
                         onClick={openModal}
-                        className="border-2 border-dashed border-gray-200 rounded-3xl p-4 sm:p-8 flex flex-row sm:flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-44 sm:min-h-[350px] group bg-gray-50 gap-4"
+                        className="border-2 border-dashed border-gray-200 rounded-3xl p-4 sm:p-8 flex flex-row sm:flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-36 sm:h-full group bg-gray-50 gap-4"
                     >
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
                             <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#FD6941]" />
@@ -708,7 +710,7 @@ const AdminMenu = () => {
             </div>
 
             {isModalOpen && createPortal(
-                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] px-4">
+                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-4">
                     <div className="fixed inset-0" onClick={handleCloseModal} />
                     <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
                         <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[90vh] overflow-y-auto no-scrollbar">

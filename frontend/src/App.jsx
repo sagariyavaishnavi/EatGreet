@@ -116,95 +116,98 @@ const TitleUpdater = () => {
 };
 
 import { SettingsProvider } from './context/SettingsContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
     <SettingsProvider>
-      <Router>
-        <TitleUpdater />
-        <Toaster position="top-right" />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+      <ErrorBoundary>
+        <Router>
+          <TitleUpdater />
+          <Toaster position="top-right" />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* Admin Auth */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Admin Auth */}
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Super Admin Auth */}
-          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+            {/* Super Admin Auth */}
+            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
 
-          {/* Protected Admin Routes */}
-          <Route path="/admin" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin`} replace />} />
-          <Route path="/admin/*" element={<AdminSubpathRedirect />} />
+            {/* Protected Admin Routes */}
+            <Route path="/admin" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/admin`} replace />} />
+            <Route path="/admin/*" element={<AdminSubpathRedirect />} />
 
-          <Route path="/:restaurantName/admin" element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<AdminDashboard />} />
-            <Route path="menu" element={<AdminMenu />} />
-            <Route path="category" element={<AdminCategory />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="table" element={<AdminTable />} />
-            <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
-            <Route path="profile" element={<AdminProfile />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
+            <Route path="/:restaurantName/admin" element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="menu" element={<AdminMenu />} />
+              <Route path="category" element={<AdminCategory />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="table" element={<AdminTable />} />
+              <Route path="sales" element={<div className="p-4">Sales Page (Coming Soon)</div>} />
+              <Route path="profile" element={<AdminProfile />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
 
-          {/* Super Admin Routes */}
-          <Route path="/super-admin" element={
-            <SuperAdminRoute>
-              <SuperAdminLayout />
-            </SuperAdminRoute>
-          }>
-            <Route index element={<SuperAdminDashboard />} />
-            <Route path="restaurants" element={<Restaurants />} />
-            <Route path="payments" element={<Payments />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="users" element={<Users />} />
-            <Route path="profile" element={<SuperAdminProfile />} />
-            <Route path="settings" element={<SuperAdminSettings />} />
-          </Route>
+            {/* Super Admin Routes */}
+            <Route path="/super-admin" element={
+              <SuperAdminRoute>
+                <SuperAdminLayout />
+              </SuperAdminRoute>
+            }>
+              <Route index element={<SuperAdminDashboard />} />
+              <Route path="restaurants" element={<Restaurants />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="users" element={<Users />} />
+              <Route path="profile" element={<SuperAdminProfile />} />
+              <Route path="settings" element={<SuperAdminSettings />} />
+            </Route>
 
-          <Route path="/kitchen" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/kitchen`} replace />} />
+            <Route path="/kitchen" element={<Navigate to={`/${JSON.parse(localStorage.getItem('user'))?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant'}/kitchen`} replace />} />
 
-          <Route path="/:restaurantName/kitchen" element={
-            <ProtectedRoute>
-              <KitchenLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<KitchenDashboard />} />
-            <Route path="profile" element={<KitchenProfile />} />
-            <Route path="settings" element={<KitchenSettings />} />
-          </Route>
-
-
-
-          {/* Dynamic Restaurant Routes */}
-          <Route path="/r/:restaurantId" element={<CustomerLayout />}>
-            <Route index element={<Menu />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="profile" element={<CustomerProfile />} />
-            <Route path="favorites" element={<CustomerFavorites />} />
-          </Route>
-
-          {/* New Table Specific Route */}
-          <Route path="/:restaurantName/table/:tableNo" element={<CustomerLayout />}>
-            <Route index element={<Menu />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="profile" element={<CustomerProfile />} />
-            <Route path="favorites" element={<CustomerFavorites />} />
-          </Route>
+            <Route path="/:restaurantName/kitchen" element={
+              <ProtectedRoute>
+                <KitchenLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<KitchenDashboard />} />
+              <Route path="profile" element={<KitchenProfile />} />
+              <Route path="settings" element={<KitchenSettings />} />
+            </Route>
 
 
 
-          {/* Fallback */}
-          <Route path="*" element={<SessionClearRedirect />} />
-        </Routes>
-      </Router>
+            {/* Dynamic Restaurant Routes */}
+            <Route path="/r/:restaurantId" element={<CustomerLayout />}>
+              <Route index element={<Menu />} />
+              <Route path="menu" element={<Menu />} />
+              <Route path="profile" element={<CustomerProfile />} />
+              <Route path="favorites" element={<CustomerFavorites />} />
+            </Route>
+
+            {/* New Table Specific Route */}
+            <Route path="/:restaurantName/table/:tableNo" element={<CustomerLayout />}>
+              <Route index element={<Menu />} />
+              <Route path="menu" element={<Menu />} />
+              <Route path="profile" element={<CustomerProfile />} />
+              <Route path="favorites" element={<CustomerFavorites />} />
+            </Route>
+
+
+
+            {/* Fallback */}
+            <Route path="*" element={<SessionClearRedirect />} />
+          </Routes>
+        </Router>
+      </ErrorBoundary>
     </SettingsProvider>
   );
 }

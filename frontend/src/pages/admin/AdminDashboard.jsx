@@ -6,7 +6,7 @@ import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import activityIcon from '../../assets/activity.svg';
 import tableIcon from '../../assets/Table-Bar--Streamline-Sharp-Material.svg';
 import revenueIcon from '../../assets/trending-up.svg';
-import kitchenIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
+// import kitchenIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
 import { statsAPI, orderAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -82,7 +82,7 @@ const TimeStatusGauge = () => (
 );
 
 const CustomPillBar = (props) => {
-    const { x, y, width, height, highlight, payload } = props;
+    const { x, y, width, height, highlight } = props;
     const pillWidth = Math.min(width * 0.8, 46);
     const radius = pillWidth / 2;
 
@@ -161,7 +161,7 @@ const AdminDashboard = () => {
                     try {
                         const parsed = JSON.parse(savedTables);
                         if (Array.isArray(parsed)) trackedTables = parsed;
-                    } catch (e) { }
+                    } catch { /* ignore */ }
                 }
 
                 // 4. Calculate Occupied Count Locally for 100% Accuracy with the UI
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
     return (
         <div className="min-h-screen bg-transparent px-2 sm:px-4 pt-0 pb-4 sm:pt-0 sm:pb-8 space-y-4 md:space-y-6">
             <div className="space-y-1">
-                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Dashboard</h1>
                 <p className="text-[12px] sm:text-[18px] text-gray-400 font-medium">Welcome back, Admin</p>
             </div>
 

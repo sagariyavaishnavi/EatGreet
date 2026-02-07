@@ -14,11 +14,11 @@ api.interceptors.request.use(
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        if (user.token) {
+        if (user && user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
         }
         // Add restaurantName for tenant resolution, but don't override if already set in params or headers
-        if (user.restaurantName) {
+        if (user && user.restaurantName) {
           if (!config.headers['x-restaurant-name'] && !config.params?.restaurantName) {
             config.headers['x-restaurant-name'] = user.restaurantName;
           }
@@ -28,11 +28,38 @@ api.interceptors.request.use(
         }
       } catch (e) {
         console.error("Error parsing user from localStorage", e);
+        // Clear corrupt data to prevent repeated crashes
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
       }
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add a response interceptor to handle session expiration or database resolution errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // 401: Unauthorized / Session Expired
+    // 400 with specific message: Tenant/Restaurant resolution failed
+    if (error.response) {
+      const isAuthError = error.response.status === 401;
+      const isTenantError = error.response.status === 400 &&
+        error.response.data?.message?.toLowerCase().includes('restaurant name');
+
+      if (isAuthError || isTenantError) {
+        console.warn("Session or Tenant error detected. Redirecting to login...", error.response.data);
+        localStorage.clear();
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export const authAPI = {
@@ -45,8 +72,8 @@ export const authAPI = {
 };
 
 export const statsAPI = {
-  getAdminStats: async () => {
-    return api.get('/stats/admin');
+  getAdminStats: async (params) => {
+    return api.get('/stats/admin', { params });
   },
   getSuperAdminStats: async () => {
     return api.get('/stats/super-admin');

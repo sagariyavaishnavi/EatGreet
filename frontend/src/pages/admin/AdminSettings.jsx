@@ -308,7 +308,7 @@ const AdminSettings = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                     <div>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                        <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">
                             {activeTab === 'profile' && 'Admin Profile'}
                             {activeTab === 'restaurant' && 'Restaurant Details'}
                             {activeTab === 'orders' && 'Order Preferences'}
@@ -429,7 +429,7 @@ const AdminSettings = () => {
                                             <button
                                                 onClick={() => document.getElementById('logo-upload-resto').click()}
                                                 disabled={uploadingLogo}
-                                                className="bg-orange-50 text-[#FD6941] px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-100 transition-colors flex items-center gap-2"
+                                                className="bg-gray-100 text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
                                             >
                                                 <Upload className="w-3 h-3" />
                                                 {uploadingLogo ? 'Uploading...' : 'Update Logo'}
@@ -489,7 +489,7 @@ const AdminSettings = () => {
                                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                                 <span className="text-[10px] font-bold text-gray-600">Location Active</span>
                                             </div>
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#FD6941]">
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black">
                                                 <MapPin className="w-8 h-8 fill-current drop-shadow-md" />
                                             </div>
                                             <div className="absolute bottom-4 right-4 flex flex-col gap-2">
@@ -630,7 +630,7 @@ const AdminSettings = () => {
                         <div className="space-y-6">
                             <div className="bg-white p-6 rounded-[2rem] border border-gray-100 mb-6">
                                 <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Plus className="w-4 h-4 text-[#FD6941]" /> Add New Staff
+                                    <Plus className="w-4 h-4 text-black" /> Add New Staff
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <InputGroup placeholder="Name" value={newStaff.name} onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })} />
@@ -660,7 +660,7 @@ const AdminSettings = () => {
                                 {staff.length > 0 ? staff.map((member) => (
                                     <div key={member._id || member.name} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between group hover:border-orange-100 transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center font-bold text-[#FD6941]">
+                                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-black">
                                                 {member.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
@@ -748,7 +748,7 @@ const SidebarItem = ({ icon: Icon, label, isActive, onClick }) => (
 const SectionCard = ({ title, icon: Icon, children }) => (
     <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 shadow-sm border border-gray-100">
         <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="p-2 sm:p-3 bg-orange-50 rounded-xl text-[#FD6941]">
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-xl text-black">
                 <Icon className="w-5 h-5 sm:w-6 h-6" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">{title}</h3>
@@ -779,7 +779,7 @@ const ToggleItem = ({ title, description, enabled, onClick }) => (
         </div>
         <div
             onClick={onClick}
-            className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ${enabled ? 'bg-[#FD6941]' : 'bg-gray-200'}`}
+            className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ${enabled ? 'bg-black' : 'bg-gray-200'}`}
         >
             <div className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-200 ${enabled ? 'right-1' : 'left-1'}`}></div>
         </div>

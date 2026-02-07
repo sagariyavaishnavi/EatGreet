@@ -157,7 +157,7 @@ const AdminCategory = () => {
             {/* Header Section */}
             {/* Header Section */}
             <div className="flex justify-between items-center gap-4">
-                <h1 className="text-[20px] sm:text-[24px] lg:text-[36px] font-medium text-black tracking-tight leading-none">Category Management</h1>
+                <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Category Management</h1>
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsModalOpen(true); }}
@@ -176,7 +176,7 @@ const AdminCategory = () => {
 
                 {/* Search & Toolbar */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-                    <h2 className="text-[16px] sm:text-[20px] font-medium text-black w-full sm:w-auto">All Categories</h2>
+                    <h2 className="text-[16px] sm:text-[22px] font-medium text-black w-full sm:w-auto">All Categories</h2>
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -260,16 +260,15 @@ const AdminCategory = () => {
                                     </div>
 
                                     {/* Mobile ONLY: Toggle at bottom-right of this column */}
-                                    <div className="flex sm:hidden justify-end mt-auto origin-right scale-75" onClick={(e) => e.stopPropagation()}>
-                                        <label className="relative inline-block w-14 h-8 cursor-pointer">
+                                    <div className="flex sm:hidden justify-end mt-auto scale-90 origin-right" onClick={(e) => e.stopPropagation()}>
+                                        <label className="relative inline-flex items-center cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={category.status === 'ACTIVE'}
                                                 onChange={() => toggleStatus(category._id)}
                                             />
-                                            <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
-                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -284,15 +283,14 @@ const AdminCategory = () => {
                                     </div>
 
                                     <div className="origin-center" onClick={(e) => e.stopPropagation()}>
-                                        <label className="relative inline-block w-14 h-8 cursor-pointer">
+                                        <label className="relative inline-flex items-center cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={category.status === 'ACTIVE'}
                                                 onChange={() => toggleStatus(category._id)}
                                             />
-                                            <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-[#FD6941] transition-colors duration-300"></div>
-                                            <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${category.status === 'ACTIVE' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -314,7 +312,7 @@ const AdminCategory = () => {
             </div>
 
             {isModalOpen && createPortal(
-                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] px-4">
+                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-4">
                     <div className="fixed inset-0" onClick={closeModal} />
                     <div className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 relative z-10 max-h-[90vh] overflow-y-auto no-scrollbar">
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
@@ -358,7 +356,8 @@ const AdminCategory = () => {
                                 <input
                                     type="text"
                                     placeholder="e.g. Breakfast Specials"
-                                    className="w-full px-5 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                    className="w-full px-5 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white
+"
                                     value={newCategoryName}
                                     onChange={(e) => setNewCategoryName(e.target.value)}
                                 />
@@ -369,15 +368,15 @@ const AdminCategory = () => {
                                     <label className="block text-sm font-bold text-gray-800">Active Status</label>
                                     <p className="text-xs text-gray-400">Visible on menu immediately</p>
                                 </div>
-                                <div
-                                    onClick={() => setNewCategoryStatus(!newCategoryStatus)}
-                                    className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in cursor-pointer"
-                                    role="button"
-                                    tabIndex={0}
-                                >
-                                    <div className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${newCategoryStatus ? 'bg-[#FD6941]' : 'bg-gray-200'}`}></div>
-                                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${newCategoryStatus ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={newCategoryStatus}
+                                        onChange={() => setNewCategoryStatus(!newCategoryStatus)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+                                </label>
                             </div>
 
                             <button

@@ -370,7 +370,7 @@ const AdminDashboard = () => {
                                             if (active && payload && payload.length) {
                                                 return (
                                                     <div className="bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-50">
-                                                        <p className="text-[14px] font-bold text-black font-urb">
+                                                        <p className="text-[14px] font-medium text-black font-urb">
                                                             {currencySymbol}{payload[0].value.toLocaleString()}
                                                         </p>
                                                     </div>
@@ -420,13 +420,13 @@ const AdminDashboard = () => {
                                             <img src={item.icon} alt={item.title} className="w-6 h-6 sm:w-9 sm:h-9 opacity-70" />
                                         </div>
                                         <div className="flex flex-col">
-                                            <h4 className="font-bold text-black text-[15px] sm:text-[18px] leading-tight">{item.title}</h4>
-                                            <p className="text-[12px] sm:text-[15px] text-gray-400 font-bold mt-0.5 truncate max-w-[100px] sm:max-w-[120px]">{item.sub}</p>
+                                            <h4 className="font-medium text-black text-[15px] sm:text-[18px] leading-tight">{item.title}</h4>
+                                            <p className="text-[12px] sm:text-[15px] text-gray-400 font-medium mt-0.5 truncate max-w-[100px] sm:max-w-[120px]">{item.sub}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); navigate(`/${restaurantSlug}/admin/orders?orderId=${item.id}`); }}
-                                        className="bg-black text-white text-[12px] sm:text-[14px] font-black px-4 sm:px-7 py-2 sm:py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95"
+                                        className="bg-black text-white text-[12px] sm:text-[14px] font-medium px-4 sm:px-7 py-2 sm:py-3 rounded-full hover:bg-gray-800 transition-transform active:scale-95"
                                     >
                                         View
                                     </button>

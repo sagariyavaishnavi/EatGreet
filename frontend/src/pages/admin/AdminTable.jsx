@@ -155,7 +155,7 @@ const AdminTable = () => {
                 <body>
                     <div class="header">
                         <div class="restaurant-name">${restaurant?.name || 'EatGreet Restaurant'}</div>
-                        <div class="restaurant-info font-bold" style="margin-top: 5px;">${restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</div>
+                        <div class="restaurant-info font-medium" style="margin-top: 5px;">${restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</div>
                         ${(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) ? `<div class="restaurant-info">Email: ${restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</div>` : ''}
                         ${(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) ? `<div class="restaurant-info">GST: ${restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</div>` : ''}
                         ${(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) ? `<div class="restaurant-info" style="margin-top: 2px;">Tel: ${restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</div>` : ''}
@@ -243,7 +243,7 @@ const AdminTable = () => {
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={addTable}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-medium flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                     >
                         <Plus className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
                         <span className="max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
@@ -281,7 +281,7 @@ const AdminTable = () => {
                                 <span className={`text-3xl md:text-5xl font-medium mb-1 tracking-tighter font-urbanist transition-colors duration-500 ${isLive ? 'text-[#FD6941]' : 'text-gray-900'}`}>
                                     {table}
                                 </span>
-                                <div className={`px-4 sm:px-5 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
+                                <div className={`px-4 sm:px-5 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.2em] shadow-sm border transition-all duration-500
                                     ${isLive
                                         ? 'bg-[#FD6941] text-white border-[#FD6941] shadow-orange-100'
                                         : 'bg-gray-50 text-gray-400 border-gray-100'}
@@ -359,8 +359,8 @@ const AdminTable = () => {
                                     <X className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
 
-                                <h2 className="text-3xl md:text-4xl font-black font-urbanist text-gray-900 tracking-tighter mt-4 md:mt-4">Table {selectedTableOrder.tableNumber}</h2>
-                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Live Order View</p>
+                                <h2 className="text-3xl md:text-4xl font-medium font-urbanist text-gray-900 tracking-tighter mt-4 md:mt-4">Table {selectedTableOrder.tableNumber}</h2>
+                                <p className="text-gray-400 text-[10px] font-medium uppercase tracking-[0.3em] mt-2">Live Order View</p>
                             </div>
 
                             <div className="p-6 md:p-8 space-y-6">
@@ -370,8 +370,8 @@ const AdminTable = () => {
                                         <User className="w-6 h-6" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-gray-400 text-[9px] font-black uppercase tracking-wider mb-0.5">Ordering Person</p>
-                                        <p className="text-lg font-bold text-gray-900 font-urbanist leading-tight">{selectedTableOrder.customerInfo?.name || 'Guest User'}</p>
+                                        <p className="text-gray-400 text-[9px] font-medium uppercase tracking-wider mb-0.5">Ordering Person</p>
+                                        <p className="text-lg font-medium text-gray-900 font-urbanist leading-tight">{selectedTableOrder.customerInfo?.name || 'Guest User'}</p>
                                     </div>
                                 </div>
 
@@ -380,17 +380,17 @@ const AdminTable = () => {
                                     {selectedTableOrder.items?.map((item, idx) => (
                                         <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 group hover:border-orange-200 transition-all">
                                             <div className="flex items-center gap-4 min-w-0">
-                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-[#FD6941] font-black text-sm">
+                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-[#FD6941] font-medium text-sm">
                                                     {item.quantity}x
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                                                    <p className={`text-[10px] font-black uppercase ${item.status === 'ready' ? 'text-green-500' : 'text-gray-400'}`}>
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                                                    <p className={`text-[10px] font-medium uppercase ${item.status === 'ready' ? 'text-green-500' : 'text-gray-400'}`}>
                                                         {item.status || 'Pending'}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <p className="text-sm font-bold text-gray-900 font-urbanist">{currencySymbol}{item.price}</p>
+                                            <p className="text-sm font-medium text-gray-900 font-urbanist">{currencySymbol}{item.price}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -398,8 +398,8 @@ const AdminTable = () => {
                                 {/* Total Amount Section - LIGHT THEME */}
                                 <div className="p-6 md:p-8 bg-gray-50 rounded-2xl md:rounded-[3rem] text-gray-900 flex justify-between items-center border border-gray-100 relative overflow-hidden group shadow-sm">
                                     <div className="relative z-10">
-                                        <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.1em] mb-1.5">Grand Total Amount</p>
-                                        <p className="text-3xl sm:text-5xl font-bold font-urbanist tracking-tighter">
+                                        <p className="text-[11px] text-gray-400 font-medium uppercase tracking-[0.1em] mb-1.5">Grand Total Amount</p>
+                                        <p className="text-3xl sm:text-5xl font-medium font-urbanist tracking-tighter">
                                             {currencySymbol}{selectedTableOrder.totalAmount?.toFixed(2) || (selectedTableOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05).toFixed(2)}
                                         </p>
                                     </div>
@@ -413,7 +413,7 @@ const AdminTable = () => {
                                 {/* Action Button */}
                                 <button
                                     onClick={() => handleCompleteOrder(selectedTableOrder)}
-                                    className={`w-full py-4 md:py-5 rounded-2xl md:rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
+                                    className={`w-full py-4 md:py-5 rounded-2xl md:rounded-[2.5rem] font-medium uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center shadow-xl
                                         ${(selectedTableOrder.items?.some(it => ['ready', 'served'].includes(it.status)) || selectedTableOrder.status === 'ready')
                                             ? 'bg-[#FD6941] text-white hover:bg-orange-600 hover:scale-[1.02] shadow-orange-200'
                                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}
@@ -434,7 +434,7 @@ const AdminTable = () => {
                     <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4">
                         <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h2 className="text-xl font-bold text-gray-800">Table {qrModal.tableNo} QR Code</h2>
+                                <h2 className="text-xl font-medium text-gray-800">Table {qrModal.tableNo} QR Code</h2>
                                 <button
                                     onClick={() => setQrModal({ ...qrModal, isOpen: false })}
                                     className="w-10 h-10 bg-white shadow-sm border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -470,11 +470,11 @@ const AdminTable = () => {
                                         link.click();
                                         toast.success('QR Code downloaded');
                                     }}
-                                    className="w-full bg-[#FD6941] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 active:scale-[0.98]"
+                                    className="w-full bg-[#FD6941] text-white py-4 rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 active:scale-[0.98]"
                                 >
                                     <Download className="w-5 h-5" /> Download QR Code
                                 </button>
-                                <p className="mt-4 text-[10px] text-gray-400 text-center uppercase font-bold tracking-widest">
+                                <p className="mt-4 text-[10px] text-gray-400 text-center uppercase font-medium tracking-widest">
                                     Scan this to open Table {qrModal.tableNo} menu
                                 </p>
                             </div>
@@ -489,7 +489,7 @@ const AdminTable = () => {
                 <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
+                            <h2 className="text-xl font-medium text-gray-800">Invoice Preview</h2>
                             <button
                                 onClick={() => {
                                     setIsInvoicePreviewOpen(false);
@@ -504,13 +504,13 @@ const AdminTable = () => {
                         <div className="p-8 max-h-[70vh] overflow-y-auto no-scrollbar bg-gray-100/30">
                             <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative" style={{ width: '100%', maxWidth: '380px' }}>
                                 <div className="text-center mb-6">
-                                    <h2 className="text-xl font-bold uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
-                                    <p className="text-[12px] leading-tight mb-1 font-bold italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
+                                    <h2 className="text-xl font-medium uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
+                                    <p className="text-[12px] leading-tight mb-1 font-medium italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
                                     {(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) && (
                                         <p className="text-[11px] mb-0.5 opacity-80">Email: {restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</p>
                                     )}
                                     {(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) && (
-                                        <p className="text-[11px] font-bold">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
+                                        <p className="text-[11px] font-medium">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
                                     )}
                                     {(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) && (
                                         <p className="text-[11px] text-gray-500 mt-1">Tel: {restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</p>
@@ -520,7 +520,7 @@ const AdminTable = () => {
                                 <div className="border-t border-dashed border-black my-4"></div>
                                 <div className="flex justify-between text-[13px] mb-1">
                                     <span>Name:</span>
-                                    <span className="font-bold">{invoiceOrder.customerInfo?.name || 'Guest'}</span>
+                                    <span className="font-medium">{invoiceOrder.customerInfo?.name || 'Guest'}</span>
                                 </div>
                                 <div className="border-t border-dashed border-black my-4"></div>
 
@@ -536,7 +536,7 @@ const AdminTable = () => {
                                 </div>
 
                                 <div className="border-t border-dashed border-black my-4"></div>
-                                <div className="flex justify-between font-bold text-[11px] mb-2 uppercase">
+                                <div className="flex justify-between font-medium text-[11px] mb-2 uppercase">
                                     <span style={{ flex: 1 }}>Item</span>
                                     <span style={{ width: '30px', textAlign: 'center' }}>Qty</span>
                                     <span style={{ width: '60px', textAlign: 'right' }}>Price</span>
@@ -556,7 +556,7 @@ const AdminTable = () => {
                                 </div>
 
                                 <div className="border-t border-dashed border-black my-4"></div>
-                                <div className="flex justify-between font-bold text-[13px] mb-1">
+                                <div className="flex justify-between font-medium text-[13px] mb-1">
                                     <span>Sub Total</span>
                                     <span>{currencySymbol}{(invoiceOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0).toFixed(2)}</span>
                                 </div>
@@ -569,19 +569,19 @@ const AdminTable = () => {
                                     <span>{currencySymbol}{((invoiceOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) || 0) * 0.025).toFixed(2)}</span>
                                 </div>
                                 <div className="border-t border-dashed border-black my-4"></div>
-                                <div className="flex justify-between font-bold text-lg">
+                                <div className="flex justify-between font-medium text-lg">
                                     <span>Grand Total</span>
                                     <span>{currencySymbol}{(invoiceOrder.totalAmount || (invoiceOrder.items?.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) * 1.05)).toFixed(2)}</span>
                                 </div>
                                 <div className="border-t border-dashed border-black my-4"></div>
-                                <div className="text-center font-bold text-[14px] uppercase mt-4">Thank You Visit Again</div>
+                                <div className="text-center font-medium text-[14px] uppercase mt-4">Thank You Visit Again</div>
                             </div>
                         </div>
 
                         <div className="p-6 bg-gray-50 border-t border-gray-100">
                             <button
                                 onClick={() => handlePrint(invoiceOrder)}
-                                className="w-full bg-[#FD6941] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-lg active:scale-[0.98]"
+                                className="w-full bg-[#FD6941] text-white py-4 rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-lg active:scale-[0.98]"
                             >
                                 <Printer className="w-5 h-5" /> Print Invoice
                             </button>
@@ -597,7 +597,7 @@ const AdminTable = () => {
                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                             <span className="text-2xl">🪑</span>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">No Tables Added</h3>
+                        <h3 className="text-lg font-medium text-gray-800 mb-1">No Tables Added</h3>
                         <p className="text-gray-400 text-sm max-w-sm">
                             Add tables to generate unique menu links for your customers.
                         </p>

@@ -153,7 +153,7 @@ const AdminHeader = () => {
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">
+              <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-medium text-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -165,7 +165,7 @@ const AdminHeader = () => {
               <div className="fixed inset-0 z-[100] bg-transparent" onClick={() => setIsNotificationOpen(false)}></div>
               <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-[1.5rem] shadow-xl border border-gray-100 z-[101] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
                 <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                  <h3 className="font-bold text-gray-800">Notifications</h3>
+                  <h3 className="font-medium text-gray-800">Notifications</h3>
                   {notifications.length > 0 && (
                     <button
                       onClick={() => setNotifications([])}
@@ -192,7 +192,7 @@ const AdminHeader = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-sm font-bold text-gray-900 truncate">{notif.title}</h4>
+                            <h4 className="text-sm font-medium text-gray-900 truncate">{notif.title}</h4>
                             <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">{notif.time}</span>
                           </div>
                           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{notif.message}</p>
@@ -216,7 +216,7 @@ const AdminHeader = () => {
                   <div className="p-3 border-t border-gray-50 bg-gray-50/30 text-center">
                     <button
                       onClick={markAllRead}
-                      className="text-xs font-bold text-gray-600 hover:text-black transition-colors"
+                      className="text-xs font-medium text-gray-600 hover:text-black transition-colors"
                     >
                       Mark all as read
                     </button>
@@ -262,7 +262,7 @@ const AdminHeader = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-5 py-4 rounded-2xl text-[17px] font-bold transition-all ${location.pathname === item.path
+                  className={`px-5 py-4 rounded-2xl text-[17px] font-medium transition-all ${location.pathname === item.path
                     ? 'bg-gray-900 text-white shadow-lg'
                     : 'text-gray-600 hover:bg-gray-50 active:bg-gray-100'
                     }`}

@@ -166,7 +166,7 @@ const CustomerLayout = () => {
                 <>
                     {/* Header */}
                     <header className="bg-white shadow-sm sticky top-0 z-50">
-                        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
                             <Link to={`${baseUrl}/menu`} className="flex items-center gap-2">
                                 <img src={logo} alt="EatGreet" className="h-8 w-auto object-contain" />
                             </Link>
@@ -193,7 +193,7 @@ const CustomerLayout = () => {
                     </header>
 
                     {/* Content - key={tenantName} forces a clean remount when switching restaurants */}
-                    <main key={tenantName} className="max-w-7xl mx-auto px-4 py-6">
+                    <main key={tenantName} className="max-w-7xl mx-auto md:px-4 md:py-6">
                         <Outlet context={{
                             cart, addToCart, removeFromCart, clearCart,
                             favorites, toggleFavorite,

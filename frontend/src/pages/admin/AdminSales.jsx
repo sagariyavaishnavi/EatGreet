@@ -18,20 +18,21 @@ const formatCurrency = (amount, symbol = '$') => {
     return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const SalesCard = ({ title, value, subValue, icon: Icon, isCurrency }) => {
+const SalesCard = ({ title, value, subValue, icon: Icon, isCurrency, mobileTitle }) => {
     return (
-        <div className="bg-white rounded-[1.2rem] sm:rounded-[2rem] px-4 sm:px-6 py-3 sm:py-4 flex items-center h-[100px] sm:h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
-            <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 opacity-60 text-black" />
+        <div className="bg-white rounded-[1.2rem] sm:rounded-[2rem] px-3 sm:px-6 py-2 sm:py-4 flex items-center h-[82px] sm:h-[140px] shadow-sm relative border border-transparent hover:border-gray-50 transition-all">
+            <div className="flex items-center gap-2 sm:gap-4">
+                <div className="w-9 h-9 sm:w-12 sm:h-12 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
+                    <Icon className="w-4.5 h-4.5 sm:w-6 sm:h-6 opacity-60 text-black" />
                 </div>
                 <div className="flex flex-col">
-                    <h3 className="text-[18px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline tracking-tight">
+                    <h3 className="text-[16px] sm:text-[28px] lg:text-[32px] font-medium text-black leading-none flex items-baseline tracking-tight">
                         {value}
                     </h3>
-                    <p className="text-[11px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight truncate max-w-[120px] sm:max-w-full">
-                        {title}
-                        {subValue && <span className="opacity-60 ml-1 font-normal">- {subValue}</span>}
+                    <p className="text-[10px] sm:text-[13px] lg:text-[14px] text-gray-400 mt-1 sm:mt-2 font-medium tracking-tight truncate max-w-[100px] sm:max-w-full">
+                        <span className="inline sm:hidden">{mobileTitle || title}</span>
+                        <span className="hidden sm:inline">{title}</span>
+                        {subValue && <span className="opacity-60 ml-1 font-normal hidden sm:inline">- {subValue}</span>}
                     </p>
                 </div>
             </div>
@@ -64,7 +65,7 @@ const DynamicEbitdaCard = ({ stats, currencySymbol }) => {
                 <div className="relative">
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="flex items-center gap-1 text-xs font-bold bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded-lg text-gray-500 transition-colors"
+                        className="flex items-center gap-1 text-xs font-medium bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded-lg text-gray-500 transition-colors"
                     >
                         {period} <ChevronDown className="w-3 h-3" />
                     </button>
@@ -89,7 +90,7 @@ const DynamicEbitdaCard = ({ stats, currencySymbol }) => {
             </div>
             <div>
                 <p className="text-gray-400 text-sm font-medium mb-1">EBITDA ({period})</p>
-                <h3 className="text-2xl font-bold text-black">{formatCurrency(getData(), currencySymbol)}</h3>
+                <h3 className="text-2xl font-medium text-black">{formatCurrency(getData(), currencySymbol)}</h3>
                 <p className="text-xs text-gray-400 mt-1">Net Earnings (~35%)</p>
             </div>
         </div>
@@ -258,13 +259,13 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                         </button>
 
                         <div className="text-center mb-6">
-                            <h2 className="text-xl font-bold uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
-                            <p className="text-[12px] leading-tight mb-1 font-bold italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
+                            <h2 className="text-xl font-medium uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
+                            <p className="text-[12px] leading-tight mb-1 font-medium italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
                             {(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) && (
                                 <p className="text-[11px] mb-0.5 opacity-80">Email: {restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</p>
                             )}
                             {(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) && (
-                                <p className="text-[11px] font-bold">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
+                                <p className="text-[11px] font-medium">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
                             )}
                             {(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) && (
                                 <p className="text-[11px] text-gray-500 mt-1">Tel: {restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</p>
@@ -274,12 +275,12 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                         <div className="border-t border-dashed border-black my-4"></div>
                         <div className="flex justify-between text-[13px] mb-1">
                             <span>Name:</span>
-                            <span className="font-bold">{order.customerInfo?.name || 'Guest'}</span>
+                            <span className="font-medium">{order.customerInfo?.name || 'Guest'}</span>
                         </div>
                         {order.customerInfo?.phone && (
                             <div className="flex justify-between text-[13px] mb-1">
                                 <span>Tel:</span>
-                                <span className="font-bold">{order.customerInfo.phone}</span>
+                                <span className="font-medium">{order.customerInfo.phone}</span>
                             </div>
                         )}
                         <div className="border-t border-dashed border-black my-4"></div>
@@ -301,7 +302,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                         </div>
 
                         <div className="border-t border-dashed border-black my-4"></div>
-                        <div className="flex justify-between font-bold text-[13px] mb-2 uppercase">
+                        <div className="flex justify-between font-medium text-[13px] mb-2 uppercase">
                             <span style={{ flex: 1 }}>No.Item</span>
                             <span style={{ width: '30px', textAlign: 'center' }}>Qty</span>
                             <span style={{ width: '60px', textAlign: 'right' }}>Price</span>
@@ -321,7 +322,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                         </div>
 
                         <div className="border-t border-dashed border-black my-4"></div>
-                        <div className="flex justify-between font-bold text-[13px] mb-1">
+                        <div className="flex justify-between font-medium text-[13px] mb-1">
                             <span>Total Qty: {order.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
                             <span>Sub Total: {currencySymbol}{orderStats?.subtotal.toFixed(2)}</span>
                         </div>
@@ -333,7 +334,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                             <span>SGST@2.5%</span>
                             <span>{currencySymbol}{orderStats?.sgst.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between font-bold text-[13px] mb-1">
+                        <div className="flex justify-between font-medium text-[13px] mb-1">
                             <span>Total</span>
                             <span>{currencySymbol}{orderStats?.totalRaw.toFixed(2)}</span>
                         </div>
@@ -342,12 +343,12 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                             <span>{currencySymbol}{orderStats?.roundOff.toFixed(2)}</span>
                         </div>
                         <div className="border-t border-dashed border-black my-4"></div>
-                        <div className="flex justify-between font-bold text-lg mb-4">
+                        <div className="flex justify-between font-medium text-lg mb-4">
                             <span>Grand Total</span>
                             <span>{currencySymbol}{orderStats?.grandTotal.toFixed(2)}</span>
                         </div>
                         <div className="border-t border-dashed border-black my-4"></div>
-                        <div className="text-center font-bold text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>
+                        <div className="text-center font-medium text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>
                     </div>
                 </div>
             </div>
@@ -582,43 +583,52 @@ const AdminSales = () => {
     return (
         <div className="space-y-6 pb-10">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-medium text-black tracking-tight leading-none">Sales Dashboard</h1>
-                    <p className="text-gray-400 font-medium">Financial Overview & Analytics</p>
+                    <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Sales Dashboard</h1>
+                    <p className="text-[12px] sm:text-[18px] text-gray-400 font-medium">Financial Overview & Analytics</p>
                 </div>
-                <div className="flex gap-2 items-center">
-                    <input
-                        type="date"
-                        value={dateRange.start}
-                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-full focus:ring-black focus:border-black block px-4 py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                    />
-                    <span className="self-center text-gray-400 font-medium">-</span>
-                    <input
-                        type="date"
-                        value={dateRange.end}
-                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                        className="bg-white border border-gray-100 text-gray-700 text-sm rounded-full focus:ring-black focus:border-black block px-4 py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                    />
+                <div className="flex flex-row items-center justify-end gap-1.5 sm:gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1">
+                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                        <input
+                            type="text"
+                            placeholder="Start Date"
+                            onFocus={(e) => (e.target.type = "date")}
+                            onBlur={(e) => !e.target.value && (e.target.type = "text")}
+                            value={dateRange.start}
+                            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                            className="bg-white border border-gray-100 text-gray-700 text-[10px] sm:text-sm rounded-full focus:ring-black focus:border-black block px-2.5 sm:px-4 py-2 sm:py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 sm:[&::-webkit-calendar-picker-indicator]:w-5 sm:[&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                        <span className="self-center text-gray-400 font-medium text-[10px] sm:text-sm">-</span>
+                        <input
+                            type="text"
+                            placeholder="End Date"
+                            onFocus={(e) => (e.target.type = "date")}
+                            onBlur={(e) => !e.target.value && (e.target.type = "text")}
+                            value={dateRange.end}
+                            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                            className="bg-white border border-gray-100 text-gray-700 text-[10px] sm:text-sm rounded-full focus:ring-black focus:border-black block px-2.5 sm:px-4 py-2 sm:py-2.5 outline-none shadow-sm transition-all hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 sm:[&::-webkit-calendar-picker-indicator]:w-5 sm:[&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                    </div>
                     <button
                         onClick={handleDownloadPDF}
-                        className="bg-black hover:bg-gray-800 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 hover:w-auto hover:px-6 hover:gap-2"
+                        className="bg-black hover:bg-gray-800 text-white h-9 sm:h-12 w-9 sm:w-12 rounded-full font-medium flex items-center justify-center shrink-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden hover:sm:w-auto hover:sm:px-6"
                         title="Download PDF Report"
                     >
-                        <Download className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                        <span className="max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden">
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden sm:group-hover:inline-block transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden">
                             Download PDF
                         </span>
                     </button>
                 </div>
             </div>
 
-            {/* 4 Summary Cards as requested */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* 4 Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {/* 1. Total Revenue */}
                 <SalesCard
                     title="Total Revenue"
+                    mobileTitle="Total Revenue"
                     value={formatCurrency(stats.revenue, currencySymbol)}
                     subValue={dateRange.start ? "Period Revenue" : "All Time Revenue"}
                     icon={DollarSign}
@@ -627,6 +637,7 @@ const AdminSales = () => {
                 {/* 2. Total Orders */}
                 <SalesCard
                     title="Total Orders"
+                    mobileTitle="Total Orders"
                     value={stats.orders}
                     subValue={dateRange.start ? "Period Orders" : "All Time Orders"}
                     icon={ShoppingBag}
@@ -635,6 +646,7 @@ const AdminSales = () => {
                 {/* 3. Avg Order Value (AOV) */}
                 <SalesCard
                     title="Avg Order Value (AOV)"
+                    mobileTitle="AOV"
                     value={formatCurrency(stats.aov, currencySymbol)}
                     subValue="Average per order"
                     icon={Activity}
@@ -643,6 +655,7 @@ const AdminSales = () => {
                 {/* 4. Yearly EBITDA */}
                 <SalesCard
                     title="EBITDA"
+                    mobileTitle="EBITDA"
                     value={formatCurrency(stats.ebitda, currencySymbol)}
                     subValue={dateRange.start ? "Period (Excl. Tax)" : "Total (Excl. Tax)"}
                     icon={PieChart}
@@ -654,8 +667,8 @@ const AdminSales = () => {
                 {/* Main Graph: Sales & EBITDA */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-[1.5rem] shadow-sm">
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-black">Revenue & EBITDA</h3>
-                        <p className="text-sm text-gray-400">Monthly breakdown of sales and earnings</p>
+                        <h3 className="text-[16px] sm:text-[24px] font-medium text-black">Revenue & EBITDA</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">Monthly breakdown of sales and earnings</p>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -687,8 +700,8 @@ const AdminSales = () => {
                 {/* Secondary Graph: Total Volume */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-[1.5rem] shadow-sm">
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-black">Total Orders</h3>
-                        <p className="text-sm text-gray-400">Number of orders per period</p>
+                        <h3 className="text-[16px] sm:text-[24px] font-medium text-black">Total Orders</h3>
+                        <p className="text-[12px] text-gray-400 font-medium">Number of orders per period</p>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -708,42 +721,43 @@ const AdminSales = () => {
 
             {/* Detailed Table */}
             <div className="bg-white rounded-[1.5rem] shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h3 className="text-xl font-bold text-black">Transaction History</h3>
-                        <p className="text-sm text-gray-400">Detailed list of past orders</p>
+                <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="w-full sm:w-auto">
+                        <h3 className="text-[16px] sm:text-[24px] font-medium text-black">Transaction History</h3>
+                        <p className="text-[12px] text-gray-400 font-medium">Detailed list of past orders</p>
                     </div>
 
                     {/* Controls */}
-                    <div className="flex gap-3 w-full sm:w-auto">
+                    <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                         {/* Search Bar */}
                         <div className="relative flex-1 sm:flex-none">
                             <input
                                 type="text"
-                                placeholder="Search Order ID..."
+                                placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-full text-sm w-full sm:w-64 focus:outline-none focus:ring-1 focus:ring-black transition-all"
+                                className="w-full sm:w-64 pl-9 sm:pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-full text-xs sm:text-sm focus:ring-1 focus:ring-black transition-all outline-none"
                             />
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
 
                         {/* Filter Dropdown */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-bold transition-all ${paymentFilter !== 'All' ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                className={`flex items-center justify-center w-9 h-9 sm:w-auto sm:px-4 sm:py-2.5 rounded-full border text-xs sm:text-sm font-medium transition-all ${paymentFilter !== 'All' ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                title="Filter Transactions"
                             >
-                                <Filter className="w-4 h-4" />
-                                <span>{paymentFilter === 'All' ? 'Filter' : paymentFilter}</span>
-                                <ChevronDown className="w-3.5 h-3.5" />
+                                <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span className="hidden sm:inline ml-2">{paymentFilter === 'All' ? 'Filter' : paymentFilter}</span>
+                                <ChevronDown className="hidden sm:inline ml-1 w-3.5 h-3.5" />
                             </button>
 
                             {isFilterOpen && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)}></div>
                                     <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-20 animate-in fade-in slide-in-from-top-2">
-                                        <div className="px-3 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Mode</div>
+                                        <div className="px-3 py-1.5 font-medium text-gray-400 uppercase tracking-wider text-[10px]">Payment Mode</div>
                                         {['All', 'Cash', 'Online'].map(mode => (
                                             <button
                                                 key={mode}
@@ -751,7 +765,7 @@ const AdminSales = () => {
                                                     setPaymentFilter(mode);
                                                     setIsFilterOpen(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors ${paymentFilter === mode ? 'text-black bg-gray-50' : 'text-gray-600'}`}
+                                                className={`w-full text-left px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors ${paymentFilter === mode ? 'text-black bg-gray-50' : 'text-gray-600'}`}
                                             >
                                                 {mode}
                                             </button>
@@ -762,9 +776,45 @@ const AdminSales = () => {
                         </div>
                     </div>
                 </div>
-                <div className="overflow-x-auto">
+
+                <div className="block sm:hidden divide-y divide-gray-50 max-h-[600px] overflow-y-auto no-scrollbar">
+                    {tableData.length > 0 ? (
+                        tableData.map((order) => (
+                            <div key={order._id} className="p-3 flex flex-col gap-2">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-sm font-medium text-black">#{order.dailySequence || (order._id || '').slice(-6).toUpperCase()}</p>
+                                        <p className="text-[10px] text-gray-400">{new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+                                    </div>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${(order.paymentMethod || 'Cash') === 'Online' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
+                                        {order.paymentMethod || 'Cash'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <div className="text-[10px] text-gray-500">
+                                        {order.items?.reduce((acc, i) => acc + (i.quantity || 1), 0) || 0} Items
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-medium text-black">{formatCurrency(order.totalAmount, currencySymbol)}</p>
+                                        <button
+                                            onClick={() => setSelectedOrder(order)}
+                                            className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-all active:scale-95 shadow-sm ml-auto mt-0.5"
+                                            title="View Invoice"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-8 text-center text-gray-400 text-sm">No transactions found</div>
+                    )}
+                </div>
+
+                <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <thead className="bg-gray-50 text-gray-500 text-[10px] sm:text-xs uppercase tracking-wider">
                             <tr>
                                 <th className="px-6 py-4 font-medium">Order ID</th>
                                 <th className="px-6 py-4 font-medium">Date & Time</th>
@@ -779,14 +829,14 @@ const AdminSales = () => {
                             {tableData.length > 0 ? (
                                 tableData.map((order) => (
                                     <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 text-sm font-bold text-black">
+                                        <td className="px-6 py-4 text-sm font-medium text-black">
                                             #{order.dailySequence || (order._id || '').slice(-6).toUpperCase()}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
                                             {new Date(order.createdAt).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${(order.paymentMethod || 'Cash') === 'Online'
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${(order.paymentMethod || 'Cash') === 'Online'
                                                 ? 'bg-blue-100 text-blue-700'
                                                 : 'bg-green-100 text-green-700'
                                                 }`}>
@@ -799,7 +849,7 @@ const AdminSales = () => {
                                         <td className="px-6 py-4 text-sm text-gray-600 text-right">
                                             {formatCurrency((order.totalAmount || 0) * 0.10, currencySymbol)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-bold text-black text-right">
+                                        <td className="px-6 py-4 text-sm font-medium text-black text-right">
                                             {formatCurrency(order.totalAmount || 0, currencySymbol)}
                                         </td>
                                         <td className="px-6 py-4 text-center">

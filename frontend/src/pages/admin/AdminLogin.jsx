@@ -63,7 +63,7 @@ export default function AdminLogin() {
 
                 <form className="space-y-5" onSubmit={handleLogin}>
                     {error && (
-                        <div className="bg-red-50 text-red-500 text-xs p-3 rounded-2xl text-center font-bold">
+                        <div className="bg-red-50 text-red-500 text-xs p-3 rounded-2xl text-center font-medium">
                             {error}
                         </div>
                     )}
@@ -98,7 +98,7 @@ export default function AdminLogin() {
 
                     <button
                         disabled={isLoading}
-                        className="w-full bg-black text-white py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-gray-900 transition-all duration-200 text-base tracking-wide mt-4 disabled:opacity-70 flex items-center justify-center gap-2"
+                        className="w-full bg-black text-white py-4 rounded-full font-medium shadow-lg hover:shadow-xl hover:bg-gray-900 transition-all duration-200 text-base tracking-wide mt-4 disabled:opacity-70 flex items-center justify-center gap-2"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

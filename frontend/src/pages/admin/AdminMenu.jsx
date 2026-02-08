@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import '@google/model-viewer';
 import { createPortal } from 'react-dom';
-import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye, Box, Camera } from 'lucide-react';
+import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye, Box, Camera, Clock, Flame } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
 import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
@@ -183,12 +183,12 @@ const AdminMenu = () => {
         setNewItemIsVeg(item.isVeg === undefined ? true : item.isVeg);
         setIsActiveStatus(item.isAvailable);
         setSelectedLabels(item.labels || []);
-        
+
         // Separate media and models
         const existingMedia = item.media || (item.image ? [{ name: 'Image', url: item.image, type: 'image/jpeg' }] : []);
         setMediaItems(existingMedia);
         setModelItems(item.models || []);
-        
+
         setIsModalOpen(true);
     };
 
@@ -294,8 +294,8 @@ const AdminMenu = () => {
                 // Check 3D Model Extension
                 const is3D = file.name.match(/\.(glb|gltf|obj)$/i);
                 if (!is3D) {
-                     toast.error(`File ${file.name} is not a supported 3D model.`);
-                     continue;
+                    toast.error(`File ${file.name} is not a supported 3D model.`);
+                    continue;
                 }
 
                 // Create Preview URL
@@ -366,13 +366,13 @@ const AdminMenu = () => {
                                 toast.error('Failed to delete item');
                             }
                         }}
-                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
+                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-colors"
                     >
                         Delete
                     </button>
                     <button
                         onClick={() => toast.dismiss(t.id)}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
                     >
                         Cancel
                     </button>
@@ -495,7 +495,7 @@ const AdminMenu = () => {
             const modelFilesToUploadIndices = modelItems.map((item, idx) => item.file ? idx : -1).filter(idx => idx !== -1);
             // We can reuse the total uploads concept or just do them in parallel with media
             // Simple approach: Concat promises
-            
+
             const modelUploadPromises = modelItems.map(async (item, index) => {
                 if (item.file) {
                     try {
@@ -514,7 +514,7 @@ const AdminMenu = () => {
                         };
                     } catch (err) {
                         if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') throw err;
-                         throw new Error(`Failed to upload model ${item.name}`);
+                        throw new Error(`Failed to upload model ${item.name}`);
                     }
                 } else {
                     return item;
@@ -607,7 +607,7 @@ const AdminMenu = () => {
     };
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-4 relative">
             {/* Header */}
             <div className="flex justify-between items-center gap-4">
                 <h1 className="text-[20px] sm:text-[24px] lg:text-[30px] font-medium text-black tracking-tight leading-none">Menu Management</h1>
@@ -621,7 +621,7 @@ const AdminMenu = () => {
                                 toast.error("Restaurant details not loaded yet");
                             }
                         }}
-                        className="bg-white hover:bg-gray-50 text-gray-600 hover:text-black p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group/preview transition-all duration-300 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
+                        className="bg-white hover:bg-gray-50 text-gray-600 hover:text-black p-2.5 sm:p-3 rounded-full font-medium flex items-center justify-center gap-0 group/preview transition-all duration-300 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                         title="Preview"
                     >
                         <Eye className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
@@ -631,7 +631,7 @@ const AdminMenu = () => {
                     </button>
                     <button
                         onClick={openModal}
-                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-bold flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
+                        className="bg-[#FD6941] hover:bg-orange-600 text-white p-2.5 sm:p-3 rounded-full font-medium flex items-center justify-center gap-0 group transition-all duration-300 shadow-sm text-sm overflow-hidden h-10 w-10 sm:h-12 sm:w-12 sm:hover:w-auto sm:hover:px-6 sm:hover:gap-2"
                     >
                         <Plus className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
                         <span className="max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
@@ -642,32 +642,32 @@ const AdminMenu = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 shadow-sm border border-gray-100 min-h-[calc(100vh-12rem)]">
 
                 {/* Filter and Search Bar */}
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-                    <h2 className="text-[16px] sm:text-[22px] font-medium text-black w-full sm:w-auto">All Menu</h2>
+                <div className="flex flex-row items-center mb-5 gap-2 sm:gap-4 justify-between">
+                    <h2 className="text-[14px] sm:text-[22px] font-medium text-black shrink-0">All Menu</h2>
 
-                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <div className="relative flex-1 sm:w-64">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+                    <div className="flex items-center gap-1.5 sm:gap-3 flex-1 justify-end min-w-0">
+                        <div className="relative flex-1 sm:flex-none max-w-[200px] sm:w-64">
+                            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-5 sm:h-5" />
                             <input
                                 type="text"
                                 placeholder="Search..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
+                                className="w-full pl-8 sm:pl-12 pr-3 py-2 sm:py-3 bg-gray-50 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
                             />
                         </div>
 
                         {/* Custom Category Filter */}
-                        <div className="relative" ref={filterRef}>
+                        <div className="relative shrink-0" ref={filterRef}>
                             <button
                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                className={`p-3 rounded-full transition-colors border ${selectedCategoryFilter ? 'bg-orange-50 border-[#FD6941] text-[#FD6941]' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'}`}
+                                className={`p-2 sm:p-3 rounded-full transition-colors border ${selectedCategoryFilter ? 'bg-orange-50 border-[#FD6941] text-[#FD6941]' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'}`}
                                 title="Filter Categories"
                             >
-                                <Filter className="w-5 h-5" />
+                                <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
 
                             {/* Dropdown */}
@@ -719,7 +719,7 @@ const AdminMenu = () => {
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                 <Search className="w-8 h-8 text-gray-400" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-800 mb-1">No items found</h3>
+                            <h3 className="text-lg font-medium text-gray-800 mb-1">No items found</h3>
                             <p className="text-sm">Try adding a new item or changing filters.</p>
                         </div>
                     )}
@@ -731,9 +731,9 @@ const AdminMenu = () => {
                         const categoryName = catObj ? catObj.name : 'Uncategorized';
 
                         return (
-                            <div key={item._id} className="bg-white rounded-3xl p-3 sm:p-1.5 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative flex flex-row sm:flex-col gap-4 sm:gap-0 h-36 sm:h-auto overflow-hidden">
+                            <div key={item._id} className="bg-white rounded-[1.5rem] sm:rounded-3xl p-2 border border-gray-100 shadow-sm hover:shadow-md transition-all group relative flex flex-row sm:flex-col gap-2.5 sm:gap-0 h-[150px] sm:h-auto overflow-hidden">
                                 {/* Image Container */}
-                                <div className="relative w-32 sm:w-full h-full sm:h-52 shrink-0 rounded-2xl sm:rounded-2xl overflow-hidden sm:mb-1 bg-gray-50">
+                                <div className="relative w-32 sm:w-full h-full sm:h-52 shrink-0 rounded-[1.2rem] sm:rounded-2xl overflow-hidden sm:mb-1 bg-gray-50">
                                     <MediaSlider
                                         media={[...(item.models || []), ...(item.media || [])].length > 0 ? [...(item.models || []), ...(item.media || [])] : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -741,7 +741,7 @@ const AdminMenu = () => {
                                     {/* Availability Tag */}
                                     <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 sm:gap-1.5 shadow-sm">
                                         <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
+                                        <span className="text-[8px] sm:text-[10px] font-medium text-gray-700 tracking-wide uppercase">{item.isAvailable ? 'Available' : 'Unavailable'}</span>
                                     </div>
 
                                     {/* Veg/Non-Veg Symbol - Top Left */}
@@ -755,46 +755,35 @@ const AdminMenu = () => {
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 flex flex-col justify-between py-1 sm:py-1.5 px-3 sm:px-4 sm:pb-3">
-                                    <div className="space-y-0.5">
-                                        <span className="text-[8px] sm:text-[10px] font-bold text-[#FD6941] tracking-wider uppercase">
+                                <div className="flex-1 flex flex-col pt-1 sm:pt-1.5 pr-1 sm:px-4 sm:pb-3">
+                                    <div className="flex flex-col gap-0">
+                                        <span className="text-[8px] sm:text-[10px] font-medium text-[#FD6941] tracking-wider uppercase leading-none mb-1">
                                             {categoryName}
                                         </span>
 
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-bold text-gray-800 text-sm sm:text-lg leading-tight w-2/3 line-clamp-2 sm:line-clamp-none">{item.name || 'Unnamed'}</h3>
-                                            <span className="font-bold text-base sm:text-xl text-gray-800">{currencySymbol}{item.price || 0}</span>
+                                        <div className="flex justify-between items-start gap-1">
+                                            <h3 className="font-medium text-gray-900 text-xs sm:text-lg leading-tight w-2/3 line-clamp-1 sm:line-clamp-none">{item.name || 'Unnamed'}</h3>
+                                            <span className="font-medium text-sm sm:text-xl text-gray-900 whitespace-nowrap leading-tight">{currencySymbol}{item.price || 0}</span>
                                         </div>
 
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[8px] sm:text-[10px] font-bold text-gray-400">
-                                            <span>{item.calories || '- kcal'}</span>
-                                            <span>•</span>
-                                            <span>{item.time || '- min'}</span>
-
-                                            {/* Dietary Labels in Description */}
-                                            {item.labels && item.labels.length > 0 && (
-                                                <div className="hidden sm:flex items-center gap-1 ml-1 pl-1 border-l border-gray-200">
-                                                    {item.labels.map(label => dietaryIcons[label] && (
-                                                        <img
-                                                            key={label}
-                                                            src={dietaryIcons[label]}
-                                                            alt={label}
-                                                            title={label}
-                                                            className="w-3.5 h-3.5"
-                                                            style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            )}
+                                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0 text-[8px] sm:text-[10px] font-medium text-gray-400 mt-1 mb-1">
+                                            <span className="flex items-center gap-0.5">
+                                                <Flame className="w-2 h-2 sm:w-3 sm:h-3 text-[#FD6941]" />
+                                                {item.calories || '- kcal'}
+                                            </span>
+                                            <span className="flex items-center gap-0.5">
+                                                <Clock className="w-2 h-2 sm:w-3 sm:h-3" />
+                                                {item.time || '- min'}
+                                            </span>
                                         </div>
 
-                                        <p className="text-[10px] sm:text-xs text-gray-400 leading-relaxed line-clamp-2 h-7 sm:h-8">
+                                        <p className="text-[9px] sm:text-xs text-gray-400 leading-tight line-clamp-2 mt-auto">
                                             {item.description}
                                         </p>
                                     </div>
 
                                     {/* Actions Footer */}
-                                    <div className="mt-1.5 sm:mt-2.5 pt-2 sm:pt-2 border-t border-gray-50 flex items-center justify-between">
+                                    <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between pb-1 sm:pb-0">
                                         {/* Toggle Switch */}
                                         <div>
                                             <label className="relative inline-flex items-center cursor-pointer scale-90 sm:scale-100">
@@ -811,13 +800,13 @@ const AdminMenu = () => {
                                         <div className="flex gap-1.5 sm:gap-2">
                                             <button
                                                 onClick={() => handleEdit(item)}
-                                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                                                className="w-8 h-8 sm:w-8 sm:h-8 bg-gray-50 sm:bg-gray-100 rounded-full flex items-center justify-center text-gray-400 sm:text-gray-500 hover:bg-black sm:hover:bg-gray-200 hover:text-white sm:hover:text-black transition-all shadow-sm sm:shadow-none border border-gray-100 sm:border-none"
                                             >
                                                 <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(item._id)}
-                                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                                className="w-8 h-8 sm:w-8 sm:h-8 bg-gray-50 sm:bg-gray-100 rounded-full flex items-center justify-center text-gray-400 sm:text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm sm:shadow-none border border-gray-100 sm:border-none"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             </button>
@@ -836,7 +825,7 @@ const AdminMenu = () => {
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
                             <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#FD6941]" />
                         </div>
-                        <h3 className="font-bold text-base sm:text-lg text-gray-800">Add New Item</h3>
+                        <h3 className="font-medium text-base sm:text-lg text-gray-800">Add New Item</h3>
                     </div>
 
                 </div>
@@ -846,82 +835,90 @@ const AdminMenu = () => {
                 <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-2">
                     <div className="fixed inset-0" onClick={handleCloseModal} />
                     <div className="bg-white rounded-[2rem] w-full max-w-6xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
+                        {/* Close Button */}
+                        <button
+                            onClick={handleCloseModal}
+                            className="absolute top-6 right-6 z-50 p-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-full transition-all duration-200 hover:rotate-90"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
                         <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[95vh] overflow-y-auto no-scrollbar">
 
                             {/* Left Column: Media Upload */}
                             <div className="lg:col-span-4 bg-gray-50 p-6 sm:p-6 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
-                                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-4">Item Media</h3>
+                                <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">Item Media</h3>
                                 <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 images or videos.</p>
 
-                                    {/* Uploaded Media Items Grid - or Empty State */}
-                                    {mediaItems.length > 0 ? (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            {mediaItems.map((media, index) => (
-                                                <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                                                    {media.type.startsWith('video') ? (
-                                                        <video src={media.url} className="w-full h-full object-cover" controls />
-                                                    ) : (
-                                                        <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
-                                                    )}
-                                                    <button
-                                                        onClick={() => removeMedia(index)}
-                                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <p className="text-xs text-white truncate">{media.name}</p>
-                                                        <p className="text-[10px] text-gray-300">{media.size}</p>
-                                                    </div>
+                                {/* Uploaded Media Items Grid - or Empty State */}
+                                {mediaItems.length > 0 ? (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {mediaItems.map((media, index) => (
+                                            <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                                                {media.type.startsWith('video') ? (
+                                                    <video src={media.url} className="w-full h-full object-cover" controls />
+                                                ) : (
+                                                    <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
+                                                )}
+                                                <button
+                                                    onClick={() => removeMedia(index)}
+                                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <p className="text-xs text-white truncate">{media.name}</p>
+                                                    <p className="text-[10px] text-gray-300">{media.size}</p>
                                                 </div>
-                                            ))}
-                                            
-                                            {mediaItems.length < 5 && (
-                                                <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        id="file-upload-small"
-                                                        className="hidden"
-                                                        accept="image/*,video/*"
-                                                        multiple
-                                                        onChange={handleFileSelection}
-                                                    />
-                                                    <label htmlFor="file-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
-                                                        <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
-                                                            <ImageIcon className="w-4 h-4" />
-                                                        </div>
-                                                        <h4 className="text-gray-800 font-bold text-xs mb-0.5">Add More</h4>
-                                                    </label>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        /* Large Empty State Board */
-                                        <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
-                                            <input
-                                                type="file"
-                                                id="file-upload-large"
-                                                className="hidden"
-                                                accept="image/*,video/*"
-                                                multiple
-                                                onChange={handleFileSelection}
-                                            />
-                                            <label htmlFor="file-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
-                                                <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
-                                                    <ImageIcon className="w-6 h-6" />
-                                                </div>
-                                                <h4 className="text-gray-800 font-bold text-base sm:text-lg mb-2">Upload Media</h4>
-                                                <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse images or videos</p>
-                                                <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
-                                                    Select Files
-                                                </span>
-                                            </label>
-                                        </div>
-                                    )}
+                                            </div>
+                                        ))}
 
-                                    {/* 3D Models Upload Section */}
+                                        {mediaItems.length < 5 && (
+                                            <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
+                                                <input
+                                                    type="file"
+                                                    id="file-upload-small"
+                                                    className="hidden"
+                                                    accept="image/*,video/*"
+                                                    multiple
+                                                    onChange={handleFileSelection}
+                                                />
+                                                <label htmlFor="file-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                    <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
+                                                        <ImageIcon className="w-4 h-4" />
+                                                    </div>
+                                                    <h4 className="text-gray-800 font-medium text-xs mb-0.5">Add More</h4>
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* Large Empty State Board */
+                                    <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
+                                        <input
+                                            type="file"
+                                            id="file-upload-large"
+                                            className="hidden"
+                                            accept="image/*,video/*"
+                                            multiple
+                                            onChange={handleFileSelection}
+                                        />
+                                        <label htmlFor="file-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                            <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
+                                                <ImageIcon className="w-6 h-6" />
+                                            </div>
+                                            <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload Media</h4>
+                                            <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse images or videos</p>
+                                            <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-medium text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
+                                                Select Files
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
+
+                                {/* 3D Models Upload Section */}
                                 <div className="mt-4">
-                                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-4">3D Models</h3>
+                                    <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">3D Models</h3>
                                     <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 3D models (.glb, .gltf, .obj).</p>
 
                                     {modelItems.length > 0 ? (
@@ -980,7 +977,7 @@ const AdminMenu = () => {
                                                         <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
                                                             <Box className="w-4 h-4" />
                                                         </div>
-                                                        <h4 className="text-gray-800 font-bold text-xs mb-0.5">Add More</h4>
+                                                        <h4 className="text-gray-800 font-medium text-xs mb-0.5">Add More</h4>
                                                     </label>
                                                 </div>
                                             )}
@@ -1000,28 +997,28 @@ const AdminMenu = () => {
                                                 <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
                                                     <Box className="w-6 h-6" />
                                                 </div>
-                                                <h4 className="text-gray-800 font-bold text-base sm:text-lg mb-2">Upload 3D Model</h4>
+                                                <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload 3D Model</h4>
                                                 <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse .glb, .gltf files</p>
-                                                <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
+                                                <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-medium text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
                                                     Select Models
                                                 </span>
                                             </label>
                                         </div>
                                     )}
                                 </div>
-                                </div>
+                            </div>
 
                             {/* Right Column: Form Details */}
                             <div className="lg:col-span-8 p-6 sm:p-6 lg:p-6 flex flex-col gap-6 h-full">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-xl font-bold text-gray-800">Item Details</h3>
+                                    <h3 className="text-xl font-medium text-gray-800">Item Details</h3>
                                     <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
                                         <X className="w-5 h-5 text-gray-500" />
                                     </button>
                                 </div>
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Item Name</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
                                         <input
                                             type="text"
                                             placeholder="e.g. Tandoor Burger"
@@ -1031,148 +1028,148 @@ const AdminMenu = () => {
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
-                                                value={newItemCategory}
-                                                onChange={(e) => setNewItemCategory(e.target.value)}
-                                            >
-                                                <option value="" disabled>Select Category</option>
-                                                {categories
-                                                    .filter(cat => cat.status !== 'INACTIVE')
-                                                    .map((cat) => (
-                                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                    ))}
-                                                {categories.length === 0 && <option value="">No categories found</option>}
-                                            </select>
-                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
+                                                    value={newItemCategory}
+                                                    onChange={(e) => setNewItemCategory(e.target.value)}
+                                                >
+                                                    <option value="" disabled>Select Category</option>
+                                                    {categories
+                                                        .filter(cat => cat.status !== 'INACTIVE')
+                                                        .map((cat) => (
+                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                        ))}
+                                                    {categories.length === 0 && <option value="">No categories found</option>}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                                            <div className="relative">
+                                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currencySymbol}</span>
+                                                <input
+                                                    type="number"
+                                                    placeholder="0.00"
+                                                    className="w-full pl-9 pr-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                    value={newItemPrice}
+                                                    onChange={(e) => setNewItemPrice(e.target.value)}
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Price</label>
-                                        <div className="relative">
-                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currencySymbol}</span>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Calories</label>
                                             <input
-                                                type="number"
-                                                placeholder="0.00"
-                                                className="w-full pl-9 pr-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                                value={newItemPrice}
-                                                onChange={(e) => setNewItemPrice(e.target.value)}
+                                                type="text"
+                                                placeholder="e.g 350 kcal"
+                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                value={newItemCalories}
+                                                onChange={(e) => setNewItemCalories(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g 15-20 min"
+                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                value={newItemTime}
+                                                onChange={(e) => setNewItemTime(e.target.value)}
                                             />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Calories</label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g 350 kcal"
-                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                            value={newItemCalories}
-                                            onChange={(e) => setNewItemCalories(e.target.value)}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Item Type (Veg / Non-Veg)</label>
+                                        <div className="flex gap-4">
+                                            <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                                <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
+                                                <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
+                                                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                                                </div>
+                                                <span className="text-sm font-medium">Veg</span>
+                                            </label>
+                                            <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                                <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
+                                                <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
+                                                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                                                </div>
+                                                <span className="text-sm font-medium">Non-Veg</span>
+                                            </label>
+                                        </div>
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g 15-20 min"
-                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                            value={newItemTime}
-                                            onChange={(e) => setNewItemTime(e.target.value)}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                        <textarea
+                                            rows="3"
+                                            placeholder="Describe the ingredients..."
+                                            className="w-full px-5 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
+                                            value={newItemDescription}
+                                            onChange={(e) => setNewItemDescription(e.target.value)}
+                                        ></textarea>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Item Type (Veg / Non-Veg)</label>
-                                    <div className="flex gap-4">
-                                        <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
-                                            <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
-                                            <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
-                                                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                            </div>
-                                            <span className="text-sm font-bold">Veg</span>
-                                        </label>
-                                        <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
-                                            <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
-                                            <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
-                                                <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                            </div>
-                                            <span className="text-sm font-bold">Non-Veg</span>
-                                        </label>
+                                    <div className="flex items-center justify-between py-1">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-800">Active Status</label>
+                                            <p className="text-xs text-gray-400">Make this item visible on the menu</p>
+                                        </div>
+                                        <div
+                                            onClick={() => setIsActiveStatus(!isActiveStatus)}
+                                            className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in cursor-pointer"
+                                        >
+                                            <div className={`w-10 h-5 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
+                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                                    <textarea
-                                        rows="3"
-                                        placeholder="Describe the ingredients..."
-                                        className="w-full px-5 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
-                                        value={newItemDescription}
-                                        onChange={(e) => setNewItemDescription(e.target.value)}
-                                    ></textarea>
-                                </div>
-
-                                <div className="flex items-center justify-between py-1">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800">Active Status</label>
-                                        <p className="text-xs text-gray-400">Make this item visible on the menu</p>
-                                    </div>
-                                    <div
-                                        onClick={() => setIsActiveStatus(!isActiveStatus)}
-                                        className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in cursor-pointer"
-                                    >
-                                        <div className={`w-10 h-5 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
-                                        <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Dietary Labels</label>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
-                                            <button
-                                                key={label}
-                                                onClick={() => toggleLabel(label)}
-                                                className={`px-3 py-1.5 rounded-full border text-xs font-bold transition-all flex items-center gap-1.5 
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Labels</label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
+                                                <button
+                                                    key={label}
+                                                    onClick={() => toggleLabel(label)}
+                                                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all flex items-center gap-1.5 
                                                     ${selectedLabels.includes(label)
-                                                        ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
-                                                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                                                    }`}
-                                            >
-                                                {dietaryIcons[label] && (
-                                                    <img
-                                                        src={dietaryIcons[label]}
-                                                        alt={label}
-                                                        className="w-3 h-3"
-                                                        style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
-                                                    />
-                                                )}
-                                                {label}
-                                            </button>
-                                        ))}
+                                                            ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
+                                                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    {dietaryIcons[label] && (
+                                                        <img
+                                                            src={dietaryIcons[label]}
+                                                            alt={label}
+                                                            className="w-3 h-3"
+                                                            style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                        />
+                                                    )}
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
 
                                 <div className="mt-auto pt-4 flex justify-end gap-3 border-t border-gray-100">
                                     <button
                                         onClick={handleCloseModal}
-                                        className="px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 text-base font-bold hover:bg-gray-50 transition-colors"
+                                        className="px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 text-base font-medium hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
-                                        className="px-8 py-2.5 rounded-full bg-[#FD6941] text-white text-base font-bold shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all"
+                                        className="px-8 py-2.5 rounded-full bg-[#FD6941] text-white text-base font-medium shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all"
                                     >
                                         Save Item
                                     </button>

@@ -658,7 +658,7 @@ const AdminSales = () => {
                         <p className="text-sm text-gray-400">Monthly breakdown of sales and earnings</p>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <AreaChart data={graphData}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -691,7 +691,7 @@ const AdminSales = () => {
                         <p className="text-sm text-gray-400">Number of orders per period</p>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <BarChart data={graphData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />

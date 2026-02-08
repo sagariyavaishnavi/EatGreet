@@ -15,7 +15,13 @@ const menuItemSchema = new mongoose.Schema({
     media: [{
         name: { type: String },
         url: { type: String },
-        type: { type: String }, // Explicitly defined field 'type'
+        type: { type: String },
+        size: { type: String }
+    }],
+    models: [{
+        name: { type: String },
+        url: { type: String },
+        type: { type: String },
         size: { type: String }
     }]
 }, {

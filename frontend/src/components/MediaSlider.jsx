@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import '@google/model-viewer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MediaSlider = ({ media, interval = 30000, className = "" }) => {
-    const [indices, setIndices] = useState({ current: 0, previous: 0 });
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     // Filter valid media just in case
     const validMedia = media?.filter(m => m.url) || [];
 
     useEffect(() => {
+        if (currentIndex >= validMedia.length && validMedia.length > 0) {
+            setCurrentIndex(0);
+        }
+    }, [validMedia.length]);
+
+    useEffect(() => {
         if (validMedia.length <= 1) return;
 
         const timer = setInterval(() => {
-            setIndices(prev => ({
-                previous: prev.current,
-                current: (prev.current + 1) % validMedia.length
-            }));
+            setCurrentIndex(prev => (prev + 1) % validMedia.length);
         }, interval);
 
         return () => clearInterval(timer);
@@ -30,42 +34,29 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
 
     const nextSlide = (e) => {
         e.stopPropagation();
-        setIndices(prev => ({
-            previous: prev.current,
-            current: (prev.current + 1) % validMedia.length
-        }));
+        setCurrentIndex((prev) => (prev + 1) % validMedia.length);
     };
 
     const prevSlide = (e) => {
         e.stopPropagation();
-        setIndices(prev => ({
-            previous: prev.current,
-            current: (prev.current - 1 + validMedia.length) % validMedia.length
-        }));
+        setCurrentIndex((prev) => (prev - 1 + validMedia.length) % validMedia.length);
     };
 
     const goToSlide = (index, e) => {
         e.stopPropagation();
-        setIndices(prev => ({
-            previous: prev.current,
-            current: index
-        }));
+        setCurrentIndex(index);
     };
 
     return (
         <div className={`relative overflow-hidden w-full h-full group ${className}`}>
-            {validMedia.map((item, index) => {
-                let statusClass = 'opacity-0 z-0';
-                if (index === indices.current) {
-                    statusClass = 'opacity-100 z-10';
-                } else if (index === indices.previous) {
-                    statusClass = 'opacity-100 z-0';
-                }
-
-                return (
+            <div 
+                className="flex w-full h-full transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+                {validMedia.map((item, index) => (
                     <div
                         key={index}
-                        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${statusClass}`}
+                        className="w-full h-full flex-shrink-0"
                     >
                         {item.type && item.type.startsWith('video') ? (
                             <video
@@ -76,6 +67,17 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
                                 autoPlay
                                 playsInline
                             />
+                        ) : (item.type && item.type.startsWith('model')) || (item.name && item.name.match(/\.(glb|gltf|obj)$/i)) ? (
+                            <model-viewer
+                                src={item.url}
+                                alt={item.name || '3D Model'}
+                                camera-controls
+                                auto-rotate
+                                ar
+                                shadow-intensity="1"
+                                style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                className="w-full h-full object-cover"
+                            />
                         ) : (
                             <img
                                 src={item.url}
@@ -84,8 +86,8 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
                             />
                         )}
                     </div>
-                );
-            })}
+                ))}
+            </div>
 
             {/* Navigation Dots if more than 1 item */}
             {validMedia.length > 1 && (
@@ -95,7 +97,7 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
                             <button
                                 key={index}
                                 onClick={(e) => goToSlide(index, e)}
-                                className={`w-1.5 h-1.5 rounded-full transition-all ${index === indices.current ? 'bg-white w-3' : 'bg-white/50'
+                                className={`w-1.5 h-1.5 rounded-full transition-all shadow-sm ${index === currentIndex ? 'bg-white w-3' : 'bg-white/50 hover:bg-white/80'
                                     }`}
                             />
                         ))}
@@ -103,13 +105,13 @@ const MediaSlider = ({ media, interval = 30000, className = "" }) => {
 
                     <button
                         onClick={prevSlide}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1.5 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
                         onClick={nextSlide}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1.5 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>

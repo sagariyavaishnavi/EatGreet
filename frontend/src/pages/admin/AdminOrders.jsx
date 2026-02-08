@@ -1031,6 +1031,17 @@ const AdminOrders = () => {
         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     };
 
+    const calculateDerivedStatus = (items) => {
+        if (!items || items.length === 0) return 'pending';
+        const allCompleted = items.every(i => ['completed', 'served'].includes(i.status));
+        if (allCompleted) return 'completed';
+        const allReady = items.every(i => ['ready', 'served', 'completed'].includes(i.status));
+        if (allReady) return 'ready';
+        const anyPreparing = items.some(i => i.status === 'preparing');
+        if (anyPreparing) return 'preparing';
+        return 'pending';
+    };
+
     const toggleItemSelection = (idx) => {
         setSelectedItems(prev =>
             prev.includes(idx)
@@ -1057,7 +1068,9 @@ const AdminOrders = () => {
             selectedItems.forEach(idx => {
                 updatedItems[idx].status = status;
             });
-            setSelectedOrder({ ...selectedOrder, items: updatedItems });
+            // Calculate new derived status based on updated items
+            const newDerivedStatus = calculateDerivedStatus(updatedItems);
+            setSelectedOrder({ ...selectedOrder, items: updatedItems, status: newDerivedStatus });
         } catch (error) {
             console.error('Bulk update failed', error);
             toast.error('Failed to update some items', { id: loadToast });
@@ -1077,9 +1090,9 @@ const AdminOrders = () => {
                 const updatedItems = [...selectedOrder.items];
                 updatedItems[itemIdx].status = status;
 
-                // If all items become ready, the backend might update the main order status
-                // To be safe, let's just refresh everything
-                setSelectedOrder({ ...selectedOrder, items: updatedItems });
+                // Calculate new derived status based on updated items
+                const newDerivedStatus = calculateDerivedStatus(updatedItems);
+                setSelectedOrder({ ...selectedOrder, items: updatedItems, status: newDerivedStatus });
             }
         } catch (error) {
             console.error('Failed to update item status', error);
@@ -1847,22 +1860,45 @@ const AdminOrders = () => {
                                         <div className="flex gap-4">
                                             {selectedItems.length > 0 ? (
                                                 <>
-                                                    <button
-                                                        onClick={() => handleBulkItemStatusUpdate('preparing')}
-                                                        className="flex-1 bg-yellow-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
-                                                    >
-                                                        Mark Preparing ({selectedItems.length})
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleBulkItemStatusUpdate('ready')}
-                                                        className="flex-1 bg-green-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
-                                                    >
-                                                        Mark Ready ({selectedItems.length})
-                                                    </button>
+                                                    {selectedItems.every(idx => {
+                                                        const s = selectedOrder.items[idx].status || 'pending';
+                                                        return s === 'pending';
+                                                    }) && (
+                                                        <button
+                                                            onClick={() => handleBulkItemStatusUpdate('preparing')}
+                                                            className="flex-1 bg-yellow-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                        >
+                                                            Mark Preparing ({selectedItems.length})
+                                                        </button>
+                                                    )}
+                                                    {selectedItems.every(idx => {
+                                                        const s = selectedOrder.items[idx].status || 'pending';
+                                                        return ['pending', 'preparing'].includes(s);
+                                                    }) && (
+                                                        <button
+                                                            onClick={() => handleBulkItemStatusUpdate('ready')}
+                                                            className="flex-1 bg-green-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                        >
+                                                            Mark Ready ({selectedItems.length})
+                                                        </button>
+                                                    )}
+                                                    {selectedItems.every(idx => {
+                                                        const s = selectedOrder.items[idx].status || 'pending';
+                                                        return ['ready'].includes(s);
+                                                    }) && (
+                                                        <button
+                                                            onClick={() => handleBulkItemStatusUpdate('completed')}
+                                                            className="flex-1 bg-blue-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-bold shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                        >
+                                                            Mark Completed ({selectedItems.length})
+                                                        </button>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <button
                                                     onClick={() => {
+                                                        // Use pure status logic: if status is ready, next is completed. If completed, nothing.
+                                                        // The button label logic below handles the display.
                                                         const nextStatus = selectedOrder.status === 'ready' ? 'completed' : getNextStatus(selectedOrder.status);
                                                         updateOrderStatus(selectedOrder._id, nextStatus);
                                                         setSelectedOrder(null);

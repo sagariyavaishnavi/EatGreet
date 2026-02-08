@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import '@google/model-viewer';
 import { createPortal } from 'react-dom';
-import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye } from 'lucide-react';
+import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye, Box } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
 import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
@@ -62,6 +63,7 @@ const AdminMenu = () => {
 
     // Modal Form State
     const [mediaItems, setMediaItems] = useState([]); // Array of { name, size, url, type }
+    const [modelItems, setModelItems] = useState([]); // Array of { name, size, url, type } for 3D models
     const [isActiveStatus, setIsActiveStatus] = useState(true);
     const [selectedLabels, setSelectedLabels] = useState(['Vegetarian']);
 
@@ -77,6 +79,10 @@ const AdminMenu = () => {
 
     const removeMedia = (indexToRemove) => {
         setMediaItems(mediaItems.filter((_, index) => index !== indexToRemove));
+    };
+
+    const removeModel = (indexToRemove) => {
+        setModelItems(modelItems.filter((_, index) => index !== indexToRemove));
     };
 
     const toggleLabel = (label) => {
@@ -177,7 +183,12 @@ const AdminMenu = () => {
         setNewItemIsVeg(item.isVeg === undefined ? true : item.isVeg);
         setIsActiveStatus(item.isAvailable);
         setSelectedLabels(item.labels || []);
-        setMediaItems(item.media || (item.image ? [{ name: 'Image', url: item.image, type: 'image/jpeg' }] : []));
+        
+        // Separate media and models
+        const existingMedia = item.media || (item.image ? [{ name: 'Image', url: item.image, type: 'image/jpeg' }] : []);
+        setMediaItems(existingMedia);
+        setModelItems(item.models || []);
+        
         setIsModalOpen(true);
     };
 
@@ -205,6 +216,12 @@ const AdminMenu = () => {
 
         for (const file of files) {
             try {
+                // Check if file is 3D model - reject it here as this is for images/videos
+                if (file.name.match(/\.(glb|gltf|obj)$/i)) {
+                    toast.error(`Please upload 3D models in the designated section.`);
+                    continue;
+                }
+
                 // Check file size (100MB limit)
                 if (file.size > 100 * 1024 * 1024) {
                     toast.error(`File ${file.name} exceeds 100MB limit`);
@@ -248,6 +265,57 @@ const AdminMenu = () => {
         }
 
         setMediaItems(prev => [...prev, ...newItems].slice(0, 5));
+    };
+
+    const handleModelSelection = async (e) => {
+        let files = Array.from(e.target.files);
+
+        // Calculate remaining slots
+        const maxSlots = 5;
+        const remainingSlots = maxSlots - modelItems.length;
+
+        if (remainingSlots <= 0) {
+            toast.error("You have reached the maximum limit of 5 3D models.");
+            return;
+        }
+
+        if (files.length > remainingSlots) {
+            toast(
+                `Only the first ${remainingSlots} model(s) will be added due to the 5-item limit.`,
+                { icon: '⚠️' }
+            );
+            files = files.slice(0, remainingSlots);
+        }
+
+        const newItems = [];
+
+        for (const file of files) {
+            try {
+                // Check 3D Model Extension
+                const is3D = file.name.match(/\.(glb|gltf|obj)$/i);
+                if (!is3D) {
+                     toast.error(`File ${file.name} is not a supported 3D model.`);
+                     continue;
+                }
+
+                // Create Preview URL
+                const previewUrl = URL.createObjectURL(file);
+
+                newItems.push({
+                    name: file.name,
+                    url: previewUrl, // Temporary blob URL for preview
+                    type: is3D ? 'model/gltf-binary' : file.type, // Force model type for 3D files
+                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                    file: file // Store actual file for later upload
+                });
+
+            } catch (error) {
+                console.error("Model selection error", error);
+                toast.error(`Error processing ${file.name}`);
+            }
+        }
+
+        setModelItems(prev => [...prev, ...newItems].slice(0, 5));
     };
 
     const handleDelete = (id) => {
@@ -310,6 +378,7 @@ const AdminMenu = () => {
         }
 
         setMediaItems([]);
+        setModelItems([]);
         setIsActiveStatus(true);
         setSelectedLabels([]);
         setNewItemName('');
@@ -390,7 +459,38 @@ const AdminMenu = () => {
                 }
             });
 
+            // Upload Logic for 3D Models
+            const modelFilesToUploadIndices = modelItems.map((item, idx) => item.file ? idx : -1).filter(idx => idx !== -1);
+            // We can reuse the total uploads concept or just do them in parallel with media
+            // Simple approach: Concat promises
+            
+            const modelUploadPromises = modelItems.map(async (item, index) => {
+                if (item.file) {
+                    try {
+                        const res = await uploadAPI.uploadDirect(item.file, null, { signal }); // No progress tracking for models specifically for now to keep simple
+
+                        // Track ID for potential cleanup
+                        if (res.data.public_id) {
+                            uploadedPublicIdsRef.current.push(res.data.public_id);
+                        }
+
+                        return {
+                            name: item.name,
+                            url: res.data.secure_url,
+                            type: item.type,
+                            size: item.size
+                        };
+                    } catch (err) {
+                        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') throw err;
+                         throw new Error(`Failed to upload model ${item.name}`);
+                    }
+                } else {
+                    return item;
+                }
+            });
+
             const finalMediaItems = await Promise.all(uploadPromises);
+            const finalModelItems = await Promise.all(modelUploadPromises);
 
             // 2. Save Item Data
             toast.loading('Saving item details...', { id: loadToast });
@@ -406,7 +506,8 @@ const AdminMenu = () => {
                 image: finalMediaItems.length > 0 ? finalMediaItems[0].url : '',
                 isAvailable: isActiveStatus,
                 labels: selectedLabels,
-                media: finalMediaItems
+                media: finalMediaItems,
+                models: finalModelItems
             };
 
             if (editingItem) {
@@ -602,7 +703,7 @@ const AdminMenu = () => {
                                 {/* Image Container */}
                                 <div className="relative w-32 sm:w-full h-full sm:h-52 shrink-0 rounded-2xl sm:rounded-2xl overflow-hidden sm:mb-1 bg-gray-50">
                                     <MediaSlider
-                                        media={item.media && item.media.length > 0 ? item.media : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
+                                        media={[...(item.models || []), ...(item.media || [])].length > 0 ? [...(item.models || []), ...(item.media || [])] : [{ url: item.image || 'https://via.placeholder.com/150', type: 'image/jpeg' }]}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     {/* Availability Tag */}
@@ -709,96 +810,186 @@ const AdminMenu = () => {
                 </div>
             </div>
 
-            {isModalOpen && createPortal(
-                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-4">
+            {isModalOpen && createPortal(<>
+                <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-2">
                     <div className="fixed inset-0" onClick={handleCloseModal} />
-                    <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[90vh] overflow-y-auto no-scrollbar">
+                    <div className="bg-white rounded-[2rem] w-full max-w-6xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[95vh] overflow-y-auto no-scrollbar">
 
                             {/* Left Column: Media Upload */}
-                            <div className="lg:col-span-4 bg-gray-50 p-4 sm:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
-                                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-4">Item Media</h3>
-                                <p className="text-[10px] sm:text-xs text-gray-400 mb-3">Add up to 5 images or videos.</p>
+                            <div className="lg:col-span-4 bg-gray-50 p-6 sm:p-6 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-4">Item Media</h3>
+                                <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 images or videos.</p>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    {/* Uploaded Media Items */}
-                                    {mediaItems.map((media, index) => (
-                                        <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                                            {media.type.startsWith('video') ? (
-                                                <video src={media.url} className="w-full h-full object-cover" controls />
-                                            ) : (
-                                                <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
+                                    {/* Uploaded Media Items Grid - or Empty State */}
+                                    {mediaItems.length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {mediaItems.map((media, index) => (
+                                                <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                                                    {media.type.startsWith('video') ? (
+                                                        <video src={media.url} className="w-full h-full object-cover" controls />
+                                                    ) : (
+                                                        <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
+                                                    )}
+                                                    <button
+                                                        onClick={() => removeMedia(index)}
+                                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <p className="text-xs text-white truncate">{media.name}</p>
+                                                        <p className="text-[10px] text-gray-300">{media.size}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            
+                                            {mediaItems.length < 5 && (
+                                                <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
+                                                    <input
+                                                        type="file"
+                                                        id="file-upload-small"
+                                                        className="hidden"
+                                                        accept="image/*,video/*"
+                                                        multiple
+                                                        onChange={handleFileSelection}
+                                                    />
+                                                    <label htmlFor="file-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                        <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
+                                                            <ImageIcon className="w-4 h-4" />
+                                                        </div>
+                                                        <h4 className="text-gray-800 font-bold text-xs mb-0.5">Add More</h4>
+                                                    </label>
+                                                </div>
                                             )}
-                                            <button
-                                                onClick={() => removeMedia(index)}
-                                                className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <p className="text-[10px] text-white truncate">{media.name}</p>
-                                                <p className="text-[8px] text-gray-300">{media.size}</p>
-                                            </div>
                                         </div>
-                                    ))}
-
-                                    {/* Upload Card (Show if limit not reached) */}
-                                    {mediaItems.length < 5 && (
-                                        <div className={`border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer ${mediaItems.length === 0 ? 'col-span-2 aspect-auto min-h-[120px] sm:min-h-[180px]' : ''}`}>
+                                    ) : (
+                                        /* Large Empty State Board */
+                                        <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
                                             <input
                                                 type="file"
-                                                id="file-upload"
+                                                id="file-upload-large"
                                                 className="hidden"
                                                 accept="image/*,video/*"
                                                 multiple
                                                 onChange={handleFileSelection}
                                             />
-                                            <label htmlFor="file-upload" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
-                                                <div className={`bg-orange-100 rounded-full flex items-center justify-center text-[#FD6941] mb-2 ${mediaItems.length === 0 ? 'w-12 h-12' : 'w-8 h-8'}`}>
-                                                    <ImageIcon className={mediaItems.length === 0 ? 'w-6 h-6' : 'w-4 h-4'} />
+                                            <label htmlFor="file-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
+                                                    <ImageIcon className="w-6 h-6" />
                                                 </div>
-                                                <h4 className={`text-gray-800 font-bold ${mediaItems.length === 0 ? 'text-sm mb-1' : 'text-[10px] mb-0.5'}`}>
-                                                    {mediaItems.length === 0 ? 'Upload Media' : 'Add More'}
-                                                </h4>
-                                                {mediaItems.length === 0 && (
-                                                    <p className="text-[10px] text-gray-400 mb-3 max-w-[150px]">Browse images or videos</p>
-                                                )}
-                                                {mediaItems.length === 0 && (
-                                                    <span className="bg-[#FD6941] text-white px-4 py-1.5 rounded-full font-medium text-xs shadow-sm">
-                                                        Select Files
-                                                    </span>
-                                                )}
+                                                <h4 className="text-gray-800 font-bold text-base sm:text-lg mb-2">Upload Media</h4>
+                                                <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse images or videos</p>
+                                                <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
+                                                    Select Files
+                                                </span>
+                                            </label>
+                                        </div>
+                                    )}
+
+                                    {/* 3D Models Upload Section */}
+                                <div className="mt-4">
+                                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-4">3D Models</h3>
+                                    <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 3D models (.glb, .gltf, .obj).</p>
+
+                                    {modelItems.length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {modelItems.map((model, index) => (
+                                                <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                                                    <model-viewer
+                                                        src={model.url}
+                                                        alt={model.name}
+                                                        camera-controls
+                                                        auto-rotate
+                                                        ar
+                                                        shadow-intensity="1"
+                                                        style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <button
+                                                        onClick={() => removeModel(index)}
+                                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <p className="text-xs text-white truncate">{model.name}</p>
+                                                        <p className="text-[10px] text-gray-300">{model.size}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            {/* Small Add Button for Models */}
+                                            {modelItems.length < 5 && (
+                                                <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
+                                                    <input
+                                                        type="file"
+                                                        id="model-upload-small"
+                                                        className="hidden"
+                                                        accept=".glb,.gltf,.obj"
+                                                        multiple
+                                                        onChange={handleModelSelection}
+                                                    />
+                                                    <label htmlFor="model-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                        <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
+                                                            <Box className="w-4 h-4" />
+                                                        </div>
+                                                        <h4 className="text-gray-800 font-bold text-xs mb-0.5">Add More</h4>
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        /* Large Empty State for Models */
+                                        <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
+                                            <input
+                                                type="file"
+                                                id="model-upload-large"
+                                                className="hidden"
+                                                accept=".glb,.gltf,.obj"
+                                                multiple
+                                                onChange={handleModelSelection}
+                                            />
+                                            <label htmlFor="model-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
+                                                    <Box className="w-6 h-6" />
+                                                </div>
+                                                <h4 className="text-gray-800 font-bold text-base sm:text-lg mb-2">Upload 3D Model</h4>
+                                                <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse .glb, .gltf files</p>
+                                                <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-bold text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
+                                                    Select Models
+                                                </span>
                                             </label>
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                                </div>
 
                             {/* Right Column: Form Details */}
-                            <div className="lg:col-span-8 p-4 sm:p-6 lg:p-8 space-y-4">
+                            <div className="lg:col-span-8 p-6 sm:p-6 lg:p-6 flex flex-col gap-6 h-full">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">Item Details</h3>
+                                    <h3 className="text-xl font-bold text-gray-800">Item Details</h3>
                                     <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
                                         <X className="w-5 h-5 text-gray-500" />
                                     </button>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Item Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Tandoor Burger"
-                                        className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                        value={newItemName}
-                                        onChange={(e) => setNewItemName(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Item Name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Tandoor Burger"
+                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            value={newItemName}
+                                            onChange={(e) => setNewItemName(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
                                         <div className="relative">
                                             <select
-                                                className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
+                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
                                                 value={newItemCategory}
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
                                             >
@@ -816,13 +1007,13 @@ const AdminMenu = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Price</label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Price</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currencySymbol}</span>
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currencySymbol}</span>
                                             <input
                                                 type="number"
                                                 placeholder="0.00"
-                                                className="w-full pl-8 pr-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                className="w-full pl-9 pr-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                             />
@@ -830,23 +1021,23 @@ const AdminMenu = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Calories</label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Calories</label>
                                         <input
                                             type="text"
                                             placeholder="e.g 350 kcal"
-                                            className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
                                             value={newItemCalories}
                                             onChange={(e) => setNewItemCalories(e.target.value)}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Time</label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Time</label>
                                         <input
                                             type="text"
                                             placeholder="e.g 15-20 min"
-                                            className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
                                             value={newItemTime}
                                             onChange={(e) => setNewItemTime(e.target.value)}
                                         />
@@ -854,31 +1045,31 @@ const AdminMenu = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Item Type (Veg / Non-Veg)</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Item Type (Veg / Non-Veg)</label>
                                     <div className="flex gap-4">
                                         <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
                                             <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
                                             <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
                                                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                                             </div>
-                                            <span className="text-xs font-bold">Veg</span>
+                                            <span className="text-sm font-bold">Veg</span>
                                         </label>
                                         <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
                                             <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
                                             <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
                                                 <div className="w-2 h-2 bg-red-600 rounded-full"></div>
                                             </div>
-                                            <span className="text-xs font-bold">Non-Veg</span>
+                                            <span className="text-sm font-bold">Non-Veg</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Description</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
                                     <textarea
-                                        rows="2"
+                                        rows="3"
                                         placeholder="Describe the ingredients..."
-                                        className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
+                                        className="w-full px-5 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
                                         value={newItemDescription}
                                         onChange={(e) => setNewItemDescription(e.target.value)}
                                     ></textarea>
@@ -886,8 +1077,8 @@ const AdminMenu = () => {
 
                                 <div className="flex items-center justify-between py-1">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-800">Active Status</label>
-                                        <p className="text-[10px] text-gray-400">Make this item visible on the menu</p>
+                                        <label className="block text-sm font-bold text-gray-800">Active Status</label>
+                                        <p className="text-xs text-gray-400">Make this item visible on the menu</p>
                                     </div>
                                     <div
                                         onClick={() => setIsActiveStatus(!isActiveStatus)}
@@ -899,13 +1090,13 @@ const AdminMenu = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-2">Dietary Labels</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Dietary Labels</label>
                                     <div className="flex flex-wrap gap-1.5">
                                         {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
                                             <button
                                                 key={label}
                                                 onClick={() => toggleLabel(label)}
-                                                className={`px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all flex items-center gap-1.5 
+                                                className={`px-3 py-1.5 rounded-full border text-xs font-bold transition-all flex items-center gap-1.5 
                                                     ${selectedLabels.includes(label)
                                                         ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
                                                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
@@ -924,17 +1115,18 @@ const AdminMenu = () => {
                                         ))}
                                     </div>
                                 </div>
+                                </div>
 
-                                <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
+                                <div className="mt-auto pt-4 flex justify-end gap-3 border-t border-gray-100">
                                     <button
                                         onClick={handleCloseModal}
-                                        className="px-6 py-2 rounded-full border border-gray-200 text-gray-600 text-xs font-bold hover:bg-gray-50 transition-colors"
+                                        className="px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 text-base font-bold hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
-                                        className="px-6 py-2 rounded-full bg-[#FD6941] text-white text-xs font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all"
+                                        className="px-8 py-2.5 rounded-full bg-[#FD6941] text-white text-base font-bold shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all"
                                     >
                                         Save Item
                                     </button>
@@ -942,9 +1134,8 @@ const AdminMenu = () => {
                             </div>
                         </div>
                     </div>
-                </div>,
-                document.body
-            )}
+                </div>
+            </>, document.body)}
 
 
         </div>

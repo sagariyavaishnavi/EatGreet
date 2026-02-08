@@ -354,7 +354,7 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="flex-1 w-full min-h-0">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={salesData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
                                     <XAxis
                                         dataKey="name"

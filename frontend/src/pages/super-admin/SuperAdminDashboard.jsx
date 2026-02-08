@@ -135,7 +135,7 @@ export default function SuperAdminDashboard() {
                             <p className="text-xs text-gray-500">Monthly recurring revenue trends</p>
                         </div>
                         <div className="flex-1 w-full min-h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <LineChart data={statsData.revenueData || []}>
                                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#eee" />
                                     <XAxis
@@ -180,7 +180,7 @@ export default function SuperAdminDashboard() {
 
                         <div className="relative flex-1 w-full min-h-[300px] flex items-center justify-center">
                             <div className="aspect-square h-full max-h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                     <PieChart>
                                         <Pie
                                             data={statsData.paymentStatusData || []}

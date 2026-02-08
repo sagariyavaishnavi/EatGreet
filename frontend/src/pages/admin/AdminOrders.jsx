@@ -796,6 +796,7 @@ import { createPortal } from 'react-dom';
 import { orderAPI, statsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../context/SocketContext';
+import '@google/model-viewer';
 
 const StatCard = ({ icon: Icon, value, title }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
@@ -1812,9 +1813,56 @@ const AdminOrders = () => {
                                                                     {selectedItems.includes(idx) && <X className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
                                                                 </div>
                                                             )}
-                                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-gray-400 border border-gray-100 shadow-sm">
+                                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-gray-400 border border-gray-100 shadow-sm shrink-0">
                                                                 {item.quantity}x
                                                             </div>
+
+                                                            {/* Item Media Thumbnail */}
+                                                            <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                                                                {(() => {
+                                                                    const mItem = item.menuItem || {};
+                                                                    const models = mItem.models || [];
+                                                                    const images = mItem.media || [];
+                                                                    const mainImage = mItem.image;
+
+                                                                    if (models.length > 0) {
+                                                                        return (
+                                                                            <model-viewer
+                                                                                src={models[0].url}
+                                                                                alt={item.name}
+                                                                                camera-controls
+                                                                                disable-zoom
+                                                                                auto-rotate
+                                                                                shadow-intensity="1"
+                                                                                style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                                                            />
+                                                                        );
+                                                                    } else if (images.length > 0) {
+                                                                        return (
+                                                                            <img
+                                                                                src={images[0].url}
+                                                                                alt={item.name}
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+                                                                        );
+                                                                    } else if (mainImage) {
+                                                                        return (
+                                                                            <img
+                                                                                src={mainImage}
+                                                                                alt={item.name}
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+                                                                        );
+                                                                    } else {
+                                                                        return (
+                                                                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                                                <UtensilsCrossed className="w-6 h-6" />
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                })()}
+                                                            </div>
+
                                                             <div>
                                                                 <p className="text-gray-900 font-bold">{item.name}</p>
                                                                 <p className="text-xs text-gray-400 font-medium">{currencySymbol}{item.price.toFixed(2)} / unit</p>

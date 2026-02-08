@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import '@google/model-viewer';
 import { createPortal } from 'react-dom';
-import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye, Box } from 'lucide-react';
+import { Search, Filter, Plus, Pencil, Trash2, Image as ImageIcon, X, Upload, Eye, Box, Camera } from 'lucide-react';
 import MediaSlider from '../../components/MediaSlider';
 import { MENU_ITEMS_KEY } from '../../constants';
 import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
@@ -316,6 +316,38 @@ const AdminMenu = () => {
         }
 
         setModelItems(prev => [...prev, ...newItems].slice(0, 5));
+    };
+
+    const handleCaptureThumbnail = async (index) => {
+        try {
+            const viewer = document.getElementById(`model-viewer-${index}`);
+            if (viewer) {
+                const blob = await viewer.toBlob({ idealAspectRatio: true });
+                const file = new File([blob], `model-thumb-${Date.now()}.png`, { type: 'image/png' });
+
+                // Create Item for Media List
+                const newItem = {
+                    name: file.name,
+                    url: URL.createObjectURL(file),
+                    type: file.type,
+                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                    file: file
+                };
+
+                // Add to media items (if space allows)
+                setMediaItems(prev => {
+                    if (prev.length >= 5) {
+                        toast.error('Cannot add thumbnail: Media limit (5) reached.');
+                        return prev;
+                    }
+                    return [newItem, ...prev]; // Add to front
+                });
+                toast.success('Snapshot captured and added to images!');
+            }
+        } catch (error) {
+            console.error('Snapshot failed:', error);
+            toast.error('Failed to capture snapshot.');
+        }
     };
 
     const handleDelete = (id) => {
@@ -897,6 +929,7 @@ const AdminMenu = () => {
                                             {modelItems.map((model, index) => (
                                                 <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
                                                     <model-viewer
+                                                        id={`model-viewer-${index}`}
                                                         src={model.url}
                                                         alt={model.name}
                                                         camera-controls
@@ -906,12 +939,25 @@ const AdminMenu = () => {
                                                         style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
                                                         className="w-full h-full object-cover"
                                                     />
-                                                    <button
-                                                        onClick={() => removeModel(index)}
-                                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-10px] opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleCaptureThumbnail(index);
+                                                            }}
+                                                            className="p-1.5 bg-white/90 text-blue-600 rounded-full shadow-sm hover:bg-blue-50"
+                                                            title="Use as Item Image"
+                                                        >
+                                                            <Camera className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => removeModel(index)}
+                                                            className="p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm hover:bg-red-50"
+                                                            title="Remove Model"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                     <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <p className="text-xs text-white truncate">{model.name}</p>
                                                         <p className="text-[10px] text-gray-300">{model.size}</p>

@@ -146,16 +146,18 @@ export const uploadAPI = {
 
     try {
       // 1. Get Signature from Backend
-      const signRes = await api.get('/upload/signature', config); // Pass signal to signature request too
-      const { signature, timestamp, folder, cloudName, apiKey } = signRes.data;
-
       // 2. Prepare Direct Upload Data
+      const { signature, timestamp, folder, cloudName, apiKey, use_filename } = signRes.data;
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('api_key', apiKey);
       formData.append('timestamp', timestamp);
       formData.append('signature', signature);
       formData.append('folder', folder);
+      if (use_filename) {
+        formData.append('use_filename', 'true');
+      }
 
       // 3. Upload Directly to Cloudinary
       // Note: We use a naked axios instance to avoid sending our Backend Auth Headers to Cloudinary

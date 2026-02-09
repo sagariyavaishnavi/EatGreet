@@ -97,6 +97,7 @@ app.get('/api/upload/signature', protect, (req, res) => {
         const paramsToSign = {
             timestamp: timestamp,
             folder: folder,
+            use_filename: true,
         };
 
         const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET);
@@ -107,7 +108,8 @@ app.get('/api/upload/signature', protect, (req, res) => {
             timestamp,
             folder,
             cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-            apiKey: process.env.CLOUDINARY_API_KEY
+            apiKey: process.env.CLOUDINARY_API_KEY,
+            use_filename: true
         });
     } catch (error) {
         console.error('Signature Error:', error);

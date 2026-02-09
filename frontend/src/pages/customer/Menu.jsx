@@ -41,8 +41,7 @@ const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(
 const offers = [
     { id: 1, type: 'video', src: arVideo, bg: "bg-orange-600" },
     { id: 2, title: "50% OFF", subtitle: "On your first order", code: "WELCOME50", bg: "bg-gray-700", text: "text-white" },
-    { id: 3, title: "FREE FRIES", subtitle: "Orders above 299", code: "FREEMEAL", bg: "bg-[#FD6941]", text: "text-white" }, // Orange
-    { id: 4, title: "FLAT 100 OFF", subtitle: "On gourmet pizzas", code: "PIZZAPARTY", bg: "bg-green-600", text: "text-white" },
+    { id: 3, title: "FREE FRIES", subtitle: "Orders above 299", code: "FREEMEAL", bg: "bg-[#FD6941]", text: "text-white" },
 ];
 
 const currencyMap = {
@@ -218,10 +217,10 @@ const Menu = () => {
     const isInteractingRef = useRef(false);
     const interactionTimeoutRef = useRef(null);
 
-    // Create extended offers for "infinite" loop feeling (large duplication)
-    const extendedOffers = Array(12).fill(offers).flat().map((offer, index) => ({
+    // Use only the 3 offers without duplication
+    const extendedOffers = offers.map(offer => ({
         ...offer,
-        uniqueId: `${offer.id}-${index}`
+        uniqueId: `${offer.id}`
     }));
 
     // Interaction Handlers
@@ -249,9 +248,10 @@ const Menu = () => {
 
             if (sliderRef.current) {
                 const { clientWidth, scrollLeft, scrollWidth } = sliderRef.current;
-                // If we somehow reach the very end, reset (rare)
-                if (scrollLeft + clientWidth >= scrollWidth - 50) {
-                    sliderRef.current.scrollTo({ left: 0, behavior: 'auto' });
+
+                // For 3 items, if we are at the last one, go back to start
+                if (scrollLeft + clientWidth >= scrollWidth - 10) {
+                    sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
                     sliderRef.current.scrollBy({ left: clientWidth, behavior: 'smooth' });
                 }
@@ -392,7 +392,7 @@ const Menu = () => {
                 onMouseUp={handleInteractionEnd}
                 onMouseEnter={handleInteractionStart}
                 onMouseLeave={handleInteractionEnd}
-                className="mt-4 md:mt-6 px-2 md:px-4 overflow-x-auto no-scrollbar flex gap-2 md:gap-4 snap-x snap-mandatory w-full touch-pan-y overscroll-x-none cursor-grab active:cursor-grabbing"
+                className="mt-4 md:mt-6 px-2 md:px-4 overflow-x-auto no-scrollbar flex gap-2 md:gap-4 snap-x snap-mandatory w-full touch-pan-x overscroll-x-contain cursor-grab active:cursor-grabbing"
             >
                 {extendedOffers.map((offer, index) => (
                     <div key={offer.uniqueId} className={`snap-center shrink-0 w-full md:w-[350px] h-44 md:h-48 rounded-[2rem] flex flex-col justify-center relative shadow-lg overflow-hidden ${offer.bg} ${!offer.type ? 'p-5 md:p-6' : ''}`}>

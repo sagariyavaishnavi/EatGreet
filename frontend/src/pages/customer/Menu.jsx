@@ -117,6 +117,31 @@ const Menu = () => {
         }
     }, [restaurantId, tenantName]);
 
+    // Check Table Occupancy
+    const checkStatus = React.useCallback(async () => {
+        if (tenantName && tableNo && tableNo !== 'preview') {
+            try {
+                const res = await orderAPI.checkTableStatus(tableNo, tenantName);
+                if (res.data.status === 'occupied') {
+                    if (!customerDetails.phone || customerDetails.phone !== res.data.customer.phone) {
+                        setIsTableOccupied(true);
+                        setOccupantInfo(res.data.customer);
+                    } else {
+                        setIsTableOccupied(false);
+                    }
+                } else {
+                    setIsTableOccupied(false);
+                }
+            } catch (e) {
+                console.error("Occupancy Check Failed", e);
+            }
+        }
+    }, [tenantName, tableNo, customerDetails.phone]);
+
+    useEffect(() => {
+        checkStatus();
+    }, [checkStatus]);
+
     // Socket Listener for Real-Time Menu & Category Updates
     useEffect(() => {
         if (!socket || !tenantName) return;
@@ -136,39 +161,20 @@ const Menu = () => {
         socket.on('menuUpdated', handleMenuUpdate);
         socket.on('categoryUpdated', handleCategoryUpdate);
 
+        const handleOrderUpdate = (payload) => {
+            if (payload.data && String(payload.data.tableNumber) === String(tableNo)) {
+                console.log("Real-time occupancy update triggered");
+                checkStatus();
+            }
+        };
+        socket.on('orderUpdated', handleOrderUpdate);
+
         return () => {
             socket.off('menuUpdated', handleMenuUpdate);
             socket.off('categoryUpdated', handleCategoryUpdate);
+            socket.off('orderUpdated', handleOrderUpdate);
         };
-    }, [socket, tenantName]);
-
-    // Check Table Occupancy
-    useEffect(() => {
-        const checkStatus = async () => {
-            if (tenantName && tableNo && tableNo !== 'preview') {
-                try {
-                    const res = await orderAPI.checkTableStatus(tableNo, tenantName);
-                    if (res.data.status === 'occupied') {
-                        if (!customerDetails.phone || customerDetails.phone !== res.data.customer.phone) {
-                            setIsTableOccupied(true);
-                            setOccupantInfo(res.data.customer);
-                        } else {
-                            setIsTableOccupied(false);
-                        }
-                    } else {
-                        setIsTableOccupied(false);
-                    }
-                } catch (e) {
-                    console.error("Occupancy Check Failed", e);
-                }
-            }
-        };
-        checkStatus();
-
-        // Polling as fallback for occupancy, but sockets would be better if backend sent them
-        const interval = setInterval(checkStatus, 10000);
-        return () => clearInterval(interval);
-    }, [tenantName, tableNo, customerDetails.phone]);
+    }, [socket, tenantName, tableNo, checkStatus]);
 
     const fetchData = async () => {
         try {
@@ -312,7 +318,7 @@ const Menu = () => {
 
         const loadToast = toast.loading('Placing your order...');
         try {
-            await orderAPI.create(orderData);
+            await orderAPI.create(orderData, tenantName);
             toast.success('Order placed successfully!', { id: loadToast });
             setOrderPlaced(true);
 

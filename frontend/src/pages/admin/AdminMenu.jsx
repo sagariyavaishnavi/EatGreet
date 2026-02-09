@@ -7,6 +7,7 @@ import { MENU_ITEMS_KEY } from '../../constants';
 import { menuAPI, categoryAPI, uploadAPI, restaurantAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useSettings } from '../../context/SettingsContext';
+import { useSocket } from '../../context/SocketContext';
 
 // Dietary Icons
 import sugarFreeIcon from '../../assets/suger-free.svg';
@@ -44,7 +45,7 @@ const orangeFilter = "brightness-0 saturate-100 invert(55%) sepia(85%) saturate(
 // Default mock data removed per live data requirement
 
 const AdminMenu = () => {
-    const { currencySymbol } = useSettings();
+    const { currencySymbol, user } = useSettings();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [restaurantName, setRestaurantName] = useState('');
@@ -143,7 +144,9 @@ const AdminMenu = () => {
 
     // Socket Listener for Real-Time Updates
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !user?.restaurantName) return;
+
+        socket.emit('joinRestaurant', user.restaurantName);
 
         socket.on('menuUpdated', (payload) => {
             console.log("Real-time menu update received", payload.action);
@@ -151,7 +154,7 @@ const AdminMenu = () => {
         });
 
         return () => socket.off('menuUpdated');
-    }, [socket]);
+    }, [socket, user?.restaurantName]);
 
     // Initial Load
     useEffect(() => {
@@ -179,19 +182,6 @@ const AdminMenu = () => {
     }, [menuItems, searchTerm, selectedCategoryFilter]);
     const [editingItem, setEditingItem] = useState(null);
 
-    const toggleStatus = async (id) => {
-        const item = menuItems.find(i => i._id === id);
-        if (!item) return;
-
-        const newStatus = !item.isAvailable;
-        try {
-            await menuAPI.update(id, { isAvailable: newStatus });
-            toast.success(`Item is now ${newStatus ? 'Available' : 'Not Available'}`);
-            fetchData();
-        } catch (error) {
-            toast.error('Failed to update status');
-        }
-    };
 
     const handleEdit = (item) => {
         setEditingItem(item);

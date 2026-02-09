@@ -55,7 +55,13 @@ export default function KitchenDashboard() {
                     if (!['pending', 'preparing'].includes(data.status)) {
                         return prev.filter(o => o._id !== data._id);
                     }
-                    return prev.map(o => o._id === data._id ? data : o);
+                    const exists = prev.find(o => o._id === data._id);
+                    if (exists) {
+                        return prev.map(o => o._id === data._id ? data : o);
+                    } else {
+                        // If it's a pending/preparing order we didn't have, add it
+                        return [data, ...prev];
+                    }
                 });
             }
         };

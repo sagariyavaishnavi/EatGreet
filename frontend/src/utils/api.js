@@ -100,7 +100,7 @@ export const categoryAPI = {
 
 export const orderAPI = {
   getOrders: (params) => api.get('/orders', { params }),
-  create: (orderData) => api.post('/orders', orderData),
+  create: (orderData, restaurantName) => api.post('/orders', orderData, { params: { restaurantName } }),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
   updateItemStatus: (orderId, itemIdx, status) => api.put(`/orders/${orderId}/items/${itemIdx}/status`, { status }),
   checkTableStatus: (tableNumber, restaurantName) => api.get(`/orders/table-status/${tableNumber}`, { params: { restaurantName } }),

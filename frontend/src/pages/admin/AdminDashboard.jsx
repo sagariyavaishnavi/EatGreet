@@ -175,7 +175,7 @@ const CustomPillBar = (props) => {
     );
 };
 
-import { useNavigate } from 'react-router-dom';
+
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
             // Fetch stats and orders in parallel for better performance
             const [statsRes, ordersRes] = await Promise.all([
                 statsAPI.getAdminStats(),
-                orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 10 })
+                orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 100 })
             ]);
 
             // 3. Robust Total Tables count

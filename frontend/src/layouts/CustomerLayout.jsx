@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
-import { ShoppingBag, Heart, UtensilsCrossed } from 'lucide-react';
-import logo from '../assets/logo-full.png';
 import { restaurantAPI } from '../utils/api';
+import DynamicNavbar from '../components/DynamicNavbar';
 
 const CustomerLayout = () => {
     const location = useLocation();
@@ -164,38 +163,15 @@ const CustomerLayout = () => {
 
             {!isResolving && !resolveError && (
                 <>
-                    {/* Header */}
-                    <header className="bg-white shadow-sm sticky top-0 z-50">
-                        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
-                            <Link to={`${baseUrl}/menu`} className="flex items-center gap-2">
-                                <img src={logo} alt="EatGreet" className="h-8 w-auto object-contain" />
-                            </Link>
-
-                            <div className="flex items-center gap-2 md:gap-4">
-                                <div className="hidden md:flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-1.5 rounded-full">
-                                    Table #{tableNo}
-                                </div>
-
-                                <Link to={`${baseUrl}/favorites`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">
-                                    <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500" />
-                                    {Object.keys(favorites).length > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FD6941] rounded-full text-[10px] text-white flex items-center justify-center border border-white">
-                                            {Object.keys(favorites).length}
-                                        </span>
-                                    )}
-                                </Link>
-
-                                <button onClick={() => setShowBill(true)} className="relative p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
-                                    <ShoppingBag className="w-5 h-5" />
-                                    {totalItems > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center border border-white">
-                                            {totalItems}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </header>
+                    {/* Global Dynamic Navbar */}
+                    <DynamicNavbar customerProps={{
+                        cart,
+                        favorites,
+                        tableNo,
+                        setShowBill,
+                        totalItems,
+                        baseUrl
+                    }} />
 
                     {/* Content - key={tenantName} forces a clean remount when switching restaurants */}
                     <main key={tenantName} className="max-w-7xl mx-auto md:px-4 md:py-6">

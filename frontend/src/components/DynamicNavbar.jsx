@@ -68,7 +68,7 @@ const DynamicNavbar = ({ customerProps }) => {
     const isActive = (path) => {
         return location.pathname === path || (path !== '/' && location.pathname.endsWith(path))
             ? 'bg-black text-white shadow-md'
-            : 'text-gray-500 hover:text-black hover:bg-gray-50';
+            : 'text-gray-500 hover:text-black hover:bg-gray-50/50';
     };
 
     // --- Customer Logic Helper ---
@@ -151,7 +151,7 @@ const DynamicNavbar = ({ customerProps }) => {
 
     // 3. ADMIN & SUPER_ADMIN VIEW (Unified)
     return (
-        <header className="px-4 sm:px-[30px] py-3 flex items-center justify-between sticky top-0 z-[100] bg-white/80 backdrop-blur-md transition-all border-b border-gray-100">
+        <header className="px-4 sm:px-[30px] py-3 flex items-center justify-between sticky top-0 z-[100] bg-transparent backdrop-blur-md transition-all border-b border-gray-100 md:border-b-0">
             {/* Logo Section */}
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button
@@ -167,7 +167,7 @@ const DynamicNavbar = ({ customerProps }) => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center bg-gray-50 p-1.5 rounded-full border border-gray-200 gap-1">
+            <nav className="hidden lg:flex items-center bg-white p-1.5 rounded-full border border-gray-100 shadow-sm gap-1">
                 {navItems.map((item) => (
                     <Link
                         key={item.path}

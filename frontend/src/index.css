@@ -11,14 +11,20 @@ body {
     position: relative;
     width: 100%;
     max-width: 100%;
-    overscroll-behavior-x: none;
+    height: 100%;
+    overscroll-behavior: none;
+    /* Prevents pull-to-refresh and bouncy scrolling */
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    /* Allows vertical scrolling but prevents gestures like horizontal swipe back */
 }
 
 #root {
     overflow-x: hidden;
     width: 100%;
     position: relative;
+    height: 100%;
+    overscroll-behavior: none;
 }
 
 * {
@@ -60,6 +66,7 @@ body {
 * {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    overscroll-behavior: none;
 }
 
 

@@ -180,7 +180,7 @@ const CustomPillBar = (props) => {
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const socket = useSocket();
-    const { user } = useSettings();
+    const { user, currencySymbol } = useSettings();
     const [stats, setStats] = useState({
         totalOrders: 0,
         activeOrders: 0,

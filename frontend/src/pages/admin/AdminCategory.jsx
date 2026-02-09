@@ -5,6 +5,8 @@ import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, San
 
 import { categoryAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useSocket } from '../../context/SocketContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const AdminCategory = () => {
     const navigate = useNavigate();
@@ -17,9 +19,12 @@ const AdminCategory = () => {
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const socket = useSocket();
+    const { user } = useSettings();
 
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !user?.restaurantName) return;
+
+        socket.emit('joinRestaurant', user.restaurantName);
 
         socket.on('categoryUpdated', (payload) => {
             console.log("Real-time category update received", payload.action);

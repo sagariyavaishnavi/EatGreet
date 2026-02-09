@@ -4,9 +4,25 @@ import { ChevronLeft, ChevronRight, Box } from 'lucide-react';
 
 const MediaSlider = ({ media, interval = 30000, className = "", showArButton = true, modelCheckId = null }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [showControls, setShowControls] = useState(false);
+    const controlsTimerRef = React.useRef(null);
+
+    const handleInteraction = () => {
+        setShowControls(true);
+        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = setTimeout(() => {
+            setShowControls(false);
+        }, 3000);
+    };
 
     // Filter valid media just in case
     const validMedia = media?.filter(m => m.url) || [];
+
+    useEffect(() => {
+        return () => {
+            if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        };
+    }, []);
 
     useEffect(() => {
         if (currentIndex >= validMedia.length && validMedia.length > 0) {
@@ -14,15 +30,25 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
         }
     }, [validMedia.length]);
 
+    const isModel = (item) => {
+        if (!item) return false;
+        return (item.type && item.type.startsWith('model')) ||
+            (item.name && item.name.match(/\.(glb|gltf|obj)$/i));
+    };
+
     useEffect(() => {
         if (validMedia.length <= 1) return;
+
+        // If current slide is a 3D model, don't auto-swipe 
+        // as it interferes with user interaction (rotation/zoom)
+        if (isModel(validMedia[currentIndex])) return;
 
         const timer = setInterval(() => {
             setCurrentIndex(prev => (prev + 1) % validMedia.length);
         }, interval);
 
         return () => clearInterval(timer);
-    }, [validMedia.length, interval]);
+    }, [validMedia.length, interval, currentIndex]);
 
     if (validMedia.length === 0) {
         return (
@@ -35,16 +61,19 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
     const nextSlide = (e) => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev + 1) % validMedia.length);
+        handleInteraction();
     };
 
     const prevSlide = (e) => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev - 1 + validMedia.length) % validMedia.length);
+        handleInteraction();
     };
 
     const goToSlide = (index, e) => {
         e.stopPropagation();
         setCurrentIndex(index);
+        handleInteraction();
     };
 
     const [touchStart, setTouchStart] = useState(null);
@@ -54,6 +83,7 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
     const minSwipeDistance = 50;
 
     const onTouchStart = (e) => {
+        handleInteraction();
         setTouchEnd(null); // Reset
         setTouchStart(e.targetTouches[0].clientX);
     };
@@ -64,6 +94,11 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
 
     const onTouchEnd = () => {
         if (!touchStart || !touchEnd) return;
+
+        // If current slide is a 3D model, disable swipe gesture
+        // so user can rotate model without accidentally changing slides
+        if (isModel(validMedia[currentIndex])) return;
+
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > minSwipeDistance;
         const isRightSwipe = distance < -minSwipeDistance;
@@ -84,6 +119,7 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
+            onClick={handleInteraction}
         >
             <div
                 className="flex w-full h-full transition-transform duration-500 ease-out"
@@ -137,28 +173,27 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
             {/* Navigation Dots if more than 1 item */}
             {validMedia.length > 1 && (
                 <>
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+                    <div className={`absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                         {validMedia.map((_, index) => (
                             <button
                                 key={index}
                                 onClick={(e) => goToSlide(index, e)}
-                                className={`w-1.5 h-1.5 rounded-full transition-all shadow-sm ${index === currentIndex ? 'bg-white w-3' : 'bg-white/50 hover:bg-white/80'
-                                    }`}
+                                className={`w-1.5 h-1.5 rounded-full transition-all shadow-sm ${index === currentIndex ? 'bg-white w-3.5' : 'bg-white/40 hover:bg-white/60'}`}
                             />
                         ))}
                     </div>
 
                     <button
                         onClick={prevSlide}
-                        className="hidden md:block absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1 md:p-1.5 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                        className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center bg-white/10 text-white rounded-full transition-all backdrop-blur-md border border-white/10 shadow-sm ${showControls ? 'opacity-100' : 'opacity-0'}`}
                     >
-                        <ChevronLeft className="w-3 h-3 md:w-4 md:h-4" />
+                        <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
                     <button
                         onClick={nextSlide}
-                        className="hidden md:block absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1 md:p-1.5 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center bg-white/10 text-white rounded-full transition-all backdrop-blur-md border border-white/10 shadow-sm ${showControls ? 'opacity-100' : 'opacity-0'}`}
                     >
-                        <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+                        <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                 </>
             )}

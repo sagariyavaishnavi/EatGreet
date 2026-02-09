@@ -100,6 +100,7 @@ app.get('/api/upload/signature', protect, (req, res) => {
         };
 
         const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET);
+        console.log('Generated Signature for params:', paramsToSign, 'Signature:', signature);
 
         res.json({
             signature,

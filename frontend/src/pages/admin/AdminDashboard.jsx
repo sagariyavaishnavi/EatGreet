@@ -9,6 +9,8 @@ import revenueIcon from '../../assets/trending-up.svg';
 // import kitchenIcon from '../../assets/Chef-Toque-Hat--Streamline-Flex.svg';
 import { statsAPI, orderAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
+import { useSocket } from '../../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 // --- COMPONENTS ---
 
@@ -177,6 +179,8 @@ import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+    const socket = useSocket();
+    const { user } = useSettings();
     const [stats, setStats] = useState({
         totalOrders: 0,
         activeOrders: 0,
@@ -188,119 +192,130 @@ const AdminDashboard = () => {
     const [salesData, setSalesData] = useState([]);
     const [feedItems, setFeedItems] = useState([]);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                // Fetch stats and orders in parallel for better performance
-                const [statsRes, ordersRes] = await Promise.all([
-                    statsAPI.getAdminStats(),
-                    orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 10 })
-                ]);
+    const fetchDashboardData = React.useCallback(async () => {
+        try {
+            // Fetch stats and orders in parallel for better performance
+            const [statsRes, ordersRes] = await Promise.all([
+                statsAPI.getAdminStats(),
+                orderAPI.getOrders({ status: 'pending,preparing,ready', limit: 10 })
+            ]);
 
-                // 3. Robust Total Tables count
-                const savedTables = localStorage.getItem('admin_tables');
-                let trackedTables = [1, 2, 3, 4, 5, 6]; // Default fallback
-                if (savedTables) {
-                    try {
-                        const parsed = JSON.parse(savedTables);
-                        if (Array.isArray(parsed)) trackedTables = parsed;
-                    } catch { /* ignore */ }
-                }
-
-                // 4. Calculate Occupied Count Locally for 100% Accuracy with the UI
-                const orders = ordersRes.data || [];
-                const occupiedTableNumbers = new Set(
-                    orders
-                        .filter(o => ['pending', 'preparing', 'ready'].includes(o.status))
-                        .map(o => String(o.tableNumber))
-                        .filter(tNo => trackedTables.map(String).includes(tNo))
-                );
-
-                // 5. Calculate Real Avg Wait Time (for active orders)
-                const activeOrdersForTime = orders.filter(o => ['pending', 'preparing'].includes(o.status));
-                let calculatedWaitTime = 0;
-
-                if (activeOrdersForTime.length > 0) {
-                    const now = new Date();
-                    const totalTimeMs = activeOrdersForTime.reduce((acc, order) => {
-                        return acc + (now - new Date(order.createdAt));
-                    }, 0);
-                    calculatedWaitTime = Math.round(totalTimeMs / (1000 * 60) / activeOrdersForTime.length);
-                }
-
-                // If no active orders, wait time is 0.
-                // If active orders exist, show their average wait time.
-                const finalWaitTime = calculatedWaitTime > 0
-                    ? calculatedWaitTime
-                    : (activeOrdersForTime.length > 0 ? 1 : 0); // If pending but <1 min, show 1. If no orders, show 0.
-
-                setStats({
-                    activeOrders: statsRes.data.summary?.activeOrders || 0,
-                    todayRevenue: statsRes.data.summary?.rangeRevenue || 0,
-                    totalRevenue: statsRes.data.summary?.totalRevenue || 0,
-                    dineIn: occupiedTableNumbers.size,
-                    totalTables: trackedTables.length,
-                    avgWaitTime: finalWaitTime
-                });
-
-                // Process Feed
-                const activeOrdersList = orders
-                    .filter(o => o.status && ['pending', 'preparing', 'ready'].includes(o.status))
-                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                    .slice(0, 3)
-                    .map(o => ({
-                        id: o._id,
-                        title: `Order #${o.dailySequence ? String(o.dailySequence).padStart(3, '0') : o._id.slice(-4)}`,
-                        sub: (o.items || []).map(i => i.name || 'Item').join(', '),
-                        icon: tableIcon
-                    }));
-                setFeedItems(activeOrdersList);
-
-                // Process Hourly Revenue Data (Today)
-                const hourlyData = statsRes.data.charts?.hourlyAnalysis || [];
-                const graphData = [];
-
-                // Create array for hours 0-23
-                for (let i = 0; i < 24; i++) {
-                    const hourLabel = i === 0 ? '12 AM' : i === 12 ? '12 PM' : i > 12 ? `${i - 12} PM` : `${i} AM`;
-                    const hourData = hourlyData.find(h => h._id === i);
-
-                    graphData.push({
-                        name: hourLabel,
-                        value: hourData ? hourData.totalSales : 0,
-                        hourIndex: i // Add index for filtering
-                    });
-                }
-
-                // Dynamic 7-hour window Logic: [Current-3, Current, Current+3]
-                const currentHour = new Date().getHours();
-                let startHour = currentHour - 3;
-                let endHour = currentHour + 3;
-
-                // Adjust window if out of bounds (0-23)
-                if (startHour < 0) {
-                    startHour = 0;
-                    endHour = 6; // Fixed 7-hour window at start of day
-                } else if (endHour > 23) {
-                    endHour = 23;
-                    startHour = 17; // Fixed 7-hour window at end of day
-                }
-
-                const filteredGraphData = graphData.filter(d => d.hourIndex >= startHour && d.hourIndex <= endHour);
-                setSalesData(filteredGraphData);
-
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
+            // 3. Robust Total Tables count
+            const savedTables = localStorage.getItem('admin_tables');
+            let trackedTables = [1, 2, 3, 4, 5, 6]; // Default fallback
+            if (savedTables) {
+                try {
+                    const parsed = JSON.parse(savedTables);
+                    if (Array.isArray(parsed)) trackedTables = parsed;
+                } catch { /* ignore */ }
             }
-        };
 
-        fetchDashboardData();
-        // Poll every 30 seconds for "Live" feel
-        const interval = setInterval(fetchDashboardData, 30000);
-        return () => clearInterval(interval);
+            // 4. Calculate Occupied Count Locally for 100% Accuracy with the UI
+            const orders = ordersRes.data || [];
+            const occupiedTableNumbers = new Set(
+                orders
+                    .filter(o => ['pending', 'preparing', 'ready'].includes(o.status))
+                    .map(o => String(o.tableNumber))
+                    .filter(tNo => trackedTables.map(String).includes(tNo))
+            );
+
+            // 5. Calculate Real Avg Wait Time (for active orders)
+            const activeOrdersForTime = orders.filter(o => ['pending', 'preparing'].includes(o.status));
+            let calculatedWaitTime = 0;
+
+            if (activeOrdersForTime.length > 0) {
+                const now = new Date();
+                const totalTimeMs = activeOrdersForTime.reduce((acc, order) => {
+                    return acc + (now - new Date(order.createdAt));
+                }, 0);
+                calculatedWaitTime = Math.round(totalTimeMs / (1000 * 60) / activeOrdersForTime.length);
+            }
+
+            // If no active orders, wait time is 0.
+            // If active orders exist, show their average wait time.
+            const finalWaitTime = calculatedWaitTime > 0
+                ? calculatedWaitTime
+                : (activeOrdersForTime.length > 0 ? 1 : 0); // If pending but <1 min, show 1. If no orders, show 0.
+
+            setStats({
+                activeOrders: statsRes.data.summary?.activeOrders || 0,
+                todayRevenue: statsRes.data.summary?.rangeRevenue || 0,
+                totalRevenue: statsRes.data.summary?.totalRevenue || 0,
+                dineIn: occupiedTableNumbers.size,
+                totalTables: trackedTables.length,
+                avgWaitTime: finalWaitTime
+            });
+
+            // Process Feed
+            const activeOrdersList = orders
+                .filter(o => o.status && ['pending', 'preparing', 'ready'].includes(o.status))
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 3)
+                .map(o => ({
+                    id: o._id,
+                    title: `Order #${o.dailySequence ? String(o.dailySequence).padStart(3, '0') : o._id.slice(-4)}`,
+                    sub: (o.items || []).map(i => i.name || 'Item').join(', '),
+                    icon: tableIcon
+                }));
+            setFeedItems(activeOrdersList);
+
+            // Process Hourly Revenue Data (Today)
+            const hourlyData = statsRes.data.charts?.hourlyAnalysis || [];
+            const graphData = [];
+
+            // Create array for hours 0-23
+            for (let i = 0; i < 24; i++) {
+                const hourLabel = i === 0 ? '12 AM' : i === 12 ? '12 PM' : i > 12 ? `${i - 12} PM` : `${i} AM`;
+                const hourData = hourlyData.find(h => h._id === i);
+
+                graphData.push({
+                    name: hourLabel,
+                    value: hourData ? hourData.totalSales : 0,
+                    hourIndex: i // Add index for filtering
+                });
+            }
+
+            // Dynamic 7-hour window Logic: [Current-3, Current, Current+3]
+            const currentHour = new Date().getHours();
+            let startHour = currentHour - 3;
+            let endHour = currentHour + 3;
+
+            // Adjust window if out of bounds (0-23)
+            if (startHour < 0) {
+                startHour = 0;
+                endHour = 6; // Fixed 7-hour window at start of day
+            } else if (endHour > 23) {
+                endHour = 23;
+                startHour = 17; // Fixed 7-hour window at end of day
+            }
+
+            const filteredGraphData = graphData.filter(d => d.hourIndex >= startHour && d.hourIndex <= endHour);
+            setSalesData(filteredGraphData);
+
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+        }
     }, []);
 
-    const { user, currencySymbol } = useSettings();
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    // Socket Listener for Real-Time Stats Update
+    useEffect(() => {
+        if (!socket || !user?.restaurantName) return;
+
+        socket.emit('joinRestaurant', user.restaurantName);
+
+        const handleUpdate = () => {
+            console.log("Dashboard update triggered by socket");
+            fetchDashboardData();
+        };
+
+        socket.on('orderUpdated', handleUpdate);
+        return () => socket.off('orderUpdated');
+    }, [socket, user?.restaurantName, fetchDashboardData]);
+
     const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
 
     return (

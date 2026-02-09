@@ -5,6 +5,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 import { useSettings } from '../../context/SettingsContext';
 import { restaurantAPI, orderAPI } from '../../utils/api';
+import { useSocket } from '../../context/SocketContext';
 import logo from '../../assets/logo-m.svg';
 
 const AdminTable = () => {
@@ -36,6 +37,8 @@ const AdminTable = () => {
         }
     };
 
+    const socket = useSocket();
+
     useEffect(() => {
         localStorage.setItem('admin_tables', JSON.stringify(tables));
         if (tables.length > 0) {
@@ -43,10 +46,22 @@ const AdminTable = () => {
         }
         fetchRestaurantDetails();
         fetchActiveOrders();
-
-        const interval = setInterval(fetchActiveOrders, 30000); // Poll every 30s
-        return () => clearInterval(interval);
     }, [tables]);
+
+    // Socket Listener for Real-Time Table Status
+    useEffect(() => {
+        if (!socket || !restaurantName) return;
+
+        socket.emit('joinRestaurant', restaurantName);
+
+        const handleOrderUpdate = () => {
+            console.log("Real-time table status update received");
+            fetchActiveOrders();
+        };
+
+        socket.on('orderUpdated', handleOrderUpdate);
+        return () => socket.off('orderUpdated');
+    }, [socket, restaurantName]);
 
     // Keep selectedTableOrder updated if activeOrders changes while modal is open
     useEffect(() => {
@@ -59,8 +74,7 @@ const AdminTable = () => {
                 setIsPreviewOpen(false);
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeOrders, isPreviewOpen]);
+    }, [activeOrders, isPreviewOpen, selectedTableOrder]);
 
     const fetchActiveOrders = async () => {
         try {

@@ -16,6 +16,18 @@ const AdminCategory = () => {
     const [selectedIcon, setSelectedIcon] = useState(Utensils);
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const socket = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('categoryUpdated', (payload) => {
+            console.log("Real-time category update received", payload.action);
+            fetchCategories(); // Simple refresh for now
+        });
+
+        return () => socket.off('categoryUpdated');
+    }, [socket]);
 
     const iconOptions = [
         { icon: Utensils, label: 'Utensils' },
@@ -83,6 +95,9 @@ const AdminCategory = () => {
             return;
         }
 
+        // Optimistic Update Setup
+        const previousCategories = [...categories];
+
         try {
             const selectedOpt = iconOptions.find(opt => opt.icon === selectedIcon);
             const iconLabel = selectedOpt ? selectedOpt.label : '';
@@ -91,21 +106,28 @@ const AdminCategory = () => {
                 name: newCategoryName,
                 icon: iconLabel,
                 status: newCategoryStatus ? 'ACTIVE' : 'INACTIVE',
-                image: '' // Ensure image is cleared if it existed
+                image: ''
             };
 
+            // OPTIMISTIC UI: Update local state before API call
             if (editingCategory) {
+                setCategories(prev => prev.map(c =>
+                    c._id === editingCategory._id ? { ...c, ...categoryData } : c
+                ));
+                closeModal(); // Replaced clearForm() with existing closeModal()
                 await categoryAPI.update(editingCategory._id, categoryData);
                 toast.success('Category updated');
             } else {
-                await categoryAPI.create(categoryData);
+                // For 'create', we don't have the real ID yet, so we'll just wait or use a temp ID
+                // Simpler for create to just wait for response
+                const { data } = await categoryAPI.create(categoryData);
+                setCategories(prev => [data, ...prev]);
                 toast.success('Category created');
+                closeModal(); // Replaced clearForm() with existing closeModal()
             }
-            fetchCategories();
-            closeModal();
         } catch (error) {
             toast.error('Failed to save category');
-            console.error(error);
+            setCategories(previousCategories); // Rollback
         }
     };
 
@@ -117,14 +139,17 @@ const AdminCategory = () => {
         setSelectedIcon(Utensils);
     };
 
-    const toggleStatus = async (id) => {
-        const cat = categories.find(c => c._id === id);
-        if (!cat) return;
+    const handleToggleStatus = async (id, currentStatus) => {
+        const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        const previousCategories = [...categories];
 
-        const newStatus = cat.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        // OPTIMISTIC UI
+        setCategories(prev => prev.map(c =>
+            c._id === id ? { ...c, status: newStatus } : c
+        ));
+
         try {
             await categoryAPI.update(id, { status: newStatus });
-            toast.success(`Category is now ${newStatus === 'ACTIVE' ? 'Available' : 'Not Available'}`);
             fetchCategories();
         } catch (error) {
             toast.error('Failed to update status');
@@ -278,7 +303,7 @@ const AdminCategory = () => {
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={category.status === 'ACTIVE'}
-                                                onChange={() => toggleStatus(category._id)}
+                                                onChange={() => handleToggleStatus(category._id, category.status)}
                                             />
                                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                                         </label>
@@ -300,7 +325,7 @@ const AdminCategory = () => {
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={category.status === 'ACTIVE'}
-                                                onChange={() => toggleStatus(category._id)}
+                                                onChange={() => handleToggleStatus(category._id, category.status)}
                                             />
                                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                                         </label>

@@ -18,7 +18,6 @@ export const SocketProvider = ({ children }) => {
 
         const newSocket = io(socketUrl, {
             withCredentials: true,
-            withCredentials: true,
             transports: ['websocket', 'polling'], // Try websocket first for speed
             reconnectionAttempts: Infinity,
             reconnectionDelay: 5000, // 5 seconds between retries

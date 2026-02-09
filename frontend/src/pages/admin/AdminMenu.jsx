@@ -50,11 +50,18 @@ const AdminMenu = () => {
     const [restaurantName, setRestaurantName] = useState('');
     const filterRef = useRef(null);
 
-    // Close filter when clicking outside
+    const [catSearchTerm, setCatSearchTerm] = useState('');
+    const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
+    const catDropdownRef = useRef(null);
+
+    // Close filter and category dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (filterRef.current && !filterRef.current.contains(event.target)) {
                 setIsFilterOpen(false);
+            }
+            if (catDropdownRef.current && !catDropdownRef.current.contains(event.target)) {
+                setIsCatDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -73,8 +80,8 @@ const AdminMenu = () => {
     const [newItemPrice, setNewItemPrice] = useState('');
     const [newItemDescription, setNewItemDescription] = useState('');
     // New Fields
-    const [newItemCalories, setNewItemCalories] = useState('250 kcal');
-    const [newItemTime, setNewItemTime] = useState('15-20 min');
+    const [newItemCalories, setNewItemCalories] = useState('250');
+    const [newItemTime, setNewItemTime] = useState('15-20');
     const [newItemIsVeg, setNewItemIsVeg] = useState(true);
 
     const removeMedia = (indexToRemove) => {
@@ -132,6 +139,20 @@ const AdminMenu = () => {
         }
     };
 
+    const socket = useSocket();
+
+    // Socket Listener for Real-Time Updates
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('menuUpdated', (payload) => {
+            console.log("Real-time menu update received", payload.action);
+            fetchData(); // Simple refresh for now
+        });
+
+        return () => socket.off('menuUpdated');
+    }, [socket]);
+
     // Initial Load
     useEffect(() => {
         fetchData();
@@ -178,8 +199,8 @@ const AdminMenu = () => {
         setNewItemCategory(item.category?._id || item.category);
         setNewItemPrice(item.price);
         setNewItemDescription(item.description);
-        setNewItemCalories(item.calories || '250 kcal');
-        setNewItemTime(item.time || '15-20 min');
+        setNewItemCalories(item.calories ? item.calories.replace(/\s*kcal/i, '') : '250');
+        setNewItemTime(item.time ? item.time.replace(/\s*min/i, '') : '15-20');
         setNewItemIsVeg(item.isVeg === undefined ? true : item.isVeg);
         setIsActiveStatus(item.isAvailable);
         setSelectedLabels(item.labels || []);
@@ -271,17 +292,17 @@ const AdminMenu = () => {
         let files = Array.from(e.target.files);
 
         // Calculate remaining slots
-        const maxSlots = 5;
+        const maxSlots = 1;
         const remainingSlots = maxSlots - modelItems.length;
 
         if (remainingSlots <= 0) {
-            toast.error("You have reached the maximum limit of 5 3D models.");
+            toast.error("You have reached the maximum limit of 1 3D model.");
             return;
         }
 
         if (files.length > remainingSlots) {
             toast(
-                `Only the first ${remainingSlots} model(s) will be added due to the 5-item limit.`,
+                `Only the first ${remainingSlots} model(s) will be added due to the 1-item limit.`,
                 { icon: '⚠️' }
             );
             files = files.slice(0, remainingSlots);
@@ -315,7 +336,7 @@ const AdminMenu = () => {
             }
         }
 
-        setModelItems(prev => [...prev, ...newItems].slice(0, 5));
+        setModelItems(prev => [...prev, ...newItems].slice(0, 1));
     };
 
     const handleCaptureThumbnail = async (index) => {
@@ -358,12 +379,16 @@ const AdminMenu = () => {
                     <button
                         onClick={async () => {
                             toast.dismiss(t.id);
+                            const previousItems = [...menuItems];
+                            // Optimistic Update
+                            setMenuItems(prev => prev.filter(item => item._id !== id));
+
                             try {
                                 await menuAPI.delete(id);
                                 toast.success('Item deleted successfully');
-                                fetchData();
                             } catch (error) {
                                 toast.error('Failed to delete item');
+                                setMenuItems(previousItems); // Rollback
                             }
                         }}
                         className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-colors"
@@ -379,6 +404,27 @@ const AdminMenu = () => {
                 </div>
             </div>
         ), { duration: 5000 });
+    };
+
+    const toggleStatus = async (id) => {
+        const item = menuItems.find(i => i._id === id);
+        if (!item) return;
+
+        const newStatus = !item.isAvailable;
+        const previousItems = [...menuItems];
+
+        // Optimistic Update
+        setMenuItems(prev => prev.map(i =>
+            i._id === id ? { ...i, isAvailable: newStatus } : i
+        ));
+
+        try {
+            await menuAPI.update(id, { isAvailable: newStatus });
+            toast.success(`Item is now ${newStatus ? 'Available' : 'Unavailable'}`);
+        } catch (error) {
+            toast.error('Failed to update status');
+            setMenuItems(previousItems); // Rollback
+        }
     };
 
 
@@ -417,8 +463,8 @@ const AdminMenu = () => {
         setNewItemCategory(categories.length > 0 ? categories[0]._id : '');
         setNewItemPrice('');
         setNewItemDescription('');
-        setNewItemCalories('250 kcal');
-        setNewItemTime('15-20 min');
+        setNewItemCalories('250');
+        setNewItemTime('15-20');
         setNewItemIsVeg(true);
         setEditingItem(null);
     };
@@ -499,7 +545,7 @@ const AdminMenu = () => {
             const modelUploadPromises = modelItems.map(async (item, index) => {
                 if (item.file) {
                     try {
-                        const res = await uploadAPI.uploadDirect(item.file, null, { signal }); // No progress tracking for models specifically for now to keep simple
+                        const res = await uploadAPI.uploadDirect(item.file, null, { signal }, 'raw'); // Use 'raw' for 3D models to ensure compatibility
 
                         // Track ID for potential cleanup
                         if (res.data.public_id) {
@@ -532,8 +578,8 @@ const AdminMenu = () => {
                 category: newItemCategory,
                 price: Number(newItemPrice),
                 description: newItemDescription,
-                calories: newItemCalories,
-                time: newItemTime,
+                calories: newItemCalories ? `${newItemCalories} kcal` : '',
+                time: newItemTime ? `${newItemTime} min` : '',
                 isVeg: newItemIsVeg,
                 image: finalMediaItems.length > 0 ? finalMediaItems[0].url : '',
                 isAvailable: isActiveStatus,
@@ -820,7 +866,7 @@ const AdminMenu = () => {
                     {/* Add New Item Card */}
                     <div
                         onClick={openModal}
-                        className="border-2 border-dashed border-gray-200 rounded-3xl p-4 sm:p-8 flex flex-row sm:flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-36 sm:h-full group bg-gray-50 gap-4"
+                        className="border-2 border-dashed border-gray-200 rounded-[1.5rem] sm:rounded-3xl p-2.5 sm:p-8 flex flex-row sm:flex-col items-center justify-center text-center cursor-pointer hover:border-[#FD6941] hover:bg-orange-50/10 transition-all h-[150px] sm:h-full group bg-gray-50 gap-3"
                     >
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
                             <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#FD6941]" />
@@ -834,148 +880,59 @@ const AdminMenu = () => {
             {isModalOpen && createPortal(<>
                 <div className="fixed inset-0 w-screen h-screen top-0 left-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[99999] px-2">
                     <div className="fixed inset-0" onClick={handleCloseModal} />
-                    <div className="bg-white rounded-[2rem] w-full max-w-6xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10">
+                    <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] w-full max-w-6xl h-[92vh] lg:h-auto lg:max-h-[95vh] shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative z-10 flex flex-col">
                         {/* Close Button */}
                         <button
                             onClick={handleCloseModal}
-                            className="absolute top-6 right-6 z-50 p-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-full transition-all duration-200 hover:rotate-90"
+                            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 p-2 bg-gray-100/80 backdrop-blur-sm hover:bg-gray-200 text-gray-500 rounded-full transition-all duration-200 hover:rotate-90"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[95vh] overflow-y-auto no-scrollbar">
+                        <div className="flex-1 overflow-y-auto no-scrollbar">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 h-full">
 
-                            {/* Left Column: Media Upload */}
-                            <div className="lg:col-span-4 bg-gray-50 p-6 sm:p-6 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
-                                <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">Item Media</h3>
-                                <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 images or videos.</p>
+                                {/* Left Column: Media Upload */}
+                                <div className="lg:col-span-4 bg-gray-50 p-4 sm:p-6 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+                                    <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">Item Media</h3>
+                                    <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 images or videos.</p>
 
-                                {/* Uploaded Media Items Grid - or Empty State */}
-                                {mediaItems.length > 0 ? (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {mediaItems.map((media, index) => (
-                                            <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                                                {media.type.startsWith('video') ? (
-                                                    <video src={media.url} className="w-full h-full object-cover" controls />
-                                                ) : (
-                                                    <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
-                                                )}
-                                                <button
-                                                    onClick={() => removeMedia(index)}
-                                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <p className="text-xs text-white truncate">{media.name}</p>
-                                                    <p className="text-[10px] text-gray-300">{media.size}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        {mediaItems.length < 5 && (
-                                            <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    id="file-upload-small"
-                                                    className="hidden"
-                                                    accept="image/*,video/*"
-                                                    multiple
-                                                    onChange={handleFileSelection}
-                                                />
-                                                <label htmlFor="file-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
-                                                    <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
-                                                        <ImageIcon className="w-4 h-4" />
-                                                    </div>
-                                                    <h4 className="text-gray-800 font-medium text-xs mb-0.5">Add More</h4>
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    /* Large Empty State Board */
-                                    <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
-                                        <input
-                                            type="file"
-                                            id="file-upload-large"
-                                            className="hidden"
-                                            accept="image/*,video/*"
-                                            multiple
-                                            onChange={handleFileSelection}
-                                        />
-                                        <label htmlFor="file-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
-                                            <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
-                                                <ImageIcon className="w-6 h-6" />
-                                            </div>
-                                            <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload Media</h4>
-                                            <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse images or videos</p>
-                                            <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-medium text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
-                                                Select Files
-                                            </span>
-                                        </label>
-                                    </div>
-                                )}
-
-                                {/* 3D Models Upload Section */}
-                                <div className="mt-4">
-                                    <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">3D Models</h3>
-                                    <p className="text-xs sm:text-sm text-gray-400 mb-3">Add up to 5 3D models (.glb, .gltf, .obj).</p>
-
-                                    {modelItems.length > 0 ? (
+                                    {/* Uploaded Media Items Grid - or Empty State */}
+                                    {mediaItems.length > 0 ? (
                                         <div className="grid grid-cols-2 gap-4">
-                                            {modelItems.map((model, index) => (
+                                            {mediaItems.map((media, index) => (
                                                 <div key={index} className="relative group aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-                                                    <model-viewer
-                                                        id={`model-viewer-${index}`}
-                                                        src={model.url}
-                                                        alt={model.name}
-                                                        camera-controls
-                                                        auto-rotate
-                                                        ar
-                                                        shadow-intensity="1"
-                                                        style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-10px] opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                handleCaptureThumbnail(index);
-                                                            }}
-                                                            className="p-1.5 bg-white/90 text-blue-600 rounded-full shadow-sm hover:bg-blue-50"
-                                                            title="Use as Item Image"
-                                                        >
-                                                            <Camera className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => removeModel(index)}
-                                                            className="p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm hover:bg-red-50"
-                                                            title="Remove Model"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
+                                                    {media.type.startsWith('video') ? (
+                                                        <video src={media.url} className="w-full h-full object-cover" controls />
+                                                    ) : (
+                                                        <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
+                                                    )}
+                                                    <button
+                                                        onClick={() => removeMedia(index)}
+                                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
                                                     <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <p className="text-xs text-white truncate">{model.name}</p>
-                                                        <p className="text-[10px] text-gray-300">{model.size}</p>
+                                                        <p className="text-xs text-white truncate">{media.name}</p>
+                                                        <p className="text-[10px] text-gray-300">{media.size}</p>
                                                     </div>
                                                 </div>
                                             ))}
 
-                                            {/* Small Add Button for Models */}
-                                            {modelItems.length < 5 && (
+                                            {mediaItems.length < 5 && (
                                                 <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
                                                     <input
                                                         type="file"
-                                                        id="model-upload-small"
+                                                        id="file-upload-small"
                                                         className="hidden"
-                                                        accept=".glb,.gltf,.obj"
+                                                        accept="image/*,video/*"
                                                         multiple
-                                                        onChange={handleModelSelection}
+                                                        onChange={handleFileSelection}
                                                     />
-                                                    <label htmlFor="model-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                    <label htmlFor="file-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
                                                         <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
-                                                            <Box className="w-4 h-4" />
+                                                            <ImageIcon className="w-4 h-4" />
                                                         </div>
                                                         <h4 className="text-gray-800 font-medium text-xs mb-0.5">Add More</h4>
                                                     </label>
@@ -983,196 +940,345 @@ const AdminMenu = () => {
                                             )}
                                         </div>
                                     ) : (
-                                        /* Large Empty State for Models */
+                                        /* Large Empty State Board */
                                         <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
                                             <input
                                                 type="file"
-                                                id="model-upload-large"
+                                                id="file-upload-large"
                                                 className="hidden"
-                                                accept=".glb,.gltf,.obj"
+                                                accept="image/*,video/*"
                                                 multiple
-                                                onChange={handleModelSelection}
+                                                onChange={handleFileSelection}
                                             />
-                                            <label htmlFor="model-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                            <label htmlFor="file-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
                                                 <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
-                                                    <Box className="w-6 h-6" />
+                                                    <ImageIcon className="w-6 h-6" />
                                                 </div>
-                                                <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload 3D Model</h4>
-                                                <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse .glb, .gltf files</p>
+                                                <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload Media</h4>
+                                                <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse images or videos</p>
                                                 <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-medium text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
-                                                    Select Models
+                                                    Select Files
                                                 </span>
                                             </label>
                                         </div>
                                     )}
-                                </div>
-                            </div>
 
-                            {/* Right Column: Form Details */}
-                            <div className="lg:col-span-8 p-6 sm:p-6 lg:p-6 flex flex-col gap-6 h-full">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-xl font-medium text-gray-800">Item Details</h3>
-                                    <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
-                                        <X className="w-5 h-5 text-gray-500" />
-                                    </button>
-                                </div>
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. Tandoor Burger"
-                                            className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                            value={newItemName}
-                                            onChange={(e) => setNewItemName(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                            <div className="relative">
-                                                <select
-                                                    className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white appearance-none cursor-pointer"
-                                                    value={newItemCategory}
-                                                    onChange={(e) => setNewItemCategory(e.target.value)}
-                                                >
-                                                    <option value="" disabled>Select Category</option>
-                                                    {categories
-                                                        .filter(cat => cat.status !== 'INACTIVE')
-                                                        .map((cat) => (
-                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                        ))}
-                                                    {categories.length === 0 && <option value="">No categories found</option>}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
-                                            <div className="relative">
-                                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currencySymbol}</span>
-                                                <input
-                                                    type="number"
-                                                    placeholder="0.00"
-                                                    className="w-full pl-9 pr-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                                    value={newItemPrice}
-                                                    onChange={(e) => setNewItemPrice(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {/* 3D Models Upload Section */}
+                                    <div className="mt-4">
+                                        <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2 sm:mb-4">3D Models</h3>
+                                        <p className="text-xs sm:text-sm text-gray-400 mb-3">Add 3D model (.glb, .gltf, .obj).</p>
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Calories</label>
-                                            <input
-                                                type="text"
-                                                placeholder="e.g 350 kcal"
-                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                                value={newItemCalories}
-                                                onChange={(e) => setNewItemCalories(e.target.value)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                                            <input
-                                                type="text"
-                                                placeholder="e.g 15-20 min"
-                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
-                                                value={newItemTime}
-                                                onChange={(e) => setNewItemTime(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Item Type (Veg / Non-Veg)</label>
-                                        <div className="flex gap-4">
-                                            <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
-                                                <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
-                                                <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
-                                                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                                </div>
-                                                <span className="text-sm font-medium">Veg</span>
-                                            </label>
-                                            <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
-                                                <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
-                                                <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
-                                                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                                </div>
-                                                <span className="text-sm font-medium">Non-Veg</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                        <textarea
-                                            rows="3"
-                                            placeholder="Describe the ingredients..."
-                                            className="w-full px-5 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
-                                            value={newItemDescription}
-                                            onChange={(e) => setNewItemDescription(e.target.value)}
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="flex items-center justify-between py-1">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-800">Active Status</label>
-                                            <p className="text-xs text-gray-400">Make this item visible on the menu</p>
-                                        </div>
-                                        <div
-                                            onClick={() => setIsActiveStatus(!isActiveStatus)}
-                                            className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in cursor-pointer"
-                                        >
-                                            <div className={`w-10 h-5 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
-                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Labels</label>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
-                                                <button
-                                                    key={label}
-                                                    onClick={() => toggleLabel(label)}
-                                                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all flex items-center gap-1.5 
-                                                    ${selectedLabels.includes(label)
-                                                            ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
-                                                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                                                        }`}
-                                                >
-                                                    {dietaryIcons[label] && (
-                                                        <img
-                                                            src={dietaryIcons[label]}
-                                                            alt={label}
-                                                            className="w-3 h-3"
-                                                            style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                        {modelItems.length > 0 ? (
+                                            <div className="flex flex-col gap-4">
+                                                {modelItems.map((model, index) => (
+                                                    <div key={index} className="relative group aspect-video bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                                                        <model-viewer
+                                                            id={`model-viewer-${index}`}
+                                                            src={model.url}
+                                                            alt={model.name}
+                                                            camera-controls
+                                                            auto-rotate
+                                                            ar
+                                                            shadow-intensity="1"
+                                                            style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                                            className="w-full h-full object-cover"
                                                         />
-                                                    )}
-                                                    {label}
-                                                </button>
-                                            ))}
-                                        </div>
+                                                        <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-10px] opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleCaptureThumbnail(index);
+                                                                }}
+                                                                className="p-1.5 bg-white/90 text-blue-600 rounded-full shadow-sm hover:bg-blue-50"
+                                                                title="Use as Item Image"
+                                                            >
+                                                                <Camera className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => removeModel(index)}
+                                                                className="p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm hover:bg-red-50"
+                                                                title="Remove Model"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <p className="text-xs text-white truncate">{model.name}</p>
+                                                            <p className="text-[10px] text-gray-300">{model.size}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {/* Small Add Button for Models */}
+                                                {modelItems.length < 1 && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center bg-white aspect-square hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer">
+                                                        <input
+                                                            type="file"
+                                                            id="model-upload-small"
+                                                            className="hidden"
+                                                            accept=".glb,.gltf,.obj"
+                                                            onChange={handleModelSelection}
+                                                        />
+                                                        <label htmlFor="model-upload-small" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                            <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-[#FD6941] mb-2">
+                                                                <Box className="w-4 h-4" />
+                                                            </div>
+                                                            <h4 className="text-gray-800 font-medium text-xs mb-0.5">Add More</h4>
+                                                        </label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            /* Large Empty State for Models */
+                                            <div className="border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center bg-white w-full aspect-video hover:border-[#FD6941] hover:bg-orange-50/10 transition-colors cursor-pointer group">
+                                                <input
+                                                    type="file"
+                                                    id="model-upload-large"
+                                                    className="hidden"
+                                                    accept=".glb,.gltf,.obj"
+                                                    onChange={handleModelSelection}
+                                                />
+                                                <label htmlFor="model-upload-large" className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4">
+                                                    <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center text-[#FD6941] mb-3 group-hover:scale-110 transition-transform duration-300">
+                                                        <Box className="w-6 h-6" />
+                                                    </div>
+                                                    <h4 className="text-gray-800 font-medium text-base sm:text-lg mb-2">Upload 3D Model</h4>
+                                                    <p className="text-sm text-gray-400 mb-6 max-w-[200px]">Browse .glb, .gltf files</p>
+                                                    <span className="bg-[#FD6941] text-white px-6 py-2.5 rounded-full font-medium text-sm sm:text-base shadow-md shadow-orange-200 group-hover:shadow-lg group-hover:translate-y-[-2px] transition-all">
+                                                        Select Models
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="mt-auto pt-4 flex justify-end gap-3 border-t border-gray-100">
-                                    <button
-                                        onClick={handleCloseModal}
-                                        className="px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 text-base font-medium hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSave}
-                                        className="px-8 py-2.5 rounded-full bg-[#FD6941] text-white text-base font-medium shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all"
-                                    >
-                                        Save Item
-                                    </button>
+                                {/* Right Column: Form Details */}
+                                <div className="lg:col-span-8 p-4 sm:p-6 lg:p-6 flex flex-col gap-4 sm:gap-6 h-full">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-xl font-medium text-gray-800">Item Details</h3>
+                                        <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden">
+                                            <X className="w-5 h-5 text-gray-500" />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Tandoor Burger"
+                                                className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                value={newItemName}
+                                                onChange={(e) => setNewItemName(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                                <div className="relative" ref={catDropdownRef}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsCatDropdownOpen(!isCatDropdownOpen)}
+                                                        className="w-full px-5 py-3 rounded-full border border-gray-200 text-base flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white cursor-pointer"
+                                                    >
+                                                        <span className={newItemCategory ? "text-gray-900" : "text-gray-400"}>
+                                                            {newItemCategory
+                                                                ? (categories.find(c => c._id === newItemCategory)?.name || "Select Category")
+                                                                : "Select Category"}
+                                                        </span>
+                                                        <svg className={`w-4 h-4 text-gray-500 transition-transform ${isCatDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                                        </svg>
+                                                    </button>
+
+                                                    {isCatDropdownOpen && (
+                                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                                            <div className="p-3 border-b border-gray-50">
+                                                                <div className="relative">
+                                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Search category..."
+                                                                        className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FD6941] transition-all"
+                                                                        value={catSearchTerm}
+                                                                        onChange={(e) => setCatSearchTerm(e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <div className="max-h-60 overflow-y-auto no-scrollbar py-1">
+                                                                {categories
+                                                                    .filter(cat => cat.status !== 'INACTIVE' && cat.name.toLowerCase().includes(catSearchTerm.toLowerCase()))
+                                                                    .map((cat) => (
+                                                                        <button
+                                                                            key={cat._id}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setNewItemCategory(cat._id);
+                                                                                setIsCatDropdownOpen(false);
+                                                                                setCatSearchTerm('');
+                                                                            }}
+                                                                            className={`w-full text-left px-5 py-3 text-sm hover:bg-orange-50 transition-colors flex items-center justify-between ${newItemCategory === cat._id ? 'bg-orange-50 text-[#FD6941] font-medium' : 'text-gray-700'}`}
+                                                                        >
+                                                                            {cat.name}
+                                                                            {newItemCategory === cat._id && (
+                                                                                <svg className="w-4 h-4 text-[#FD6941]" fill="currentColor" viewBox="0 0 20 20">
+                                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                                </svg>
+                                                                            )}
+                                                                        </button>
+                                                                    ))}
+                                                                {categories.filter(cat => cat.status !== 'INACTIVE' && cat.name.toLowerCase().includes(catSearchTerm.toLowerCase())).length === 0 && (
+                                                                    <div className="px-5 py-4 text-center text-sm text-gray-400">
+                                                                        No categories found
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currencySymbol}</span>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="0.00"
+                                                        className="w-full pl-9 pr-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white"
+                                                        value={newItemPrice}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                                                setNewItemPrice(val);
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Calories</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g 350"
+                                                        className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white pr-16"
+                                                        value={newItemCalories}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/[^0-9]/g, '');
+                                                            setNewItemCalories(val);
+                                                        }}
+                                                    />
+                                                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">kcal</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g 15-20"
+                                                        className="w-full px-5 py-3 rounded-full border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white pr-14"
+                                                        value={newItemTime}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/[^0-9-]/g, '');
+                                                            setNewItemTime(val);
+                                                        }}
+                                                    />
+                                                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">min</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Item Type (Veg / Non-Veg)</label>
+                                            <div className="flex gap-4">
+                                                <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${newItemIsVeg ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                                    <input type="radio" name="isVeg" className="hidden" checked={newItemIsVeg} onChange={() => setNewItemIsVeg(true)} />
+                                                    <div className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
+                                                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium">Veg</span>
+                                                </label>
+                                                <label className={`flex-1 cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 transition-all ${!newItemIsVeg ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                                                    <input type="radio" name="isVeg" className="hidden" checked={!newItemIsVeg} onChange={() => setNewItemIsVeg(false)} />
+                                                    <div className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center">
+                                                        <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium">Non-Veg</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                            <textarea
+                                                rows="3"
+                                                placeholder="Describe the ingredients..."
+                                                className="w-full px-5 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-1 focus:ring-[#FD6941] focus:border-[#FD6941] transition-all bg-white resize-none"
+                                                value={newItemDescription}
+                                                onChange={(e) => setNewItemDescription(e.target.value)}
+                                            ></textarea>
+                                        </div>
+
+                                        <div className="flex items-center justify-between py-1">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-800">Active Status</label>
+                                                <p className="text-xs text-gray-400">Make this item visible on the menu</p>
+                                            </div>
+                                            <div
+                                                onClick={() => setIsActiveStatus(!isActiveStatus)}
+                                                className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in cursor-pointer"
+                                            >
+                                                <div className={`w-10 h-5 rounded-full transition-colors duration-200 ease-in-out ${isActiveStatus ? 'bg-black' : 'bg-gray-200'}`}></div>
+                                                <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${isActiveStatus ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Labels</label>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {['Vegan', 'Gluten-Free', 'Spicy', 'Egg', 'Seafood', 'Dairy', 'Sugar-Free', 'Low-Calorie', 'Keto', 'Jain'].map((label) => (
+                                                    <button
+                                                        key={label}
+                                                        onClick={() => toggleLabel(label)}
+                                                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all flex items-center gap-1.5 
+                                                    ${selectedLabels.includes(label)
+                                                                ? 'border-[#FD6941] text-[#FD6941] bg-orange-50'
+                                                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                                            }`}
+                                                    >
+                                                        {dietaryIcons[label] && (
+                                                            <img
+                                                                src={dietaryIcons[label]}
+                                                                alt={label}
+                                                                className="w-3 h-3"
+                                                                style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                            />
+                                                        )}
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-auto pt-4 flex justify-end gap-3 border-t border-gray-100">
+                                        <button
+                                            onClick={handleCloseModal}
+                                            className="px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 text-base font-medium hover:bg-gray-50 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSave}
+                                            className="px-8 py-2.5 rounded-full bg-[#FD6941] text-white text-base font-medium shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all"
+                                        >
+                                            Save Item
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1181,7 +1287,7 @@ const AdminMenu = () => {
             </>, document.body)}
 
 
-        </div>
+        </div >
     );
 };
 

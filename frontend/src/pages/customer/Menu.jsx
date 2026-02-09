@@ -19,6 +19,7 @@ import ketoIcon from '../../assets/Pear--Streamline-Atlas.svg';
 import vegIcon from '../../assets/veg.svg';
 import nonVegIcon from '../../assets/non-veg.svg';
 import arVideo from '../../assets/AR_Menu_Experience_Video_Generation.mp4';
+import { useSocket } from '../../context/SocketContext';
 
 const dietaryIcons = {
     'Sugar-Free': sugarFreeIcon,
@@ -108,16 +109,38 @@ const Menu = () => {
     const [showCategoryFilter, setShowCategoryFilter] = useState(false);
     const [verificationPhone, setVerificationPhone] = useState("");
 
+    const socket = useSocket();
+
     useEffect(() => {
         if (tenantName) {
             fetchData();
         }
-        // Poll for updates every 10 seconds
-        const interval = setInterval(() => {
-            if (tenantName) fetchData();
-        }, 10000);
-        return () => clearInterval(interval);
     }, [restaurantId, tenantName]);
+
+    // Socket Listener for Real-Time Menu & Category Updates
+    useEffect(() => {
+        if (!socket || !tenantName) return;
+
+        socket.emit('joinRestaurant', tenantName);
+
+        const handleMenuUpdate = () => {
+            console.log("Real-time menu update received");
+            fetchData();
+        };
+
+        const handleCategoryUpdate = () => {
+            console.log("Real-time category update received");
+            fetchData();
+        };
+
+        socket.on('menuUpdated', handleMenuUpdate);
+        socket.on('categoryUpdated', handleCategoryUpdate);
+
+        return () => {
+            socket.off('menuUpdated', handleMenuUpdate);
+            socket.off('categoryUpdated', handleCategoryUpdate);
+        };
+    }, [socket, tenantName]);
 
     // Check Table Occupancy
     useEffect(() => {
@@ -141,7 +164,9 @@ const Menu = () => {
             }
         };
         checkStatus();
-        const interval = setInterval(checkStatus, 5000);
+
+        // Polling as fallback for occupancy, but sockets would be better if backend sent them
+        const interval = setInterval(checkStatus, 10000);
         return () => clearInterval(interval);
     }, [tenantName, tableNo, customerDetails.phone]);
 
@@ -165,6 +190,18 @@ const Menu = () => {
     useEffect(() => {
         setCustomerDetails(prev => ({ ...prev, tableNo }));
     }, [tableNo]);
+
+    // Body Scroll Lock for Modals
+    useEffect(() => {
+        if (showBill || selectedItem) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showBill, selectedItem]);
 
     // Update persistence when name/phone changes
     // Persistence disabled to force new entry every time
@@ -425,24 +462,22 @@ const Menu = () => {
 
 
                                 {/* Media Slider if available, else Image */}
-                                {[...(item.models || []), ...(item.media || [])].length > 0 ? (
-                                    <MediaSlider
-                                        media={[...(item.models || []), ...(item.media || [])]}
-                                        className="w-full h-full object-cover"
-                                        modelCheckId={`model-${item._id}`}
-                                    />
-                                ) : (
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                                )}
+                                <MediaSlider
+                                    media={[...(item.models || []), ...(item.media || []), { url: item.image, type: 'image' }]}
+                                    className="w-full h-full object-cover"
+                                    modelCheckId={`model-${item._id}`}
+                                />
 
                                 {/* Available Tag - Mobile: Top Left Dot, Desktop: Top Left Pill */}
-                                <div className={`md:hidden absolute top-2 left-2 z-10 w-2.5 h-2.5 rounded-full shadow-sm ${item.isAvailable ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-
-                                <div className={`hidden md:flex absolute top-4 left-4 z-10 items-center gap-1 text-white text-[10px] px-3 py-1 rounded-full shadow-lg ${item.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
-                                    <span className={`w-1.5 h-1.5 bg-white rounded-full ${item.isAvailable ? 'animate-pulse' : ''}`}></span>
-                                    <span>{item.isAvailable ? 'Available' : 'Unavailable'}</span>
-                                </div>
-
+                                {!item.isAvailable && (
+                                    <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
+                                        <div className="md:hidden w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm"></div>
+                                        <div className="hidden md:flex bg-red-500/95 backdrop-blur-md text-white border border-red-400/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider items-center gap-1.5 shadow-lg">
+                                            <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                            Sold Out
+                                        </div>
+                                    </div>
+                                )}
                                 {/* AR Icon for Photo Corner */}
                                 {item.models && item.models.length > 0 && (
                                     <button
@@ -619,10 +654,10 @@ const Menu = () => {
             </div >
 
             {/* Live Floating Cart/Bill */}
-            {
-                totalItems > 0 && (
-                    <div className="fixed bottom-4 left-4 right-4 md:bottom-8 md:right-8 md:left-auto md:w-96 z-50">
-                        <div className="bg-white/60 text-gray-900 p-3 rounded-full shadow-2xl flex items-center justify-between border border-white/60 relative backdrop-blur-xl">
+            {totalItems > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 lg:p-8 pointer-events-none overscroll-none touch-none">
+                    <div className="max-w-[1400px] mx-auto flex justify-center md:justify-end">
+                        <div className="bg-white/80 backdrop-blur-xl border border-white/20 p-2 pl-4 rounded-full shadow-2xl flex items-center gap-4 pointer-events-auto animate-float-up overscroll-none">
                             {/* Decorative gradient */}
                             <div className="absolute -left-10 -top-10 w-32 h-32 bg-[#FD6941] rounded-full blur-3xl opacity-20"></div>
 
@@ -636,197 +671,189 @@ const Menu = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-tight">Your Bag</p>
-                                    <p className="text-lg font-black text-gray-900 leading-tight">{activeSymbol}{grandTotal}</p>
+                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-widest leading-tight">Your Bag</p>
+                                    <p className="text-lg font-medium text-gray-900 leading-tight">{activeSymbol}{grandTotal}</p>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => isPreviewMode ? toast('Preview Mode: Checkout disabled') : setShowBill(true)}
-                                className="flex items-center gap-2 bg-[#FD6941] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg shadow-orange-200/50 hover:bg-orange-600 transition-all relative z-10 mr-1"
+                                className="flex items-center gap-2 bg-[#FD6941] text-white px-6 py-3 rounded-full text-sm font-medium shadow-lg shadow-orange-200/50 hover:bg-orange-600 transition-all relative z-10 mr-1"
                             >
                                 Checkout <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Order Checkout Modal */}
-            {
-                showBill && (
-                    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-                        <div className="bg-white w-full md:w-[500px] h-[90vh] md:h-auto md:max-h-[85vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-float-up">
+            {showBill && (
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 overscroll-none touch-none overflow-hidden">
+                    <div className="bg-white w-full md:w-[500px] h-auto max-h-[92vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-float-up overscroll-none touch-pan-y relative bottom-0">
 
-                            {/* Header */}
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 sticky top-0 z-10">
-                                <h2 className="text-xl text-gray-800">Your Order</h2>
-                                <button
-                                    onClick={() => setShowBill(false)}
-                                    className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"
-                                >
-                                    <Minus className="w-5 h-5 rotate-45" /> {/* Close Icon */}
-                                </button>
-                            </div>
+                        {/* Header */}
+                        <div className="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 sticky top-0 z-10">
+                            <h2 className="text-xl font-medium text-gray-800">Your Order</h2>
+                            <button
+                                onClick={() => setShowBill(false)}
+                                className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
 
-                            {/* Order Content */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+                        {/* Order Content */}
+                        <div className="flex-1 flex flex-col overflow-hidden pt-2 px-6 pb-6 no-scrollbar">
 
-                                {/* Order Success State */}
-                                {orderPlaced ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-center py-20">
-                                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500 animate-bounce">
-                                            <ShoppingBag className="w-10 h-10" />
-                                        </div>
-                                        <h3 className="text-2xl text-gray-800 mb-2">Order Places!</h3>
-                                        <p className="text-gray-500">Kitchen is preparing your delicious meal.</p>
+                            {/* Order Success State */}
+                            {orderPlaced ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center py-20">
+                                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500 animate-bounce">
+                                        <ShoppingBag className="w-10 h-10" />
                                     </div>
-                                ) : (
-                                    <>
-                                        {/* Cart Items */}
-                                        <div className="space-y-4">
-                                            {Object.values(cart).map((item) => (
-                                                <div key={item._id} className="flex gap-4">
-                                                    <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                                                        <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex justify-between items-start mb-1">
-                                                            <h4 className="text-gray-800 text-sm">{item.name}</h4>
-                                                            <span className="text-gray-800">{activeSymbol}{item.price * item.qty}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex items-center gap-3 bg-gray-50 rounded-full px-2 py-1 h-7">
-                                                                <button onClick={() => removeFromCart(item._id)} className="w-5 h-5 flex items-center justify-center bg-white rounded-full text-gray-600 shadow-sm text-xs"><Minus className="w-3 h-3" /></button>
-                                                                <span className="text-xs w-3 text-center">{item.qty}</span>
-                                                                <button onClick={() => addToCart(item)} className="w-5 h-5 flex items-center justify-center bg-[#FD6941] text-white rounded-full shadow-sm text-xs"><Plus className="w-3 h-3" /></button>
-                                                            </div>
-                                                        </div>
+                                    <h3 className="text-2xl text-gray-800 mb-2">Order Places!</h3>
+                                    <p className="text-gray-500">Kitchen is preparing your delicious meal.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Cart Items - Shows exactly 2 items before scrolling */}
+                                    <div className="overflow-y-auto no-scrollbar pr-1 mb-4 space-y-4 max-h-[155px]">
+                                        {Object.values(cart).map((item) => (
+                                            <div key={item._id} className="flex gap-4 items-center px-1">
+                                                <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                                                    <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-gray-800 text-[13px] font-medium leading-tight mb-1.5">{item.name}</h4>
+                                                    <div className="flex items-center gap-3 bg-gray-50 rounded-full px-2 py-1 w-fit h-8 border border-gray-100">
+                                                        <button onClick={() => removeFromCart(item._id)} className="w-6 h-6 flex items-center justify-center bg-white rounded-full text-gray-600 shadow-sm hover:bg-gray-100 transition-colors"><Minus className="w-3 h-3" /></button>
+                                                        <span className="text-xs w-4 text-center font-medium text-gray-800">{item.qty}</span>
+                                                        <button onClick={() => addToCart(item)} className="w-6 h-6 flex items-center justify-center bg-[#FD6941] text-white rounded-full hover:bg-orange-600 transition-colors"><Plus className="w-3 h-3" /></button>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Customer Details Form */}
-                                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                                            <div className="flex justify-between items-center">
-                                                <h3 className="text-sm text-gray-800 uppercase tracking-wider">Order Details</h3>
-                                                {(customerDetails.name && customerDetails.phone) && (
-                                                    <button
-                                                        onClick={() => setShowFullForm(!showFullForm)}
-                                                        className="text-[10px] font-bold text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
-                                                    >
-                                                        {showFullForm ? "View Summary" : "Change Info"}
-                                                    </button>
-                                                )}
+                                                <div className="text-right self-center">
+                                                    <span className="text-[#FD6941] font-medium text-sm whitespace-nowrap">{activeSymbol}{item.price * item.qty}</span>
+                                                </div>
                                             </div>
+                                        ))}
+                                    </div>
 
-                                            {!showFullForm ? (
-                                                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-0.5">Guest Information</p>
-                                                            <p className="font-bold text-gray-800">{customerDetails.name}</p>
-                                                            <p className="text-[10px] text-gray-400">{customerDetails.phone} • Table {customerDetails.tableNo}</p>
-                                                        </div>
-                                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#FD6941] shadow-sm border border-orange-50">
-                                                            <Star className="w-5 h-5 fill-current" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="pt-3 border-t border-gray-200/50">
-                                                        <label className="block text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Cooking Instructions</label>
-                                                        <textarea
-                                                            rows="2"
-                                                            value={customerDetails.notes}
-                                                            onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-white rounded-xl text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-orange-200 resize-none"
-                                                            placeholder="Any special requests? (Optional)"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="col-span-2">
-                                                        <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Full Name</label>
-                                                        <input
-                                                            type="text"
-                                                            value={customerDetails.name}
-                                                            onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
-                                                            placeholder="Enter your name"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Phone</label>
-                                                        <input
-                                                            type="tel"
-                                                            value={customerDetails.phone}
-                                                            onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
-                                                            placeholder="+91..."
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Table</label>
-                                                        <input
-                                                            type="text"
-                                                            value={customerDetails.tableNo}
-                                                            onChange={e => {
-                                                                const val = e.target.value;
-                                                                setCustomerDetails({ ...customerDetails, tableNo: val });
-                                                                setTableNo(val);
-                                                            }}
-                                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-2">
-                                                        <label className="block text-xs text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Special Requests</label>
-                                                        <textarea
-                                                            rows="2"
-                                                            value={customerDetails.notes}
-                                                            onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FD6941] border border-transparent focus:border-transparent resize-none"
-                                                            placeholder="Less spicy, extra cheese..."
-                                                        />
-                                                    </div>
-                                                </div>
+                                    {/* Customer Details Form - Fixed below items */}
+                                    <div className="flex-shrink-0 space-y-3 pt-3 border-t border-gray-100">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Order Details</h3>
+                                            {(customerDetails.name && customerDetails.phone) && (
+                                                <button
+                                                    onClick={() => setShowFullForm(!showFullForm)}
+                                                    className="text-[10px] font-bold text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
+                                                >
+                                                    {showFullForm ? "View Summary" : "Change Info"}
+                                                </button>
                                             )}
                                         </div>
 
-                                        {/* Bill Summary */}
-                                        <div className="space-y-2 pt-4 border-t border-gray-100">
-                                            <div className="flex justify-between text-sm text-gray-500">
-                                                <span>Subtotal</span>
-                                                <span>{activeSymbol}{subTotal}</span>
+                                        {!showFullForm ? (
+                                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-gray-400 uppercase font-medium tracking-widest mb-0.5">Guest Information</p>
+                                                        <p className="font-medium text-gray-800">{customerDetails.name}</p>
+                                                        <p className="text-[10px] text-gray-400">{customerDetails.phone} • Table {customerDetails.tableNo}</p>
+                                                    </div>
+                                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#FD6941] shadow-sm border border-orange-50">
+                                                        <Star className="w-5 h-5 fill-current" />
+                                                    </div>
+                                                </div>
+                                                <div className="pt-3 border-t border-gray-200/50">
+                                                    <label className="block text-[10px] text-gray-400 uppercase font-medium tracking-widest mb-2">Cooking Instructions</label>
+                                                    <textarea
+                                                        rows="2"
+                                                        value={customerDetails.notes}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-white rounded-xl text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-orange-200 resize-none"
+                                                        placeholder="Any special requests? (Optional)"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between text-sm text-gray-500">
-                                                <span>Tax (5%)</span>
-                                                <span>{activeSymbol}{tax}</span>
+                                        ) : (
+                                            <div className="grid grid-cols-12 gap-3">
+                                                <div className="col-span-12">
+                                                    <label className="block text-[10px] text-gray-400 mb-1 font-medium uppercase tracking-widest">Full Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerDetails.name}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                                                        className="w-full px-5 py-2.5 bg-gray-50 rounded-full text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-[#FD6941]"
+                                                        placeholder="Enter your name"
+                                                    />
+                                                </div>
+                                                <div className="col-span-8">
+                                                    <label className="block text-[10px] text-gray-400 mb-1 font-medium uppercase tracking-widest">Phone</label>
+                                                    <input
+                                                        type="tel"
+                                                        value={customerDetails.phone}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                                                        className="w-full px-5 py-2.5 bg-gray-50 rounded-full text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-[#FD6941]"
+                                                        placeholder="+91..."
+                                                    />
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <label className="block text-[10px] text-gray-400 mb-1 text-center font-medium uppercase tracking-widest">Table</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerDetails.tableNo}
+                                                        readOnly
+                                                        className="w-full px-4 py-2.5 bg-gray-50 rounded-full text-sm text-gray-500 border border-gray-200 cursor-not-allowed outline-none font-medium text-center"
+                                                    />
+                                                </div>
+                                                <div className="col-span-12">
+                                                    <label className="block text-[10px] text-gray-400 mb-1 font-medium uppercase tracking-widest">Special Requests</label>
+                                                    <textarea
+                                                        rows="2"
+                                                        value={customerDetails.notes}
+                                                        onChange={e => setCustomerDetails({ ...customerDetails, notes: e.target.value })}
+                                                        className="w-full px-5 py-3 bg-gray-50 rounded-2xl text-sm text-gray-800 focus:outline-none border border-gray-100 focus:border-[#FD6941] resize-none"
+                                                        placeholder="Less spicy, extra cheese..."
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between text-lg text-gray-900 pt-2 border-t border-dashed border-gray-200 mt-2">
-                                                <span>Grand Total</span>
-                                                <span>{activeSymbol}{grandTotal}</span>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                                        )}
+                                    </div>
 
-                            {/* Footer / Place Order Button */}
-                            {!orderPlaced && (
-                                <div className="p-6 border-t border-gray-100 bg-gray-50 shrink-0 safety-pb">
-                                    <button
-                                        onClick={handlePlaceOrder}
-                                        className="w-full bg-[#FD6941] text-white py-4 rounded-xl text-lg shadow-lg hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                                    >
-                                        Place Order <span className="text-white/60">•</span> {activeSymbol}{grandTotal}
-                                    </button>
-                                </div>
+                                    {/* Bill Summary - Compact Solid */}
+                                    <div className="space-y-2 pt-4 border-t border-gray-100 flex-shrink-0">
+                                        <div className="flex justify-between text-xs text-gray-400 font-medium uppercase tracking-widest">
+                                            <span>Subtotal</span>
+                                            <span className="text-gray-700">{activeSymbol}{subTotal}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-gray-400 font-medium uppercase tracking-widest">
+                                            <span>Tax (5%)</span>
+                                            <span className="text-gray-700">{activeSymbol}{tax}</span>
+                                        </div>
+                                        <div className="flex justify-between text-lg font-medium text-gray-900 pt-2.5 mt-1 border-t border-dashed border-gray-200">
+                                            <span>Grand Total</span>
+                                            <span className="text-[#FD6941]">{activeSymbol}{grandTotal}</span>
+                                        </div>
+                                    </div>
+                                </>
                             )}
                         </div>
+
+                        {/* Footer / Place Order Button */}
+                        {!orderPlaced && (
+                            <div className="p-5 border-t border-gray-100 bg-white shrink-0 safety-pb">
+                                <button
+                                    onClick={handlePlaceOrder}
+                                    className="w-full bg-[#FD6941] text-white py-4 rounded-full text-base font-medium shadow-xl shadow-orange-200 hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                >
+                                    Place Order <span className="text-white/40">•</span> {activeSymbol}{grandTotal}
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Item Preview Modal */}
             {
@@ -856,16 +883,12 @@ const Menu = () => {
 
 
 
-                                {[...(selectedItem.models || []), ...(selectedItem.media || [])].length > 0 ? (
-                                    <MediaSlider
-                                        media={[...(selectedItem.models || []), ...(selectedItem.media || [])]}
-                                        className="w-full h-full object-cover"
-                                        showArButton={false}
-                                        modelCheckId="preview-model-viewer"
-                                    />
-                                ) : (
-                                    <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
-                                )}
+                                <MediaSlider
+                                    media={[...(selectedItem.models || []), ...(selectedItem.media || []), { url: selectedItem.image, type: 'image' }]}
+                                    className="w-full h-full object-cover"
+                                    showArButton={false}
+                                    modelCheckId="preview-model-viewer"
+                                />
                             </div>
 
                             {/* Details Section */}

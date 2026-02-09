@@ -923,9 +923,6 @@ const AdminOrders = () => {
 
     useEffect(() => {
         fetchOrders();
-        // Poll for updates every 30 seconds
-        const interval = setInterval(fetchOrders, 30000);
-        return () => clearInterval(interval);
     }, []);
 
     // Timer effect for order preparation time
@@ -1452,7 +1449,7 @@ const AdminOrders = () => {
 
                                     {/* Right Side: Status (Desktop) + Action (Both) */}
                                     <div className="flex-1 flex flex-col sm:flex-row justify-end items-end sm:items-center gap-1 sm:gap-4">
-                                        <div className="hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10">
+                                        <div className={`hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10`}>
                                             <div className="relative flex h-1.5 w-1.5">
                                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
                                                 <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>

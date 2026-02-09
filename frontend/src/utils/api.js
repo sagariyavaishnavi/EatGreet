@@ -138,7 +138,7 @@ export const uploadAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  uploadDirect: async (fileOrFormData, onUploadProgress, config = {}) => {
+  uploadDirect: async (fileOrFormData, onUploadProgress, config = {}, resourceType = 'auto') => {
     let file = fileOrFormData;
     if (fileOrFormData instanceof FormData) {
       file = fileOrFormData.get('file');
@@ -160,7 +160,7 @@ export const uploadAPI = {
       // 3. Upload Directly to Cloudinary
       // Note: We use a naked axios instance to avoid sending our Backend Auth Headers to Cloudinary
       const cloudinaryRes = await axios.post(
-        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+        `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -178,7 +178,8 @@ export const uploadAPI = {
     } catch (error) {
       // Don't log if it's just a cancellation
       if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED') {
-        console.error("Direct Upload Error", error);
+        const message = error.response?.data?.error?.message || error.message;
+        console.error("Direct Upload Error:", message, error.response?.data);
       }
       throw error;
     }

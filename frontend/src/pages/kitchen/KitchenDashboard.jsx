@@ -65,11 +65,24 @@ export default function KitchenDashboard() {
     }, [socket, restaurantName]);
 
     const handleStatusUpdate = async (orderId, itemIndices, currentStatus) => {
-        try {
-            const newStatus = currentStatus === 'pending' ? 'preparing' : 'ready';
-            const loadToast = toast.loading(`Updating ${itemIndices.length} items to ${newStatus}...`);
+        const newStatus = currentStatus === 'pending' ? 'preparing' : 'ready';
 
-            // If itemIndices is provided, we update specific items in that round
+        // Optimistic Update: Update local state immediately
+        const previousOrders = [...orders];
+        setOrders(prev => prev.map(order => {
+            if (order._id !== orderId) return order;
+
+            const updatedItems = [...order.items];
+            itemIndices.forEach(idx => {
+                updatedItems[idx] = { ...updatedItems[idx], status: newStatus };
+            });
+
+            return { ...order, items: updatedItems };
+        }));
+
+        try {
+            const loadToast = toast.loading(`Updating to ${newStatus}...`);
+
             if (itemIndices && itemIndices.length > 0) {
                 await Promise.all(itemIndices.map(idx =>
                     orderAPI.updateItemStatus(orderId, idx, newStatus)
@@ -80,7 +93,10 @@ export default function KitchenDashboard() {
 
             toast.success(`Items updated to ${newStatus}`, { id: loadToast });
         } catch (error) {
-            toast.error("Status update failed");
+            console.error("Status update failed", error);
+            toast.error("Status update failed - reverting change");
+            // Rollback to previous state on error
+            setOrders(previousOrders);
         }
     };
 

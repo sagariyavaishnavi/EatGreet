@@ -4,8 +4,21 @@
     font-family: 'Urbanist' !important;
 }
 
+html,
 body {
     font-weight: 500;
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overscroll-behavior-x: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+#root {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
 }
 
 * {

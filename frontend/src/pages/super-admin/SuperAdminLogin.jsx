@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function SuperAdminLogin() {
-    const { updateSettings } = useSettings();
+    const { login } = useSettings();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,10 +26,7 @@ export default function SuperAdminLogin() {
                 return;
             }
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userRole', userData.role);
-            updateSettings(userData);
+            login(userData);
 
             toast.success('Welcome back, Super Admin');
             navigate('/super-admin');

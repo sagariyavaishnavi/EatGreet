@@ -54,7 +54,7 @@ const CustomerFavorites = () => {
                 <Link to="../menu" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <h1 className="text-2xl font-black text-gray-800">Saved Items</h1>
+                <h1 className="text-2xl font-medium text-gray-800">Saved Items</h1>
                 <span className="text-sm font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
                     {favoriteItems.length}
                 </span>
@@ -65,9 +65,9 @@ const CustomerFavorites = () => {
                     <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6">
                         <Heart className="w-10 h-10 text-red-500 fill-current" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800 mb-2">No Saved Items</h2>
+                    <h2 className="text-xl font-medium text-gray-800 mb-2">No Saved Items</h2>
                     <p className="text-gray-500 mb-6 max-w-xs mx-auto">Items you like will appear here for quick access.</p>
-                    <Link to="../menu" className="bg-black text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
+                    <Link to="../menu" className="bg-black text-white px-8 py-3 rounded-full font-medium shadow-lg hover:scale-105 transition-transform">
                         Explore Menu
                     </Link>
                 </div>
@@ -92,8 +92,8 @@ const CustomerFavorites = () => {
                             <div className="px-2 pb-2">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h3 className="text-lg font-black text-gray-800 leading-tight mb-1">{item.name}</h3>
-                                        <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                                        <h3 className="text-lg font-medium text-gray-800 leading-tight mb-1">{item.name}</h3>
+                                        <div className="flex items-center gap-3 text-xs font-medium text-gray-500">
                                             <span className="flex items-center gap-1">
                                                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> {item.rating}
                                             </span>
@@ -103,7 +103,7 @@ const CustomerFavorites = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="block text-xl font-black text-gray-800">{activeSymbol}{item.price}</span>
+                                        <span className="block text-xl font-medium text-gray-800">{activeSymbol}{item.price}</span>
                                     </div>
                                 </div>
 
@@ -128,7 +128,7 @@ const CustomerFavorites = () => {
                                     ) : (
                                         <button
                                             onClick={() => addToCart(item)}
-                                            className="w-full bg-black text-white py-3 rounded-full font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-gray-800 active:scale-95 transition-all"
+                                            className="w-full bg-black text-white py-3 rounded-full font-medium shadow-lg flex items-center justify-center gap-2 hover:bg-gray-800 active:scale-95 transition-all"
                                         >
                                             Add to Cart
                                         </button>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Utensils, Coffee, Pizza, Salad, Cake, Sandwich, X, Filter, Leaf, Wheat, Flame, Egg, Fish, Milk, Droplet, Martini, Beef, Soup, IceCream, Beer, Drumstick, GlassWater, Apple, Cookie, ChefHat, Heater, Container } from 'lucide-react';
 
 import { categoryAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -31,6 +31,18 @@ const AdminCategory = () => {
         { icon: Fish, label: 'Seafood' },
         { icon: Milk, label: 'Dairy' },
         { icon: Droplet, label: 'Liquid' },
+        { icon: Martini, label: 'Mocktails' },
+        { icon: Beef, label: 'Steak/Meat' },
+        { icon: Soup, label: 'Soup' },
+        { icon: IceCream, label: 'Ice Cream' },
+        { icon: Beer, label: 'Drinks' },
+        { icon: Drumstick, label: 'Chicken' },
+        { icon: GlassWater, label: 'Water' },
+        { icon: Apple, label: 'Fruits' },
+        { icon: Cookie, label: 'Bakery' },
+        { icon: ChefHat, label: 'Specials' },
+        { icon: Heater, label: 'Burger' },
+        { icon: Container, label: 'Chinese' },
     ];
 
     useEffect(() => {

@@ -249,7 +249,7 @@ const InvoiceModal = ({ order, isOpen, onClose, currencySymbol, restaurant }) =>
                 </button>
 
                 <div className="p-8 overflow-y-auto custom-scrollbar flex items-center justify-center bg-gray-100/50 h-full">
-                    <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative" style={{ width: '380px' }}>
+                    <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative" style={{ width: '100%', maxWidth: '380px' }}>
                         <button
                             onClick={handlePrint}
                             className="absolute top-4 right-4 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors no-print"
@@ -777,38 +777,50 @@ const AdminSales = () => {
                     </div>
                 </div>
 
-                <div className="block sm:hidden divide-y divide-gray-50 max-h-[600px] overflow-y-auto no-scrollbar">
+                <div className="block sm:hidden divide-y divide-gray-50 max-h-[600px] overflow-y-auto no-scrollbar p-2">
                     {tableData.length > 0 ? (
                         tableData.map((order) => (
-                            <div key={order._id} className="p-3 flex flex-col gap-2">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-sm font-medium text-black">#{order.dailySequence || (order._id || '').slice(-6).toUpperCase()}</p>
-                                        <p className="text-[10px] text-gray-400">{new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+                            <div key={order._id} className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm mb-3 flex items-center justify-between gap-3 group">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 border border-transparent group-hover:scale-105 transition-transform">
+                                        <UtensilsCrossed className="w-5 h-5 text-gray-400" />
                                     </div>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${(order.paymentMethod || 'Cash') === 'Online' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
-                                        {order.paymentMethod || 'Cash'}
-                                    </span>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-bold text-gray-900 font-urbanist truncate">#{order.dailySequence || (order._id || '').slice(-6).toUpperCase()}</p>
+                                            <span className="text-[9px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded-full border border-gray-100 italic">
+                                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${(order.paymentMethod || 'Cash').toLowerCase() === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
+                                                }`}>
+                                                {order.paymentMethod || 'Cash'}
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 font-medium">
+                                                {order.items?.reduce((acc, i) => acc + (i.quantity || 1), 0) || 0} items
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <div className="text-[10px] text-gray-500">
-                                        {order.items?.reduce((acc, i) => acc + (i.quantity || 1), 0) || 0} Items
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-medium text-black">{formatCurrency(order.totalAmount, currencySymbol)}</p>
-                                        <button
-                                            onClick={() => setSelectedOrder(order)}
-                                            className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-all active:scale-95 shadow-sm ml-auto mt-0.5"
-                                            title="View Invoice"
-                                        >
-                                            <FileText className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                                <div className="flex flex-col items-end gap-1.5">
+                                    <p className="text-sm font-bold text-gray-900 leading-none">{formatCurrency(order.totalAmount, currencySymbol)}</p>
+                                    <button
+                                        onClick={() => setSelectedOrder(order)}
+                                        className="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-black transition-all active:scale-95 shadow-sm"
+                                    >
+                                        View
+                                    </button>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="p-8 text-center text-gray-400 text-sm">No transactions found</div>
+                        <div className="py-20 text-center">
+                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search className="w-8 h-8 text-gray-300" />
+                            </div>
+                            <p className="text-gray-500 font-medium">No transactions found</p>
+                        </div>
                     )}
                 </div>
 

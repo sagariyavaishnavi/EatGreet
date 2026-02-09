@@ -1406,47 +1406,53 @@ const AdminOrders = () => {
                             const statusBgColor = order.status === 'pending' ? 'bg-red-100' : order.status === 'preparing' ? 'bg-yellow-100' : 'bg-green-100';
 
                             return (
-                                <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-white rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-2 sm:gap-4 group">
+                                <div key={order._id} className="flex items-center justify-between p-2.5 sm:p-5 bg-white rounded-[1.5rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-1.5 sm:gap-4 group">
                                     {/* Left: Info */}
-                                    <div className="flex items-center gap-2 sm:gap-4 flex-[1.5] sm:flex-1 min-w-0">
-                                        <div className={`w-9 h-9 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
-                                            <UtensilsCrossed className={`w-4 h-4 sm:w-6 sm:h-6 ${statusTextColor}`} />
+                                    <div className="flex items-center gap-2 sm:gap-4 flex-[2] sm:flex-1 min-w-0">
+                                        <div className={`w-8 h-8 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border ${order.status === 'pending' ? 'bg-red-50' : order.status === 'preparing' ? 'bg-yellow-50' : 'bg-green-50'} border-transparent group-hover:scale-110 transition-transform`}>
+                                            <UtensilsCrossed className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${statusTextColor}`} />
                                         </div>
-                                        <div className="min-w-0 flex flex-col gap-1">
+                                        <div className="min-w-0 flex flex-col gap-0.5 sm:gap-1">
                                             <div>
                                                 <h4 className="text-gray-900 text-[13px] sm:text-lg font-medium font-urbanist truncate">#{order.dailySequence ? String(order.dailySequence).padStart(3, '0') : order._id.slice(-4)}</h4>
-                                                <p className="text-[10px] sm:text-sm text-gray-400 font-medium uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
+                                                <p className="text-[9px] sm:text-sm text-gray-400 font-medium uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
                                             </div>
-                                            {/* Item List Display */}
-                                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-[13px] text-gray-600 font-medium">
+                                            {/* Item List Display - Desktop only */}
+                                            <div className="hidden sm:flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-gray-600 font-medium">
                                                 {order.items && order.items.length > 0 ? (
                                                     order.items.map((item, idx) => (
-                                                        <span key={idx} className="bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-                                                            <span className="font-medium text-black">{item.quantity}x</span> {item.name}
+                                                        <span key={idx} className="bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+                                                            <span className="font-semibold text-black">{item.quantity}x</span> {item.name}
                                                         </span>
                                                     ))
                                                 ) : (
                                                     <span className="text-gray-400 italic">No items</span>
                                                 )}
                                             </div>
+                                            {/* Item Count - Mobile only */}
+                                            <div className="sm:hidden">
+                                                <p className="text-[10px] text-gray-400 font-medium">{order.items?.length || 0} items</p>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Middle for Mobile / Hidden on Desktop */}
-                                    <div className="flex-1 flex justify-center items-center sm:hidden shrink-0">
-                                        <div className={`px-2 py-0.5 rounded-full border shadow-sm flex items-center gap-1.5 ${statusTextColor} ${statusBgColor} border-current/10`}>
+                                    <div className="flex-1 flex flex-col justify-center items-center sm:hidden shrink-0 gap-0.5">
+                                        <div className={`px-2 py-0.5 rounded-full border shadow-sm flex items-center gap-1 ${statusTextColor} ${statusBgColor} border-current/10`}>
                                             <div className="relative flex h-1 w-1">
                                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
                                                 <span className={`relative inline-flex rounded-full h-1 w-1 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                                             </div>
-                                            <span className="text-[7px] font-medium uppercase tracking-widest">{order.status}</span>
+                                            <span className="text-[8px] font-bold uppercase tracking-widest">{order.status}</span>
                                         </div>
+                                        <span className="text-[10px] text-gray-900 border-gray-100 font-bold font-urbanist">
+                                            {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
 
                                     {/* Right Side: Status (Desktop) + Action (Both) */}
-                                    <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
-                                        {/* Status moved here for Desktop only - Smaller padding */}
-                                        <div className={`hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10`}>
+                                    <div className="flex-1 flex flex-col sm:flex-row justify-end items-end sm:items-center gap-1 sm:gap-4">
+                                        <div className="hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 ${statusTextColor} ${statusBgColor} border-current/10">
                                             <div className="relative flex h-1.5 w-1.5">
                                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${order.status === 'pending' ? 'bg-red-400' : order.status === 'preparing' ? 'bg-yellow-400' : 'bg-green-400'}`}></span>
                                                 <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${order.status === 'pending' ? 'bg-red-500' : order.status === 'preparing' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
@@ -1454,12 +1460,15 @@ const AdminOrders = () => {
                                             <span className="text-[10px] font-medium uppercase tracking-widest">{order.status}</span>
                                         </div>
 
-                                        <button
-                                            onClick={() => setSelectedOrder(order)}
-                                            className="px-4 py-2 sm:px-8 sm:py-3 bg-gray-900 text-white rounded-xl sm:rounded-full text-[10px] sm:text-sm font-medium hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
-                                        >
-                                            View
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[11px] sm:text-base font-bold text-gray-900 sm:hidden">{currencySymbol}{(order.totalAmount || 0).toFixed(2)}</p>
+                                            <button
+                                                onClick={() => setSelectedOrder(order)}
+                                                className="px-3 py-1.5 sm:px-8 sm:py-3 bg-gray-900 text-white rounded-lg sm:rounded-full text-[10px] sm:text-sm font-medium hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
+                                            >
+                                                View
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -1477,9 +1486,9 @@ const AdminOrders = () => {
             </div>
 
             {/* Order History Section */}
-            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                    <h2 className="text-2xl text-gray-800">Order History</h2>
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 shadow-sm border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-8 gap-4">
+                    <h2 className="text-xl sm:text-2xl font-medium text-gray-800">Order History</h2>
                     <div className="flex gap-3 w-full sm:w-auto">
                         <div className="relative flex-1 sm:flex-none">
                             <input
@@ -1526,45 +1535,55 @@ const AdminOrders = () => {
                 {filteredHistoryOrders.length > 0 ? (
                     <div className="space-y-4">
                         {filteredHistoryOrders.map(order => (
-                            <div key={order._id} className="flex items-center justify-between p-3 sm:p-5 bg-white rounded-[1.8rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-2 sm:gap-4 group">
+                            <div key={order._id} className="flex items-center justify-between p-2.5 sm:p-5 bg-white rounded-[1.5rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-orange-100 transition-all gap-1.5 sm:gap-4 group">
                                 {/* Left: Info */}
-                                <div className="flex items-center gap-2 sm:gap-4 flex-[1.5] sm:flex-1 min-w-0">
-                                    <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border bg-green-50 border-transparent group-hover:scale-110 transition-transform">
-                                        <UtensilsCrossed className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
+                                <div className="flex items-center gap-2 sm:gap-4 flex-[2] sm:flex-1 min-w-0">
+                                    <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border bg-green-50 border-transparent group-hover:scale-110 transition-transform">
+                                        <UtensilsCrossed className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-green-600" />
                                     </div>
-                                    <div className="min-w-0 flex flex-col gap-1">
-                                        <div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
                                             <h4 className="text-gray-900 text-[13px] sm:text-lg font-medium font-urbanist truncate">#{order.dailySequence ? String(order.dailySequence).padStart(3, '0') : order._id.slice(-4)}</h4>
-                                            <p className="text-[10px] sm:text-sm text-gray-400 font-medium uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
+                                            <span className="hidden sm:inline text-[9px] sm:text-xs text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded-full border border-gray-100">
+                                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
-                                        {/* Item List Display */}
-                                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-[13px] text-gray-600 font-medium">
-                                            {order.items && order.items.length > 0 ? (
-                                                order.items.map((item, idx) => (
-                                                    <span key={idx} className="bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-                                                        <span className="font-medium text-black">{item.quantity}x</span> {item.name}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-gray-400 italic">No items</span>
-                                            )}
-                                        </div>
+                                        <p className="text-[9px] sm:text-sm text-gray-400 font-medium uppercase tracking-tight">Table {order.tableNumber || 'N/A'}</p>
+                                    </div>
+                                    {/* Item List Display - Desktop only */}
+                                    <div className="hidden sm:flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-gray-600 font-medium">
+                                        {order.items && order.items.length > 0 ? (
+                                            order.items.map((item, idx) => (
+                                                <span key={idx} className="bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+                                                    <span className="font-semibold text-black">{item.quantity}x</span> {item.name}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-gray-400 italic">No items</span>
+                                        )}
+                                    </div>
+                                    {/* Item Count - Mobile only */}
+                                    <div className="sm:hidden">
+                                        <p className="text-[10px] text-gray-400 font-medium">{order.items?.length || 0} items</p>
                                     </div>
                                 </div>
 
                                 {/* Middle for Mobile / Hidden on Desktop */}
-                                <div className="flex-1 flex justify-center items-center sm:hidden shrink-0">
-                                    <div className="px-2 py-0.5 rounded-full border shadow-sm flex items-center gap-1.5 text-green-600 bg-green-100 border-green-600/10">
+                                <div className="flex-1 flex flex-col justify-center items-center sm:hidden shrink-0 gap-0.5">
+                                    <div className="px-2 py-0.5 rounded-full border shadow-sm flex items-center gap-1 text-green-600 bg-green-100 border-green-600/10">
                                         <div className="relative flex h-1 w-1">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-green-400"></span>
                                             <span className="relative inline-flex rounded-full h-1 w-1 bg-green-500"></span>
                                         </div>
-                                        <span className="text-[7px] font-medium uppercase tracking-widest">Completed</span>
+                                        <span className="text-[8px] font-bold uppercase tracking-widest">Done</span>
                                     </div>
+                                    <span className="text-[10px] text-gray-900 font-bold font-urbanist">
+                                        {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                 </div>
 
                                 {/* Right Side: Status (Desktop) + Action (Both) */}
-                                <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
+                                <div className="flex-1 flex flex-col sm:flex-row justify-end items-end sm:items-center gap-1 sm:gap-4">
                                     {/* Status moved here for Desktop only */}
                                     <div className="hidden sm:flex px-3 py-1.5 rounded-full border shadow-sm items-center gap-2 text-green-600 bg-green-100 border-green-600/10">
                                         <div className="relative flex h-1.5 w-1.5">
@@ -1574,13 +1593,16 @@ const AdminOrders = () => {
                                         <span className="text-[10px] font-medium uppercase tracking-widest">Completed</span>
                                     </div>
 
-                                    <button
-                                        onClick={() => setSelectedOrder(order)}
-                                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
-                                        title="View Invoice"
-                                    >
-                                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[11px] sm:text-base font-bold text-gray-900 sm:hidden">{currencySymbol}{(order.totalAmount || 0).toFixed(2)}</p>
+                                        <button
+                                            onClick={() => setSelectedOrder(order)}
+                                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-all active:scale-95 shadow-lg shadow-gray-200"
+                                            title="View Invoice"
+                                        >
+                                            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -1596,376 +1618,375 @@ const AdminOrders = () => {
                 )}
             </div>
 
-            {selectedOrder && createPortal(
-                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl relative flex flex-col border border-gray-100 overflow-hidden">
+            {
+                selectedOrder && createPortal(
+                    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
+                        <div className="bg-gradient-to-br from-gray-50 to-white w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl relative flex flex-col border border-gray-100 overflow-hidden">
 
-                        <button
-                            onClick={() => {
-                                setSelectedOrder(null);
-                                setSelectedItems([]);
-                            }}
-                            className="absolute top-4 sm:top-6 right-4 sm:right-6 w-9 h-9 sm:w-11 sm:h-11 bg-white/90 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
-                        >
-                            <X className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedOrder(null);
+                                    setSelectedItems([]);
+                                }}
+                                className="absolute top-4 sm:top-6 right-4 sm:right-6 w-9 h-9 sm:w-11 sm:h-11 bg-white/90 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all z-50 border border-gray-100"
+                            >
+                                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </button>
 
-                        <div className="p-4 sm:p-8 overflow-hidden flex flex-col flex-1">
-                            {selectedOrder.status === 'completed' ? (
-                                <div className="overflow-y-auto no-scrollbar flex-1">
-                                    <div className="bg-white mx-auto shadow-sm border border-gray-200 p-8 font-mono text-black relative mb-8" style={{ width: '380px' }}>
-                                        <button
-                                            onClick={() => handlePrint(selectedOrder)}
-                                            className="absolute top-4 right-4 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors no-print"
-                                            title="Print Thermal Receipt"
-                                        >
-                                            <Printer className="w-5 h-5" />
-                                        </button>
+                            <div className="overflow-hidden flex flex-col flex-1">
+                                {selectedOrder.status === 'completed' ? (
+                                    <div className="p-2 sm:p-8 overflow-y-auto custom-scrollbar flex items-start sm:items-center justify-center bg-gray-100/50 h-full flex-1">
+                                        <div className="bg-white mx-auto shadow-sm border border-gray-200 p-4 sm:p-8 font-mono text-black relative mb-4 sm:mb-8" style={{ width: '100%', maxWidth: '380px' }}>
+                                            <button
+                                                onClick={() => handlePrint(selectedOrder)}
+                                                className="absolute top-4 right-4 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors no-print"
+                                                title="Print Thermal Receipt"
+                                            >
+                                                <Printer className="w-5 h-5" />
+                                            </button>
 
-                                        <div className="text-center mb-6">
-                                            <h2 className="text-xl font-medium uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
-                                            <p className="text-[12px] leading-tight mb-1 font-medium italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
-                                            {(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) && (
-                                                <p className="text-[11px] mb-0.5 opacity-80">Email: {restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</p>
-                                            )}
-                                            {(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) && (
-                                                <p className="text-[11px] font-medium">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
-                                            )}
-                                            {(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) && (
-                                                <p className="text-[11px] text-gray-500 mt-1">Tel: {restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="border-t border-dashed border-black my-4"></div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>Name:</span>
-                                            <span className="font-medium">{selectedOrder.customerInfo?.name || 'Guest'}</span>
-                                        </div>
-                                        {selectedOrder.customerInfo?.phone && (
-                                            <div className="flex justify-between text-[13px] mb-1">
-                                                <span>Tel:</span>
-                                                <span className="font-medium">{selectedOrder.customerInfo.phone}</span>
-                                            </div>
-                                        )}
-                                        <div className="border-t border-dashed border-black my-4"></div>
-
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>Date: {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
-                                            <span>Dine In: {selectedOrder.tableNumber || 'N/A'}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>Time: {new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>Cashier: Admin</span>
-                                            <span>Bill No: {selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</span>
-                                        </div>
-
-                                        <div className="border-t border-dashed border-black my-4"></div>
-                                        <div className="flex justify-between font-medium text-[13px] mb-2 uppercase">
-                                            <span style={{ flex: 1 }}>No.Item</span>
-                                            <span style={{ width: '30px', textAlign: 'center' }}>Qty</span>
-                                            <span style={{ width: '60px', textAlign: 'right' }}>Price</span>
-                                            <span style={{ width: '70px', textAlign: 'right' }}>Amt</span>
-                                        </div>
-                                        <div className="border-t border-dashed border-black my-4"></div>
-
-                                        <div className="space-y-2 mb-4">
-                                            {(selectedOrder.items || []).map((it, i) => (
-                                                <div key={i} className="flex justify-between text-[13px]">
-                                                    <span style={{ flex: 1 }}>{i + 1}.{it.name}</span>
-                                                    <span style={{ width: '30px', textAlign: 'center' }}>{it.quantity || 1}</span>
-                                                    <span style={{ width: '60px', textAlign: 'right' }}>{(it.price || 0).toFixed(2)}</span>
-                                                    <span style={{ width: '70px', textAlign: 'right' }}>{(it.price * (it.quantity || 1)).toFixed(2)}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        <div className="border-t border-dashed border-black my-4"></div>
-                                        <div className="flex justify-between font-medium text-[13px] mb-1">
-                                            <span>Total Qty: {selectedOrder.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
-                                            <span>Sub Total: {currencySymbol}{orderStats?.subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>CGST@2.5%</span>
-                                            <span>{currencySymbol}{orderStats?.cgst.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>SGST@2.5%</span>
-                                            <span>{currencySymbol}{orderStats?.sgst.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between font-medium text-[13px] mb-1">
-                                            <span>Total</span>
-                                            <span>{currencySymbol}{orderStats?.totalRaw.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[13px] mb-1">
-                                            <span>Round Off</span>
-                                            <span>{currencySymbol}{orderStats?.roundOff.toFixed(2)}</span>
-                                        </div>
-                                        <div className="border-t border-dashed border-black my-4"></div>
-                                        <div className="flex justify-between font-medium text-lg mb-4">
-                                            <span>Grand Total</span>
-                                            <span>{currencySymbol}{orderStats?.grandTotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="border-t border-dashed border-black my-4"></div>
-                                        <div className="text-center font-medium text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col h-full overflow-hidden">
-                                    <div className="flex-1 overflow-y-auto no-scrollbar pr-2 mb-4">
-                                        <div className="mb-8 mt-4 sm:mt-0">
-                                            <h2 className="text-3xl sm:text-4xl text-gray-900 mb-2 font-medium tracking-tighter font-urbanist">Order #{selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</h2>
-                                            <p className="text-gray-400 text-[10px] sm:text-xs font-medium uppercase tracking-[0.3em]">Live Order View</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <img src={diningIcon} alt="Table" className="w-6 h-6 opacity-60" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wider">Table</p>
-                                                    <p className="text-lg text-gray-900 font-medium">{selectedOrder.tableNumber || 'Self'}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <img src={userIcon} alt="Customer" className="w-6 h-6 opacity-60" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wider">Customer</p>
-                                                    <p className="text-sm sm:text-lg text-gray-900 font-medium truncate max-w-[150px]" title={selectedOrder.customerInfo?.name}>{selectedOrder.customerInfo?.name || 'Guest'}</p>
-                                                    {selectedOrder.customerInfo?.phone && <p className="text-[10px] sm:text-xs text-gray-500 font-mono font-medium">{selectedOrder.customerInfo.phone}</p>}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <img src={clockIcon} alt="Time" className="w-6 h-6 opacity-60" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wider">Time</p>
-                                                    <p className="text-lg text-gray-900 font-medium">{getOrderTime(selectedOrder.createdAt)}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <img src={groupIcon} alt="Items" className="w-6 h-6 opacity-60" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wider">Items</p>
-                                                    <p className="text-lg text-gray-900 font-medium">{selectedOrder.items?.length || 0}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-center mb-10">
-                                            <div className="relative w-36 h-36 flex items-center justify-center bg-white rounded-full shadow-inner border-4 border-gray-50">
-                                                <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                                    <circle cx="50" cy="50" r="46" fill="none" stroke="#F3F4F6" strokeWidth="4" />
-                                                    <circle
-                                                        cx="50" cy="50" r="46" fill="none"
-                                                        stroke={selectedOrder.status === 'pending' ? '#FD6941' : selectedOrder.status === 'preparing' ? '#EAB308' : '#22C55E'}
-                                                        strokeWidth="4"
-                                                        strokeDasharray={`${(timers[selectedOrder._id] / 900) * 289} 289`}
-                                                        strokeLinecap="round"
-                                                        className="transition-all duration-1000"
-                                                    />
-                                                </svg>
-                                                <div className="text-center z-10">
-                                                    <div className="text-4xl font-medium text-gray-900 leading-none">{formatTime(timers[selectedOrder._id] || 0)}</div>
-                                                    <p className="text-[10px] text-gray-400 mt-1 uppercase font-medium tracking-widest">Remaining</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <h3 className="text-[10px] text-gray-400 uppercase font-medium tracking-widest px-1">Order Items</h3>
-                                                {selectedOrder.status !== 'completed' && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (selectedItems.length === selectedOrder.items?.length) {
-                                                                setSelectedItems([]);
-                                                            } else {
-                                                                setSelectedItems(selectedOrder.items?.map((_, i) => i) || []);
-                                                            }
-                                                        }}
-                                                        className="text-[10px] font-medium text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
-                                                    >
-                                                        {selectedItems.length === selectedOrder.items?.length ? 'Deselect All' : 'Select All'}
-                                                    </button>
+                                            <div className="text-center mb-6">
+                                                <h2 className="text-xl font-medium uppercase mb-2 tracking-tight">{restaurant?.name || 'EatGreet Restaurant'}</h2>
+                                                <p className="text-[12px] leading-tight mb-1 font-medium italic">{restaurant?.address || restaurant?.restaurantDetails?.address || 'Restaurant Address'}</p>
+                                                {(restaurant?.businessEmail || restaurant?.restaurantDetails?.businessEmail) && (
+                                                    <p className="text-[11px] mb-0.5 opacity-80">Email: {restaurant.businessEmail || restaurant.restaurantDetails.businessEmail}</p>
+                                                )}
+                                                {(restaurant?.gstNumber || restaurant?.restaurantDetails?.gstNumber) && (
+                                                    <p className="text-[11px] font-medium">GST: {restaurant.gstNumber || restaurant.restaurantDetails.gstNumber}</p>
+                                                )}
+                                                {(restaurant?.contactNumber || restaurant?.restaurantDetails?.contactNumber) && (
+                                                    <p className="text-[11px] text-gray-500 mt-1">Tel: {restaurant.contactNumber || restaurant.restaurantDetails.contactNumber}</p>
                                                 )}
                                             </div>
-                                            <div className="space-y-4">
-                                                {(selectedOrder.items || []).map((item, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        onClick={() => selectedOrder.status !== 'completed' && toggleItemSelection(idx)}
-                                                        className={`flex justify-between items-center p-4 rounded-2xl border transition-all cursor-pointer ${selectedItems.includes(idx)
-                                                            ? 'bg-orange-50/50 border-orange-200'
-                                                            : 'bg-gray-50 border-transparent hover:border-gray-200'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            {selectedOrder.status !== 'completed' && (
-                                                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${selectedItems.includes(idx) ? 'bg-[#FD6941] border-[#FD6941]' : 'bg-white border-gray-200'}`}>
-                                                                    {selectedItems.includes(idx) && <X className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
-                                                                </div>
-                                                            )}
-                                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-medium text-gray-400 border border-gray-100 shadow-sm shrink-0">
-                                                                {item.quantity}x
-                                                            </div>
 
-                                                            {/* Item Media Thumbnail */}
-                                                            <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shrink-0">
-                                                                {(() => {
-                                                                    const mItem = item.menuItem || {};
-                                                                    const models = mItem.models || [];
-                                                                    const images = mItem.media || [];
-                                                                    const mainImage = mItem.image;
+                                            <div className="border-t border-dashed border-black my-4"></div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Name:</span>
+                                                <span className="font-medium">{selectedOrder.customerInfo?.name || 'Guest'}</span>
+                                            </div>
+                                            {selectedOrder.customerInfo?.phone && (
+                                                <div className="flex justify-between text-[13px] mb-1">
+                                                    <span>Tel:</span>
+                                                    <span className="font-medium">{selectedOrder.customerInfo.phone}</span>
+                                                </div>
+                                            )}
+                                            <div className="border-t border-dashed border-black my-4"></div>
 
-                                                                    if (models.length > 0) {
-                                                                        return (
-                                                                            <model-viewer
-                                                                                src={models[0].url}
-                                                                                alt={item.name}
-                                                                                camera-controls
-                                                                                disable-zoom
-                                                                                auto-rotate
-                                                                                shadow-intensity="1"
-                                                                                style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
-                                                                            />
-                                                                        );
-                                                                    } else if (images.length > 0) {
-                                                                        return (
-                                                                            <img
-                                                                                src={images[0].url}
-                                                                                alt={item.name}
-                                                                                className="w-full h-full object-cover"
-                                                                            />
-                                                                        );
-                                                                    } else if (mainImage) {
-                                                                        return (
-                                                                            <img
-                                                                                src={mainImage}
-                                                                                alt={item.name}
-                                                                                className="w-full h-full object-cover"
-                                                                            />
-                                                                        );
-                                                                    } else {
-                                                                        return (
-                                                                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                                                <UtensilsCrossed className="w-6 h-6" />
-                                                                            </div>
-                                                                        );
-                                                                    }
-                                                                })()}
-                                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Date: {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
+                                                <span>Dine In: {selectedOrder.tableNumber || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Time: {new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Cashier: Admin</span>
+                                                <span>Bill No: {selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</span>
+                                            </div>
 
-                                                            <div>
-                                                                <p className="text-gray-900 font-medium">{item.name}</p>
-                                                                <p className="text-xs text-gray-400 font-medium">{currencySymbol}{item.price.toFixed(2)} / unit</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-end gap-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${item.status === 'ready' ? 'bg-green-100 text-green-600' :
-                                                                    item.status === 'served' ? 'bg-blue-100 text-blue-600' :
-                                                                        item.status === 'completed' ? 'bg-gray-100 text-gray-400' :
-                                                                            item.status === 'preparing' ? 'bg-yellow-100 text-yellow-600' :
-                                                                                'bg-red-100 text-red-600'
-                                                                    }`}>
-                                                                    {item.status || 'pending'}
-                                                                </span>
+                                            <div className="border-t border-dashed border-black my-4"></div>
+                                            <div className="flex justify-between font-medium text-[13px] mb-2 uppercase">
+                                                <span style={{ flex: 1 }}>No.Item</span>
+                                                <span style={{ width: '30px', textAlign: 'center' }}>Qty</span>
+                                                <span style={{ width: '60px', textAlign: 'right' }}>Price</span>
+                                                <span style={{ width: '70px', textAlign: 'right' }}>Amt</span>
+                                            </div>
+                                            <div className="border-t border-dashed border-black my-4"></div>
 
-                                                            </div>
-                                                            <p className="text-gray-900 font-medium">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</p>
-                                                        </div>
+                                            <div className="space-y-2 mb-4">
+                                                {(selectedOrder.items || []).map((it, i) => (
+                                                    <div key={i} className="flex justify-between text-[13px]">
+                                                        <span style={{ flex: 1 }}>{i + 1}.{it.name}</span>
+                                                        <span style={{ width: '30px', textAlign: 'center' }}>{it.quantity || 1}</span>
+                                                        <span style={{ width: '60px', textAlign: 'right' }}>{(it.price || 0).toFixed(2)}</span>
+                                                        <span style={{ width: '70px', textAlign: 'right' }}>{(it.price * (it.quantity || 1)).toFixed(2)}</span>
                                                     </div>
                                                 ))}
                                             </div>
+
+                                            <div className="border-t border-dashed border-black my-4"></div>
+                                            <div className="flex justify-between font-medium text-[13px] mb-1">
+                                                <span>Total Qty: {selectedOrder.items?.reduce((acc, it) => acc + (it.quantity || 1), 0)}</span>
+                                                <span>Sub Total: {currencySymbol}{orderStats?.subtotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>CGST@2.5%</span>
+                                                <span>{currencySymbol}{orderStats?.cgst.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>SGST@2.5%</span>
+                                                <span>{currencySymbol}{orderStats?.sgst.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between font-medium text-[13px] mb-1">
+                                                <span>Total</span>
+                                                <span>{currencySymbol}{orderStats?.totalRaw.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[13px] mb-1">
+                                                <span>Round Off</span>
+                                                <span>{currencySymbol}{orderStats?.roundOff.toFixed(2)}</span>
+                                            </div>
+                                            <div className="border-t border-dashed border-black my-4"></div>
+                                            <div className="flex justify-between font-medium text-lg mb-4">
+                                                <span>Grand Total</span>
+                                                <span>{currencySymbol}{orderStats?.grandTotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="border-t border-dashed border-black my-4"></div>
+                                            <div className="text-center font-medium text-[16px] uppercase tracking-widest mt-6">Thank You Visit Again</div>
                                         </div>
                                     </div>
+                                ) : (
+                                    <div className="flex flex-col h-full overflow-hidden p-4 sm:p-0">
+                                        <div className="flex-1 overflow-y-auto no-scrollbar sm:pr-2 mb-4">
+                                            <div className="mb-4 sm:mb-8 mt-2 sm:mt-0">
+                                                <h2 className="text-2xl sm:text-4xl text-gray-900 mb-1 font-medium tracking-tighter font-urbanist">Order #{selectedOrder.dailySequence ? String(selectedOrder.dailySequence).padStart(3, '0') : selectedOrder._id.slice(-4)}</h2>
+                                                <p className="text-gray-400 text-[8px] sm:text-xs font-semibold uppercase tracking-[0.3em]">Live Order View</p>
+                                            </div>
 
-                                    {/* Fixed Bottom Action Area */}
-                                    <div className="pt-4 sm:pt-6 border-t border-gray-100 bg-white/50 backdrop-blur-md">
-                                        <div className="flex items-center justify-between p-6 sm:p-8 bg-gray-50 rounded-[2.5rem] sm:rounded-[3rem] text-gray-900 mb-4 sm:mb-6 border border-gray-100 shadow-sm relative overflow-hidden group">
-                                            <div className="relative z-10">
-                                                <p className="text-[10px] sm:text-[11px] text-gray-400 font-medium uppercase tracking-[0.2em] mb-1 sm:mb-2 italic">Grand Total Amount</p>
-                                                <p className="text-2xl sm:text-5xl font-medium font-urbanist tracking-tighter flex items-center gap-2">
-                                                    <span className="text-[#FD6941]">{currencySymbol}</span>
-                                                    {(selectedOrder.totalAmount || 0).toFixed(2)}
-                                                </p>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 pb-4 sm:pb-8 border-b border-gray-100">
+                                                <div className="flex items-center gap-2 sm:gap-3">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <img src={diningIcon} alt="Table" className="w-5 h-5 sm:w-6 sm:h-6 opacity-60" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase font-medium tracking-wider">Table</p>
+                                                        <p className="text-base sm:text-lg text-gray-900 font-medium">{selectedOrder.tableNumber || 'Self'}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 sm:gap-3">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <img src={userIcon} alt="Customer" className="w-5 h-5 sm:w-6 sm:h-6 opacity-60" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase font-medium tracking-wider">Customer</p>
+                                                        <p className="text-[13px] sm:text-lg text-gray-900 font-medium truncate max-w-[80px] sm:max-w-[150px]" title={selectedOrder.customerInfo?.name}>{selectedOrder.customerInfo?.name || 'Guest'}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 sm:gap-3">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <img src={clockIcon} alt="Time" className="w-5 h-5 sm:w-6 sm:h-6 opacity-60" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase font-medium tracking-wider">Time</p>
+                                                        <p className="text-base sm:text-lg text-gray-900 font-medium">{getOrderTime(selectedOrder.createdAt)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 sm:gap-3">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <img src={groupIcon} alt="Items" className="w-5 h-5 sm:w-6 sm:h-6 opacity-60" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase font-medium tracking-wider">Items</p>
+                                                        <p className="text-base sm:text-lg text-gray-900 font-medium">{selectedOrder.items?.length || 0}</p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="relative z-10 w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm transition-transform group-hover:rotate-12">
-                                                <Hash className="w-5 h-5 sm:w-7 sm:h-7 text-gray-300 font-light" />
+
+                                            <div className="flex justify-center mb-6 sm:mb-10">
+                                                <div className="relative w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center bg-white rounded-full shadow-inner border-4 border-gray-50">
+                                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                        <circle cx="50" cy="50" r="46" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                                                        <circle
+                                                            cx="50" cy="50" r="46" fill="none"
+                                                            stroke={selectedOrder.status === 'pending' ? '#FD6941' : selectedOrder.status === 'preparing' ? '#EAB308' : '#22C55E'}
+                                                            strokeWidth="4"
+                                                            strokeDasharray={`${(timers[selectedOrder._id] / 900) * 289} 289`}
+                                                            strokeLinecap="round"
+                                                            className="transition-all duration-1000"
+                                                        />
+                                                    </svg>
+                                                    <div className="text-center z-10">
+                                                        <div className="text-2xl sm:text-4xl font-medium text-gray-900 leading-none">{formatTime(timers[selectedOrder._id] || 0)}</div>
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-400 mt-1 uppercase font-medium tracking-widest">Remaining</p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            {/* Subtle Ambient Glow */}
-                                            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-100/30 blur-[60px] rounded-full group-hover:bg-orange-200/40 transition-colors" />
+
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <h3 className="text-[10px] text-gray-400 uppercase font-medium tracking-widest px-1">Order Items</h3>
+                                                    {selectedOrder.status !== 'completed' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (selectedItems.length === selectedOrder.items?.length) {
+                                                                    setSelectedItems([]);
+                                                                } else {
+                                                                    setSelectedItems(selectedOrder.items?.map((_, i) => i) || []);
+                                                                }
+                                                            }}
+                                                            className="text-[10px] font-medium text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
+                                                        >
+                                                            {selectedItems.length === selectedOrder.items?.length ? 'Deselect All' : 'Select All'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {(selectedOrder.items || []).map((item, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            onClick={() => selectedOrder.status !== 'completed' && toggleItemSelection(idx)}
+                                                            className={`flex justify-between items-center p-3 sm:p-4 rounded-[1.2rem] sm:rounded-2xl border transition-all cursor-pointer ${selectedItems.includes(idx)
+                                                                ? 'bg-orange-50/50 border-orange-200'
+                                                                : 'bg-gray-50 border-transparent hover:border-gray-200'
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                {selectedOrder.status !== 'completed' && (
+                                                                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${selectedItems.includes(idx) ? 'bg-[#FD6941] border-[#FD6941]' : 'bg-white border-gray-200'}`}>
+                                                                        {selectedItems.includes(idx) && <X className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
+                                                                    </div>
+                                                                )}
+                                                                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center font-medium text-gray-400 border border-gray-100 shadow-sm shrink-0">
+                                                                    {item.quantity}x
+                                                                </div>
+
+                                                                {/* Item Media Thumbnail */}
+                                                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                                                                    {(() => {
+                                                                        const mItem = item.menuItem || {};
+                                                                        const models = mItem.models || [];
+                                                                        const images = mItem.media || [];
+                                                                        const mainImage = mItem.image;
+
+                                                                        if (models.length > 0) {
+                                                                            return (
+                                                                                <model-viewer
+                                                                                    src={models[0].url}
+                                                                                    alt={item.name}
+                                                                                    camera-controls
+                                                                                    disable-zoom
+                                                                                    auto-rotate
+                                                                                    shadow-intensity="1"
+                                                                                    style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                                                                />
+                                                                            );
+                                                                        } else if (images.length > 0) {
+                                                                            return (
+                                                                                <img
+                                                                                    src={images[0].url}
+                                                                                    alt={item.name}
+                                                                                    className="w-full h-full object-cover"
+                                                                                />
+                                                                            );
+                                                                        } else if (mainImage) {
+                                                                            return (
+                                                                                <img
+                                                                                    src={mainImage}
+                                                                                    alt={item.name}
+                                                                                    className="w-full h-full object-cover"
+                                                                                />
+                                                                            );
+                                                                        } else {
+                                                                            return (
+                                                                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                                                    <UtensilsCrossed className="w-6 h-6" />
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                    })()}
+                                                                </div>
+
+                                                                <div>
+                                                                    <p className="text-gray-900 font-medium">{item.name}</p>
+                                                                    <p className="text-xs text-gray-400 font-medium">{currencySymbol}{item.price.toFixed(2)} / unit</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${item.status === 'ready' ? 'bg-green-100 text-green-600' :
+                                                                        item.status === 'served' ? 'bg-blue-100 text-blue-600' :
+                                                                            item.status === 'completed' ? 'bg-gray-100 text-gray-400' :
+                                                                                item.status === 'preparing' ? 'bg-yellow-100 text-yellow-600' :
+                                                                                    'bg-red-100 text-red-600'
+                                                                        }`}>
+                                                                        {item.status || 'pending'}
+                                                                    </span>
+
+                                                                </div>
+                                                                <p className="text-gray-900 font-medium">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="flex gap-4">
-                                            {selectedItems.length > 0 ? (
-                                                <>
-                                                    {selectedItems.every(idx => {
-                                                        const s = selectedOrder.items[idx].status || 'pending';
-                                                        return s === 'pending';
-                                                    }) && (
-                                                        <button
-                                                            onClick={() => handleBulkItemStatusUpdate('preparing')}
-                                                            className="flex-1 bg-yellow-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
-                                                        >
-                                                            Mark Preparing ({selectedItems.length})
-                                                        </button>
-                                                    )}
-                                                    {selectedItems.every(idx => {
-                                                        const s = selectedOrder.items[idx].status || 'pending';
-                                                        return ['pending', 'preparing'].includes(s);
-                                                    }) && (
-                                                        <button
-                                                            onClick={() => handleBulkItemStatusUpdate('ready')}
-                                                            className="flex-1 bg-green-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
-                                                        >
-                                                            Mark Ready ({selectedItems.length})
-                                                        </button>
-                                                    )}
-                                                    {selectedItems.every(idx => {
-                                                        const s = selectedOrder.items[idx].status || 'pending';
-                                                        return ['ready'].includes(s);
-                                                    }) && (
-                                                        <button
-                                                            onClick={() => handleBulkItemStatusUpdate('completed')}
-                                                            className="flex-1 bg-blue-500 text-white py-5 rounded-[1.8rem] transition-all text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
-                                                        >
-                                                            Mark Completed ({selectedItems.length})
-                                                        </button>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        // Use pure status logic: if status is ready, next is completed. If completed, nothing.
-                                                        // The button label logic below handles the display.
-                                                        const nextStatus = selectedOrder.status === 'ready' ? 'completed' : getNextStatus(selectedOrder.status);
-                                                        updateOrderStatus(selectedOrder._id, nextStatus);
-                                                        setSelectedOrder(null);
-                                                    }}
-                                                    className={`flex-1 ${selectedOrder.status === 'ready' ? 'bg-[#FD6941]' : getStatusButtonColor(selectedOrder.status)} text-white py-5 rounded-[1.8rem] transition-all text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
-                                                >
-                                                    {selectedOrder.status === 'ready' ? 'Complete Order' : getNextStatusLabel(selectedOrder.status)}
-                                                </button>
-                                            )}
+                                        {/* Fixed Bottom Action Area */}
+                                        <div className="pt-2 sm:pt-6 border-t border-gray-100 bg-white/50 backdrop-blur-md">
+                                            <div className="flex items-center justify-between p-4 sm:p-8 bg-gray-50 rounded-[1.5rem] sm:rounded-[3rem] text-gray-900 mb-3 sm:mb-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+                                                <div className="relative z-10">
+                                                    <p className="text-[8px] sm:text-[11px] text-gray-400 font-medium uppercase tracking-[0.2em] mb-1 sm:mb-2 italic">Grand Total</p>
+                                                    <p className="text-xl sm:text-5xl font-medium font-urbanist tracking-tighter flex items-center gap-1.5 sm:gap-2">
+                                                        <span className="text-[#FD6941]">{currencySymbol}</span>
+                                                        {(selectedOrder.totalAmount || 0).toFixed(2)}
+                                                    </p>
+                                                </div>
+                                                <div className="relative z-10 w-9 h-9 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm transition-transform group-hover:rotate-12">
+                                                    <Hash className="w-4 h-4 sm:w-7 sm:h-7 text-gray-300 font-light" />
+                                                </div>
+                                                {/* Subtle Ambient Glow */}
+                                                <div className="absolute -right-8 -bottom-8 sm:-right-10 sm:-bottom-10 w-32 h-32 sm:w-40 sm:h-40 bg-orange-100/30 blur-[40px] sm:blur-[60px] rounded-full group-hover:bg-orange-200/40 transition-colors" />
+                                            </div>
+
+                                            <div className="flex gap-4">
+                                                {selectedItems.length > 0 ? (
+                                                    <>
+                                                        {selectedItems.every(idx => {
+                                                            const s = selectedOrder.items[idx].status || 'pending';
+                                                            return s === 'pending';
+                                                        }) && (
+                                                                <button
+                                                                    onClick={() => handleBulkItemStatusUpdate('preparing')}
+                                                                    className="flex-1 bg-yellow-500 text-white py-3 sm:py-5 rounded-[1.2rem] sm:rounded-[1.8rem] transition-all text-sm sm:text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                                >
+                                                                    Mark Preparing ({selectedItems.length})
+                                                                </button>
+                                                            )}
+                                                        {selectedItems.every(idx => {
+                                                            const s = selectedOrder.items[idx].status || 'pending';
+                                                            return ['pending', 'preparing'].includes(s);
+                                                        }) && (
+                                                                <button
+                                                                    onClick={() => handleBulkItemStatusUpdate('ready')}
+                                                                    className="flex-1 bg-green-500 text-white py-3 sm:py-5 rounded-[1.2rem] sm:rounded-[1.8rem] transition-all text-sm sm:text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                                >
+                                                                    Mark Ready ({selectedItems.length})
+                                                                </button>
+                                                            )}
+                                                        {selectedItems.every(idx => {
+                                                            const s = selectedOrder.items[idx].status || 'pending';
+                                                            return ['ready'].includes(s);
+                                                        }) && (
+                                                                <button
+                                                                    onClick={() => handleBulkItemStatusUpdate('completed')}
+                                                                    className="flex-1 bg-blue-500 text-white py-3 sm:py-5 rounded-[1.2rem] sm:rounded-[1.8rem] transition-all text-sm sm:text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none"
+                                                                >
+                                                                    Mark Completed ({selectedItems.length})
+                                                                </button>
+                                                            )}
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            const nextStatus = selectedOrder.status === 'ready' ? 'completed' : getNextStatus(selectedOrder.status);
+                                                            updateOrderStatus(selectedOrder._id, nextStatus);
+                                                            setSelectedOrder(null);
+                                                        }}
+                                                        className={`flex-1 ${selectedOrder.status === 'ready' ? 'bg-[#FD6941]' : getStatusButtonColor(selectedOrder.status)} text-white py-3 sm:py-5 rounded-[1.2rem] sm:rounded-[1.8rem] transition-all text-sm sm:text-lg font-medium shadow-lg hover:shadow-xl active:scale-[0.98] outline-none`}
+                                                    >
+                                                        {selectedOrder.status === 'ready' ? 'Complete Order' : getNextStatusLabel(selectedOrder.status)}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
+                    </div>,
+                    document.body
+                )
+            }
+        </div >
     );
 };
 

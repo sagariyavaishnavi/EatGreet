@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Building, Camera, Save, Shield, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 const SuperAdminProfile = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const { user, logout } = useSettings();
 
     const [profile, setProfile] = useState({
         fullName: user.name || 'Super Admin',
@@ -51,8 +52,7 @@ const SuperAdminProfile = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => {
-                            localStorage.removeItem('isAuthenticated');
-                            localStorage.removeItem('user');
+                            logout();
                             toast.dismiss(t.id);
                             toast.success('Logged out successfully');
                             navigate('/');

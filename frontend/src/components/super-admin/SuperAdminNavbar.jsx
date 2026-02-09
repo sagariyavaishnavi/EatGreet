@@ -1,15 +1,16 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Settings, Bell, ChevronDown, LogOut } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 
 import logo from '../../assets/logo-full.png';
 
 export default function SuperAdminNavbar() {
     const location = useLocation();
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user, logout } = useSettings();
 
     const handleLogout = () => {
-        localStorage.clear();
+        logout();
         navigate('/login');
     };
 
@@ -64,7 +65,7 @@ export default function SuperAdminNavbar() {
                 <div className="relative group">
                     <div className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer hover:shadow-md transition-all">
                         <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-50">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Admin" className="w-full h-full object-cover" />
+                            <img src={`https://ui-avatars.com/api/?name=${user?.name || 'Admin'}&background=2C3E50&color=fff`} alt={user?.name || 'Admin'} className="w-full h-full object-cover" />
                         </div>
                         <div className="hidden md:flex items-center gap-1">
                             <span className="font-medium text-sm text-gray-800">{user?.name || 'Admin'}</span>

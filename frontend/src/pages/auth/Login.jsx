@@ -2,8 +2,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../../utils/api';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function Login() {
+    const { login } = useSettings();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,9 +21,7 @@ export default function Login() {
             const response = await authAPI.login({ email, password });
             const userData = response.data;
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userRole', userData.role);
+            login(userData);
 
             // Direct navigation to skip redundant redirects
             if (userData.role === 'super-admin' || userData.role === 'superadmin') {

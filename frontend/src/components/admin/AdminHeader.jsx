@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../context/SocketContext';
+import { useSettings } from '../../context/SettingsContext';
 
 import logo from '../../assets/logo-full.png';
 
@@ -11,23 +12,11 @@ const AdminHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const socket = useSocket();
-
-  // Safe user data parsing
-  const getUserData = () => {
-    try {
-      const userStr = localStorage.getItem('user');
-      return userStr ? JSON.parse(userStr) : null;
-    } catch (e) {
-      console.error("Error parsing user data in header", e);
-      return null;
-    }
-  };
-
-  const user = getUserData();
+  const { user, logout } = useSettings();
   const restaurantSlug = user?.restaurantName?.toLowerCase()?.replace(/\s+/g, '-') || 'restaurant';
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     navigate('/admin/login');
   };
 

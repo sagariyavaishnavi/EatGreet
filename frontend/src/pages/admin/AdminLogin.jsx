@@ -5,7 +5,7 @@ import { authAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function AdminLogin() {
-    const { updateSettings } = useSettings();
+    const { login } = useSettings();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,10 +21,7 @@ export default function AdminLogin() {
             const response = await authAPI.login({ email, password });
             const userData = response.data;
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userRole', userData.role);
-            updateSettings(userData);
+            login(userData);
 
             if (userData.role === 'superadmin') {
                 // Enforce separation: Super Admins must use their own login portal

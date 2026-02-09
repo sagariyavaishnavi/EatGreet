@@ -41,8 +41,20 @@ export const SettingsProvider = ({ children }) => {
         });
     };
 
+    const login = (userData) => {
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', userData.role);
+        setUser(userData);
+    };
+
+    const logout = () => {
+        localStorage.clear();
+        setUser(null);
+    };
+
     return (
-        <SettingsContext.Provider value={{ user, currency, currencySymbol, updateSettings }}>
+        <SettingsContext.Provider value={{ user, currency, currencySymbol, updateSettings, login, logout }}>
             {children}
         </SettingsContext.Provider>
     );

@@ -491,7 +491,7 @@ const AdminMenu = () => {
             const uploadPromises = mediaItems.map(async (item, index) => {
                 if (item.file) {
                     try {
-                        const res = await uploadAPI.uploadDirect(item.file, (percent) => {
+                        const res = await uploadAPI.uploadDirectNew(item.file, (percent) => {
                             progressMap[index] = percent;
 
                             // Calculate Average
@@ -535,7 +535,7 @@ const AdminMenu = () => {
             const modelUploadPromises = modelItems.map(async (item, index) => {
                 if (item.file) {
                     try {
-                        const res = await uploadAPI.uploadDirect(item.file, null, { signal }, 'raw'); // Use 'raw' for 3D models to ensure compatibility
+                        const res = await uploadAPI.uploadDirectNew(item.file, null, { signal }, 'raw'); // Use 'raw' for 3D models to ensure compatibility
 
                         // Track ID for potential cleanup
                         if (res.data.public_id) {

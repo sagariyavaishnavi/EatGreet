@@ -39,10 +39,15 @@ const getMenuItems = async (req, res) => {
 // @desc    Create menu item
 // @route   POST /api/menu
 // @access  Private (Admin)
+// @desc    Create menu item
+// @route   POST /api/menu
+// @access  Private (Admin)
 const createMenuItem = async (req, res) => {
     try {
+        console.log("Create Menu Item Request Body:", JSON.stringify(req.body, null, 2));
         const { MenuItem } = req.tenantModels;
         const menuItem = await MenuItem.create(req.body);
+        console.log("Menu Item Created in DB:", menuItem._id);
 
         const io = req.app.get('io');
         if (io && req.tenantDbName) {
@@ -51,6 +56,7 @@ const createMenuItem = async (req, res) => {
 
         res.status(201).json(menuItem);
     } catch (error) {
+        console.error("Create Menu Item Error:", error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -138,7 +138,7 @@ export const uploadAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  uploadDirect: async (fileOrFormData, onUploadProgress, config = {}, resourceType = 'auto') => {
+  uploadDirectNew: async (fileOrFormData, onUploadProgress, config = {}, resourceType = 'auto') => {
     let file = fileOrFormData;
     if (fileOrFormData instanceof FormData) {
       file = fileOrFormData.get('file');
@@ -146,6 +146,10 @@ export const uploadAPI = {
 
     try {
       // 1. Get Signature from Backend
+      console.log("Fetching signature...");
+      const signRes = await api.get('/upload/signature', config);
+      console.log("Signature received:", signRes.data);
+
       // 2. Prepare Direct Upload Data
       const { signature, timestamp, folder, cloudName, apiKey, use_filename } = signRes.data;
 

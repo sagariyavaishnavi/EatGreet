@@ -13,15 +13,17 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         // Derive socket URL from VITE_API_BASE_URL or default to localhost
         // API_BASE_URL typically ends with /api, we need the root
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api';
         const socketUrl = apiBaseUrl.replace('/api', '');
 
         const newSocket = io(socketUrl, {
             withCredentials: true,
-            transports: ['polling', 'websocket'], // Start with polling then upgrade to websocket
-            reconnectionAttempts: 10,
-            reconnectionDelay: 2000,
-            timeout: 20000, // Increase connection timeout to 20s
+            withCredentials: true,
+            transports: ['websocket', 'polling'], // Try websocket first for speed
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 5000, // 5 seconds between retries
+            reconnectionDelayMax: 10000,
+            timeout: 10000,
         });
 
         setSocket(newSocket);

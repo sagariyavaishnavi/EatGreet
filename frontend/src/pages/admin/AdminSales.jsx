@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
     Calendar, DollarSign, TrendingUp, Download, Eye, X, Printer,
-    FileText, Search, Filter, ChevronDown, Wallet, ShoppingBag, PieChart, Activity
+    FileText, Search, Filter, ChevronDown, Wallet, ShoppingBag, PieChart, Activity, UtensilsCrossed
 } from 'lucide-react';
 import { orderAPI, restaurantAPI } from '../../utils/api';
 import { useSettings } from '../../context/SettingsContext';

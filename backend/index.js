@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables
 const dns = require('dns');
 // Set Google DNS to bypass local network DNS issues
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -151,7 +151,7 @@ const startServer = async () => {
         await connectDB();
 
         const PORT = process.env.PORT || 5000;
-        server.listen(PORT, '0.0.0.0', () => {
+        server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
         });

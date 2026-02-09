@@ -215,6 +215,8 @@ const Menu = () => {
     const sliderRef = useRef(null);
     const videoRefs = useRef([]);
     const isVideoPlayingRef = useRef(false);
+    const isInteractingRef = useRef(false);
+    const interactionTimeoutRef = useRef(null);
 
     // Create extended offers for "infinite" loop feeling (large duplication)
     const extendedOffers = Array(12).fill(offers).flat().map((offer, index) => ({
@@ -222,10 +224,28 @@ const Menu = () => {
         uniqueId: `${offer.id}-${index}`
     }));
 
+    // Interaction Handlers
+    const handleInteractionStart = () => {
+        isInteractingRef.current = true;
+        if (interactionTimeoutRef.current) {
+            clearTimeout(interactionTimeoutRef.current);
+        }
+    };
+
+    const handleInteractionEnd = () => {
+        if (interactionTimeoutRef.current) {
+            clearTimeout(interactionTimeoutRef.current);
+        }
+        // Resume after 5 seconds of no interaction
+        interactionTimeoutRef.current = setTimeout(() => {
+            isInteractingRef.current = false;
+        }, 5000);
+    };
+
     // Auto-swipe offers
     useEffect(() => {
         const interval = setInterval(() => {
-            if (isVideoPlayingRef.current) return;
+            if (isVideoPlayingRef.current || isInteractingRef.current) return;
 
             if (sliderRef.current) {
                 const { clientWidth, scrollLeft, scrollWidth } = sliderRef.current;
@@ -237,7 +257,10 @@ const Menu = () => {
                 }
             }
         }, 7000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
+        };
     }, []);
 
     // Play video when in view
@@ -363,7 +386,13 @@ const Menu = () => {
             {/* Daily Offers Slider */}
             <div
                 ref={sliderRef}
-                className="mt-4 md:mt-6 px-2 md:px-4 overflow-x-auto no-scrollbar flex gap-2 md:gap-4 snap-x snap-mandatory w-full touch-pan-y overscroll-x-none"
+                onTouchStart={handleInteractionStart}
+                onTouchEnd={handleInteractionEnd}
+                onMouseDown={handleInteractionStart}
+                onMouseUp={handleInteractionEnd}
+                onMouseEnter={handleInteractionStart}
+                onMouseLeave={handleInteractionEnd}
+                className="mt-4 md:mt-6 px-2 md:px-4 overflow-x-auto no-scrollbar flex gap-2 md:gap-4 snap-x snap-mandatory w-full touch-pan-y overscroll-x-none cursor-grab active:cursor-grabbing"
             >
                 {extendedOffers.map((offer, index) => (
                     <div key={offer.uniqueId} className={`snap-center shrink-0 w-full md:w-[350px] h-44 md:h-48 rounded-[2rem] flex flex-col justify-center relative shadow-lg overflow-hidden ${offer.bg} ${!offer.type ? 'p-5 md:p-6' : ''}`}>

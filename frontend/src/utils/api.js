@@ -46,11 +46,10 @@ api.interceptors.response.use(
     // 400 with specific message: Tenant/Restaurant resolution failed
     if (error.response) {
       const isAuthError = error.response.status === 401;
-      const isTenantError = error.response.status === 400 &&
-        error.response.data?.message?.toLowerCase().includes('restaurant name');
-
-      if (isAuthError || isTenantError) {
-        console.warn("Session or Tenant error detected. Redirecting to login...", error.response.data);
+      
+      // Only redirect for Auth errors. 400 errors (like 'Restaurant not found') should be handled by the component.
+      if (isAuthError) {
+        console.warn("Session expired. Redirecting to login...", error.response.data);
         localStorage.clear();
         // Redirect to login if not already there
         if (!window.location.pathname.includes('/login')) {

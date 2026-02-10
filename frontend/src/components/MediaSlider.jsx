@@ -148,7 +148,7 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
                                 auto-rotate
                                 ar
                                 ar-modes="webxr scene-viewer quick-look"
-                                shadow-intensity="1"
+                                disable-zoom
                                 style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
                                 className="w-full h-full object-cover"
                             >

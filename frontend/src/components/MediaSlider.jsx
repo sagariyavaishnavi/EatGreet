@@ -173,7 +173,7 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
             {/* Navigation Dots if more than 1 item */}
             {validMedia.length > 1 && (
                 <>
-                    <div className={`absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className={`absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                         {validMedia.map((_, index) => (
                             <button
                                 key={index}

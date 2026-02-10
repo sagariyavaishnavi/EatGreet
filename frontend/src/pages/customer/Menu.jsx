@@ -480,15 +480,7 @@ const Menu = () => {
                             {/* Card Header / Image Slider */}
                             <div className="relative w-32 md:w-full h-full md:h-64 shrink-0 rounded-2xl md:rounded-[2rem] overflow-hidden md:mb-4 bg-gray-100">
 
-                                {/* Veg/Non-Veg Symbol on Image - REMOVED */}{/* 
-                                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 w-4 h-4 md:w-5 md:h-5 bg-white/90 backdrop-blur rounded-md shadow-sm p-0.5">
-                                    <img
-                                        src={item.isVeg ? vegIcon : nonVegIcon}
-                                        alt={item.isVeg ? "Veg" : "Non-Veg"}
-                                        className="w-full h-full object-contain"
-                                    />
-                                </div>
-                                */}
+
 
 
                                 {/* AR Icon if Model Exists */}
@@ -503,89 +495,76 @@ const Menu = () => {
                                     modelCheckId={`model-${item._id}`}
                                 />
 
+                                {/* Veg/Non-Veg Badge on Image */}
+                                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
+                                    <img
+                                        src={item.isVeg ? vegIcon : nonVegIcon}
+                                        alt={item.isVeg ? "Veg" : "Non-Veg"}
+                                        className="w-5 h-5 md:w-6 md:h-6 shrink-0 shadow-sm"
+                                    />
+                                </div>
+
                                 {/* Available Tag - Mobile: Top Left Dot, Desktop: Top Left Pill */}
                                 {!item.isAvailable && (
-                                    <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
+                                    <div className="absolute top-8 left-2 md:top-12 md:left-4 z-20">
                                         <div className="md:hidden w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm"></div>
-                                        <div className="hidden md:flex bg-red-500/95 backdrop-blur-md text-white border border-red-400/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider items-center gap-1.5 shadow-lg">
+                                        <div className="hidden md:flex bg-red-500/95 backdrop-blur-md text-white border border-red-400/30 px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider items-center gap-1.5 shadow-lg">
                                             <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
                                             Sold Out
                                         </div>
                                     </div>
                                 )}
-                                {/* AR Icon for Photo Corner */}
-                                {item.models && item.models.length > 0 && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            const viewer = document.getElementById(`model-${item._id}`);
-                                            if (viewer) viewer.activateAR();
-                                        }}
-                                        disabled={isPreviewMode}
-                                        className={`absolute top-2 right-2 md:top-4 md:right-4 z-10 w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center transition-all shadow-lg border bg-white border-white/50 text-blue-600 hover:bg-gray-50 ${isPreviewMode ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
-                                        title="View in AR"
-                                    >
-                                        <Box className="w-4 h-4 md:w-5 md:h-5" />
-                                    </button>
-                                )}
+
                             </div>
 
                             {/* Content */}
                             <div className="flex-1 flex flex-col md:block justify-between md:px-2 md:pb-2 overflow-hidden relative">
                                 <div className="flex justify-between items-start mb-1 md:mb-2 gap-2 md:gap-4">
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-base md:text-xl text-gray-800 leading-tight font-semibold inline align-middle">
+                                        <h3 className="text-base md:text-xl text-gray-800 leading-tight font-medium inline align-middle">
                                             {item.name}
                                         </h3>
-                                        {item.labels && item.labels.length > 0 && (
-                                            <span className="inline-flex items-center gap-1 ml-1.5 align-middle">
-                                                {item.labels.map(label => dietaryIcons[label] && (
-                                                    <img
-                                                        key={label}
-                                                        src={dietaryIcons[label]}
-                                                        alt={label}
-                                                        title={label}
-                                                        className="w-3.5 h-3.5"
-                                                        style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
-                                                    />
-                                                ))}
-                                            </span>
-                                        )}
                                     </div>
 
                                     {/* Rating & Price (Desktop) - Top Right Corner */}
                                     <div className="shrink-0 flex flex-col items-end gap-1">
                                         {/* Price - Top Right (Mobile & Desktop) */}
-                                        <span className="text-lg md:text-xl font-bold text-gray-900 block">
+                                        <span className="text-lg md:text-xl font-medium text-gray-900 block">
                                             {activeSymbol}{item.price}
                                         </span>
 
+                                        {/* Rating - Desktop Only */}
+                                        <span className="hidden md:flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0 rounded-md font-medium text-[10px]">
+                                            <Star className="w-2.5 h-2.5 fill-current" /> {item.rating || '4.5'}
+                                        </span>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-x-3 md:gap-x-4 gap-y-1 md:gap-y-2 text-[10px] md:text-xs text-gray-500">
-                                    {/* Veg/Non-Veg Icon */}
-                                    <img
-                                        src={item.isVeg ? vegIcon : nonVegIcon}
-                                        alt={item.isVeg ? "Veg" : "Non-Veg"}
-                                        className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0"
-                                    />
+                                <div className="flex flex-wrap items-center gap-x-2.5 md:gap-x-4 gap-y-1.5 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-3">
+                                    {/* Dietary Labels */}
+                                    {item.labels && item.labels.length > 0 && (
+                                        <div className="flex items-center gap-1">
+                                            {item.labels.map(label => dietaryIcons[label] && (
+                                                <img
+                                                    key={label}
+                                                    src={dietaryIcons[label]}
+                                                    alt={label}
+                                                    className="w-3 h-3"
+                                                    style={!['Spicy', 'Vegan'].includes(label) ? { filter: orangeFilter } : {}}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
 
-                                    {/* Time */}
-                                    <span className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3" /> {item.time}
-                                    </span>
-
-                                    {/* Calories */}
-                                    <span className="flex items-center gap-1">
-                                        <Flame className="w-2.5 h-2.5 md:w-3 md:h-3 text-[#FD6941]" /> {item.calories}
-                                    </span>
-
-                                    {/* Rating - Desktop Only (Green, End of Row) */}
-                                    <span className="hidden md:flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded-md font-medium text-xs">
-                                        <Star className="w-3 h-3 fill-current" /> {item.rating || '4.5'}
-                                    </span>
-
+                                    {/* Stats Group */}
+                                    <div className="flex items-center gap-2.5 md:gap-4">
+                                        <span className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-gray-400" /> {item.time}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <Flame className="w-2.5 h-2.5 text-[#FD6941]" /> {item.calories}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <p className="text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-2 md:h-10 overflow-hidden md:mb-6 text-balance hidden md:block">
@@ -615,13 +594,29 @@ const Menu = () => {
                                                 <Heart className={`w-4 h-4 transition-transform duration-300 ${favorites[item._id] ? 'fill-current scale-110' : ''}`} />
                                             </button>
                                         ) : (
-                                            <span className="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded-md font-medium text-[10px]">
-                                                <Star className="w-2.5 h-2.5 fill-current" /> {item.rating || '4.5'}
+                                            <span className="flex items-center gap-1 bg-green-50 text-green-700 px-1 py-0.5 rounded-md font-medium text-[9px]">
+                                                <Star className="w-2 h-2 fill-current" /> {item.rating || '4.5'}
                                             </span>
                                         )}
                                     </div>
 
                                     <div className="flex items-center gap-2 justify-end">
+                                        {/* AR Button (3D Box) */}
+                                        {item.models && item.models.length > 0 && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const viewer = document.getElementById(`model-${item._id}`);
+                                                    if (viewer) viewer.activateAR();
+                                                }}
+                                                disabled={isPreviewMode}
+                                                className={`flex w-8 h-8 md:w-14 md:h-14 rounded-full items-center justify-center transition-all shadow-sm border bg-white border-gray-200 text-blue-600 hover:bg-gray-50 ${isPreviewMode ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+                                                title="View in AR"
+                                            >
+                                                <Box className="w-4 h-4 md:w-7 md:h-7" />
+                                            </button>
+                                        )}
+
                                         {/* Desktop Like Button OR Mobile Like (only if NOT in cart) */}
                                         <button
                                             onClick={(e) => {
@@ -651,7 +646,7 @@ const Menu = () => {
                                                     >
                                                         <Minus className="w-2.5 h-2.5 md:w-5 md:h-5" />
                                                     </button>
-                                                    <span className="text-xs md:text-lg min-w-[1.2rem] text-center font-bold text-[#FD6941] px-0.5">{cart[item._id].qty}</span>
+                                                    <span className="text-xs md:text-lg min-w-[1.2rem] text-center font-medium text-[#FD6941] px-0.5">{cart[item._id].qty}</span>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -692,28 +687,28 @@ const Menu = () => {
             {totalItems > 0 && (
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 lg:p-8 pointer-events-none overscroll-none touch-none">
                     <div className="max-w-[1400px] mx-auto flex justify-center md:justify-end">
-                        <div className="bg-white/80 backdrop-blur-xl border border-white/20 p-2 pl-4 rounded-full shadow-2xl flex items-center gap-4 pointer-events-auto animate-float-up overscroll-none">
+                        <div className="w-[286px] h-[64px] bg-white/70 backdrop-blur-2xl border-[1px] border-white px-3 pl-4 rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.1)] flex items-center justify-between pointer-events-auto animate-float-up overscroll-none">
                             {/* Decorative gradient */}
                             <div className="absolute -left-10 -top-10 w-32 h-32 bg-[#FD6941] rounded-full blur-3xl opacity-20"></div>
 
-                            <div className="flex items-center gap-3 relative z-10 ms-1">
+                            <div className="flex items-center gap-3 relative z-10">
                                 <div className="relative shrink-0">
-                                    <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm relative">
-                                        <ShoppingBag size={18} className="text-[#FD6941]" />
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm relative">
+                                        <ShoppingBag size={22} className="text-[#FD6941]" />
                                     </div>
                                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FD6941] text-white rounded-full border border-white flex items-center justify-center shadow-sm">
-                                        <span className="text-[8px] font-bold leading-none">{totalItems}</span>
+                                        <span className="text-[8px] font-medium leading-none">{totalItems}</span>
                                     </div>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-widest leading-tight">Your Bag</p>
+                                <div className="flex flex-col">
+                                    <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wider leading-tight">Your Bag</p>
                                     <p className="text-lg font-medium text-gray-900 leading-tight">{activeSymbol}{grandTotal}</p>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => isPreviewMode ? toast('Preview Mode: Checkout disabled') : setShowBill(true)}
-                                className="flex items-center gap-2 bg-[#FD6941] text-white px-6 py-3 rounded-full text-sm font-medium shadow-lg shadow-orange-200/50 hover:bg-orange-600 transition-all relative z-10 mr-1"
+                                className="flex items-center gap-2 bg-[#FD6941] text-white px-6 h-11 rounded-full text-sm font-medium shadow-lg shadow-orange-200/50 hover:bg-orange-600 transition-all active:scale-95 relative z-10"
                             >
                                 Checkout <ChevronRight className="w-4 h-4" />
                             </button>
@@ -781,7 +776,7 @@ const Menu = () => {
                                             {(customerDetails.name && customerDetails.phone) && (
                                                 <button
                                                     onClick={() => setShowFullForm(!showFullForm)}
-                                                    className="text-[10px] font-bold text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
+                                                    className="text-[10px] font-medium text-[#FD6941] bg-orange-50 px-3 py-1 rounded-full border border-orange-100"
                                                 >
                                                     {showFullForm ? "View Summary" : "Change Info"}
                                                 </button>
@@ -910,7 +905,7 @@ const Menu = () => {
                                 {/* Top Left Badges - Status Only */}
                                 <div className="absolute top-4 left-4 z-30">
                                     {/* Status Tag */}
-                                    <div className={`px-2.5 py-1.5 rounded-lg backdrop-blur-md shadow-sm flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider ${selectedItem.isAvailable ? 'bg-white/90 text-green-600' : 'bg-red-500/90 text-white'}`}>
+                                    <div className={`px-2.5 py-1.5 rounded-lg backdrop-blur-md shadow-sm flex items-center gap-1.5 font-medium text-[10px] uppercase tracking-wider ${selectedItem.isAvailable ? 'bg-white/90 text-green-600' : 'bg-red-500/90 text-white'}`}>
                                         <span className={`w-1.5 h-1.5 rounded-full ${selectedItem.isAvailable ? 'bg-green-500 animate-pulse' : 'bg-white'}`}></span>
                                         {selectedItem.isAvailable ? 'Available' : 'Sold Out'}
                                     </div>
@@ -929,7 +924,7 @@ const Menu = () => {
                             {/* Details Section */}
                             <div className="flex-1 flex flex-col bg-white relative -mt-10 rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] overflow-hidden">
                                 {/* Fixed Header */}
-                                <div className="shrink-0 px-6 pt-6 md:px-8 md:pt-8 bg-white z-10">
+                                <div className="shrink-0 px-6 pt-5 md:px-8 md:pt-6 bg-white z-10">
                                     <div className="mb-4">
                                         <div className="flex flex-col gap-0.5">
                                             <div className="flex justify-between items-start gap-4">
@@ -991,7 +986,7 @@ const Menu = () => {
                                     {/* Dietary Tags */}
                                     {selectedItem.labels && selectedItem.labels.length > 0 && (
                                         <div className="mb-8">
-                                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">Dietary Info</h4>
+                                            <h4 className="text-sm font-medium text-gray-900 uppercase tracking-widest mb-3">Dietary Info</h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {selectedItem.labels.map(label => (
                                                     <span key={label} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 text-sm font-medium text-gray-700">
@@ -1046,7 +1041,7 @@ const Menu = () => {
                                                 >
                                                     <Minus className="w-3.5 h-3.5 md:w-5 md:h-5" />
                                                 </button>
-                                                <span className="text-base md:text-lg font-bold min-w-[1.2rem] text-center text-[#FD6941]">{cart[selectedItem._id].qty}</span>
+                                                <span className="text-base md:text-lg font-medium min-w-[1.2rem] text-center text-[#FD6941]">{cart[selectedItem._id].qty}</span>
                                                 <button
                                                     onClick={() => addToCart(selectedItem)}
                                                     className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-[#FD6941] text-white flex items-center justify-center hover:bg-orange-600 transition-all shrink-0 shadow-sm"
@@ -1057,13 +1052,13 @@ const Menu = () => {
                                         ) : (
                                             <button
                                                 onClick={() => addToCart(selectedItem)}
-                                                className="h-12 w-12 md:h-14 md:w-14 bg-[#FD6941] text-white rounded-full font-bold hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                                                className="h-12 w-12 md:h-14 md:w-14 bg-[#FD6941] text-white rounded-full font-medium hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
                                             >
                                                 <Plus className="w-6 h-6 md:w-7 md:h-7" />
                                             </button>
                                         )
                                     ) : (
-                                        <div className="flex-1 md:flex-none px-6 py-4 bg-gray-100 text-gray-400 rounded-full font-bold text-sm text-center">
+                                        <div className="flex-1 md:flex-none px-6 py-4 bg-gray-100 text-gray-400 rounded-full font-medium text-sm text-center">
                                             Currently Unavailable
                                         </div>
                                     )}
@@ -1082,14 +1077,14 @@ const Menu = () => {
                             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
                                 <UtensilsCrossed className="w-10 h-10" />
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Table Occupied</h3>
+                            <h3 className="text-2xl font-medium text-gray-900 mb-2">Table Occupied</h3>
                             <p className="text-gray-500 mb-6 px-4">
                                 You can't order here, this table is already occupied.
                                 <br />Please check your table number and scan the QR Code again.
                             </p>
 
                             <div className="border-t border-gray-100 pt-6">
-                                <p className="text-sm font-bold text-gray-800 mb-3">Is this your table?</p>
+                                <p className="text-sm font-medium text-gray-800 mb-3">Is this your table?</p>
                                 <div className="flex gap-2">
                                     <input
                                         type="tel"
@@ -1109,7 +1104,7 @@ const Menu = () => {
                                                 toast.error("Phone number does not match current order.");
                                             }
                                         }}
-                                        className="bg-[#FD6941] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orange-100"
+                                        className="bg-[#FD6941] text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg shadow-orange-100"
                                     >
                                         Verify
                                     </button>

@@ -69,6 +69,19 @@ const AdminMenu = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Manage Body Scroll Lock when Modal is Open
+    useEffect(() => {
+        if (isModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isModalOpen]);
+
     // Modal Form State
     const [mediaItems, setMediaItems] = useState([]); // Array of { name, size, url, type }
     const [modelItems, setModelItems] = useState([]); // Array of { name, size, url, type } for 3D models
@@ -112,8 +125,8 @@ const AdminMenu = () => {
     // Sync Helper: Removed complex sync logic for now to ensure stability. 
     // If you want offline sync, restore it later. For now, trust the API.
 
-    const fetchData = async () => {
-        setItemsLoading(true);
+    const fetchData = async (background = false) => {
+        if (!background) setItemsLoading(true);
         try {
             const [menuRes, catRes] = await Promise.all([
                 menuAPI.getAll(),
@@ -136,7 +149,7 @@ const AdminMenu = () => {
             toast.error('Failed to load data');
             setMenuItems([]);
         } finally {
-            setItemsLoading(false);
+            if (!background) setItemsLoading(false);
         }
     };
 
@@ -150,7 +163,7 @@ const AdminMenu = () => {
 
         socket.on('menuUpdated', (payload) => {
             console.log("Real-time menu update received", payload.action);
-            fetchData(); // Simple refresh for now
+            fetchData(true); // Background refresh
         });
 
         return () => socket.off('menuUpdated');
@@ -300,12 +313,21 @@ const AdminMenu = () => {
 
         const newItems = [];
 
+        const MAX_MODEL_SIZE = 10 * 1024 * 1024; // 10MB limit (Cloudinary Free limit)
+        // Note: Increasing this locally WILL NOT bypass the server/Cloudinary limit.
+
         for (const file of files) {
             try {
                 // Check 3D Model Extension
                 const is3D = file.name.match(/\.(glb|gltf|obj)$/i);
                 if (!is3D) {
                     toast.error(`File ${file.name} is not a supported 3D model.`);
+                    continue;
+                }
+
+                // Check File Size
+                if (file.size > MAX_MODEL_SIZE) {
+                    toast.error(`File ${file.name} exceeds the 10MB limit allowed by the server.`);
                     continue;
                 }
 
@@ -520,7 +542,8 @@ const AdminMenu = () => {
                         if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
                             throw err;
                         }
-                        throw new Error(`Failed to upload ${item.name}`);
+                        const errMsg = err.response?.data?.error?.message || err.message;
+                        throw new Error(`Failed to upload ${item.name}: ${errMsg}`);
                     }
                 } else {
                     return item;
@@ -529,13 +552,12 @@ const AdminMenu = () => {
 
             // Upload Logic for 3D Models
             const modelFilesToUploadIndices = modelItems.map((item, idx) => item.file ? idx : -1).filter(idx => idx !== -1);
-            // We can reuse the total uploads concept or just do them in parallel with media
-            // Simple approach: Concat promises
-
+            
             const modelUploadPromises = modelItems.map(async (item, index) => {
                 if (item.file) {
                     try {
-                        const res = await uploadAPI.uploadDirectNew(item.file, null, { signal }, 'raw'); // Use 'raw' for 3D models to ensure compatibility
+                        // Use 'image' resource type for GLB/GLTF as Cloudinary supports them as images and might offer better limits/handling
+                        const res = await uploadAPI.uploadDirectNew(item.file, null, { signal }, 'image'); 
 
                         // Track ID for potential cleanup
                         if (res.data.public_id) {
@@ -550,7 +572,8 @@ const AdminMenu = () => {
                         };
                     } catch (err) {
                         if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') throw err;
-                        throw new Error(`Failed to upload model ${item.name}`);
+                        const errMsg = err.response?.data?.error?.message || err.message;
+                        throw new Error(`Failed to upload model ${item.name}: ${errMsg}`);
                     }
                 } else {
                     return item;
@@ -589,8 +612,8 @@ const AdminMenu = () => {
             // Success! Clear cleanup tracking because these files are now valid/saved.
             uploadedPublicIdsRef.current = [];
 
-            fetchData();
-            setIsModalOpen(false);
+            fetchData(true); // Background refresh so UI doesn't flicker
+            setIsModalOpen(false); // Close the modal
             resetForm();
 
         } catch (error) {
@@ -617,7 +640,12 @@ const AdminMenu = () => {
 
             } else {
                 console.error("Save Error", error);
-                toast.error('Failed: ' + (error.message || 'Unknown error'), { id: loadToast });
+                
+                // Close modal even on error as requested, so user can see the error toast clearly
+                setIsModalOpen(false); 
+                
+                // We still want to show the error
+                toast.error('Failed: ' + (error.message || 'Unknown error'), { id: loadToast, duration: 5000 });
 
                 // On error (e.g. backend failed), we SHOULD cleanup the images we just uploaded.
                 if (uploadedPublicIdsRef.current.length > 0) {
@@ -625,6 +653,22 @@ const AdminMenu = () => {
                     uploadAPI.cleanupFiles(ids); // Fire and forget
                     uploadedPublicIdsRef.current = [];
                 }
+                
+                // Since we closed the modal, we should probably reset the form or at least stop loading state?
+                // The user asked to close it to see the error. 
+                // We don't want to reset form data completely in case they want to retry... 
+                // But closing the modal effectively loses the state unless we are using a global store or sticking it in a draft.
+                // Current implementation of 'mediaItems' is local state to the component (AdminMenu), 
+                // but AdminMenu doesn't unmount, the modal is just a boolean toggle. 
+                // HOWEVER, 'resetForm' is called when opening/closing usually.
+                // If we just set setIsModalOpen(false), the form state (mediaItems, etc) MIGHT be preserved IF we don't call resetForm()...
+                // BUT: The existing code calls resetForm() in handleCloseModal. 
+                // Let's see... handleCloseModal calls resetForm. 
+                // If we just `setIsModalOpen(false)`, the state remains in `AdminMenu` component variables!
+                // So when they open it again, the old data might be there? 
+                // Wait, `openModal` calls `resetForm()` explicitly. 
+                // So if we close it now, the data is LOST when they re-open it.
+                // This seems to be what the user requested ("close automatically so I can see the error").
             }
         } finally {
             abortControllerRef.current = null;

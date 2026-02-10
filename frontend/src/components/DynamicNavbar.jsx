@@ -7,6 +7,7 @@ import {
 import { useSettings } from '../context/SettingsContext';
 import { useAdminNotifications } from '../hooks/useAdminNotifications';
 import logo from '../assets/logo-full.png';
+import tableIcon from '../assets/Table-Bar--Streamline-Sharp-Material.svg';
 
 const DynamicNavbar = ({ customerProps }) => {
     const location = useLocation();
@@ -121,9 +122,15 @@ const DynamicNavbar = ({ customerProps }) => {
 
                     <div className="flex items-center gap-2 md:gap-4">
                         {tableNo && (
-                            <div className="hidden md:flex items-center gap-1 text-sm font-medium bg-gray-100 px-4 py-1.5 rounded-full uppercase tracking-wider text-gray-500">
-                                Table no. {tableNo !== 'preview' && <span className="text-black font-bold ml-1">{tableNo}</span>}
-                            </div>
+                            <>
+                                <div className="hidden md:flex items-center gap-1 text-sm font-medium bg-gray-100 px-4 py-1.5 rounded-full uppercase tracking-wider text-gray-500">
+                                    Table no. {tableNo !== 'preview' && <span className="text-black font-bold ml-1">{tableNo}</span>}
+                                </div>
+                                <div className="flex md:hidden items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 shadow-sm animate-in fade-in slide-in-from-right-2">
+                                    <img src={tableIcon} alt="Table" className="w-4 h-4" />
+                                    <span className="text-xs font-bold text-gray-900 leading-none">{tableNo !== 'preview' ? tableNo : 'P'}</span>
+                                </div>
+                            </>
                         )}
 
                         <Link to={`${baseUrl}/favorites`} className="p-2 hover:bg-gray-100 rounded-full transition-colors relative group">

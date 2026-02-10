@@ -154,7 +154,7 @@ const MediaSlider = ({ media, interval = 30000, className = "", showArButton = t
                             >
                                 <button
                                     slot="ar-button"
-                                    className={`absolute top-2 left-2 md:top-4 md:left-4 z-20 w-7 h-7 md:w-9 md:h-9 backdrop-blur rounded-full items-center justify-center shadow-sm bg-white/90 text-gray-800 ${!showArButton ? 'hidden' : 'hidden md:flex'}`}
+                                    className={`absolute top-2 right-2 md:top-4 md:right-4 z-20 w-7 h-7 md:w-9 md:h-9 backdrop-blur rounded-full items-center justify-center shadow-sm bg-white/90 text-gray-800 ${!showArButton ? 'hidden' : 'hidden md:flex'}`}
                                 >
                                     <Box className="w-3.5 h-3.5 md:w-5 md:h-5 text-black" />
                                 </button>
